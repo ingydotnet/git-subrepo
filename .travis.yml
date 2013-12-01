@@ -1,0 +1,5 @@
+# Want 'bash' but 'c' works:
+language: c
+
+script:
+- PROVEOPT=-v make test
