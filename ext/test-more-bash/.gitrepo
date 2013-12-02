@@ -1,0 +1,5 @@
+[subrepo]
+	url = git@github.com:ingydotnet/test-more-bash
+	branch = master
+	commit = d4f844514130aaeb93b95d17c65053e0312e94d7
+	prev = 5dff04fb84b9cc514b03d06870b77b1ca0e49c75

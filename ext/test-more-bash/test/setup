@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -e
+
+BASHLIB="`find $PWD -type d | grep -E '/(bin|lib)$' | xargs -n1 printf "%s:"`"
+PATH="$BASHLIB:$PATH"
+
+source bash+ :std
