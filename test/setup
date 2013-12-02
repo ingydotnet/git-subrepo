@@ -2,19 +2,7 @@
 
 set -e
 
-export BASHLIB="`find $PWD -type d | grep -E '/(bin|lib)$' | xargs -n1 printf "%s:"`"
-export PATH="$BASHLIB:$PATH"
+BASHLIB="`find $PWD -type d | grep -E '/(bin|lib)$' | xargs -n1 printf "%s:"`"
+PATH="$BASHLIB:$PATH"
+
 source bash+ :std
-
-TMP="tmp"
-source test/teardown
-
-UPSTREAM="$TMP/upstream"
-OWNER="$TMP/owner"
-COLLAB="$TMP/collab"
-
-mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
-
-cp -r test/repo/{foo,bar} "$UPSTREAM/"
-
-# export GIT_SUBREPO_QUIET=1
