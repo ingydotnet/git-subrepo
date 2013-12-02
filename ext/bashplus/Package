@@ -1,0 +1,18 @@
+[pkg]
+name                = bashplus
+author              = Ingy döt Net <ingy@bpan.org>
+copyright-holder    = Ingy döt Net
+copyright-year      = 2013
+license             = MIT
+abstract            = Modern Bash Programming
+source-url          = git@github.com:bash-org/bashplus.git
+home-url            = http://github.com/bash-org/bashplus#readme
+
+[bpan]
+version             = 0.0.1
+owner               = ingydotnet
+requires-bash       = > 3.2
+
+; Set prereqs so that these core packages get installed with Bash+
+requires-package    = test-more
+requires-package    = config-ini

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#------------------------------------------------------------------------------
+# Bash+ - Modern Bash Programming
+#
+# Copyright (c) 2013 Ingy döt Net
+#------------------------------------------------------------------------------
+
+set -e
+
+#------------------------------------------------------------------------------
+# Determine how `bash+` was called, and do the right thing:
+#------------------------------------------------------------------------------
+if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+  # 'bash+' is being sourced:
+  [[ "${BASH_SOURCE[0]}" =~ /bin/bash\+$ ]] || {
+    echo "Invalid Bash+ path '${BASH_SOURCE[0]}'" 2> /dev/null
+    exit 1
+  }
+  source "${BASH_SOURCE[0]%/bin/*}"/lib/bash+.bash || return $?
+  bash+:import "$@"
+  return $?
+else
+  if [ $# -eq 1 -a "$1" == --version ]; then
+    echo 'bash+   version 0.0.1'
+  else
+  cat <<...
+
+Greetings modern Bash programmer. Welcome to Bash+!
+
+Bash+ is framework that makes Bash programming more like Ruby and Perl.
+
+See: https://github.com/bpan-org/bashplus
+
+If you got here trying to use bash+ in a program, you need to source it:
+
+    source bash+
+
+Happy Bash Hacking!
+
+...
+  fi
+fi
