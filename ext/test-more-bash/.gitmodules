@@ -1,6 +1,0 @@
-[submodule "ext/test-tap-bash"]
-	path = ext/test-tap-bash
-	url = https://github.com/ingydotnet/test-tap-bash.git
-[submodule "ext/bashplus"]
-	path = ext/bashplus
-	url = https://github.com/ingydotnet/bashplus.git
