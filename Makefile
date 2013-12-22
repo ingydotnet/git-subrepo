@@ -82,3 +82,6 @@ doc: doc/$(CMD).1
 dev-install:
 	ln -fs $(LOCAL_LIB) $(INSTALL_CMD)
 	ln -fs $(LOCAL_EXTS) $(INSTALL_EXT)
+
+clean purge:
+	rm -fr tmp
