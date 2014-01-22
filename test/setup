@@ -9,9 +9,10 @@ source bash+ :std
 TMP="tmp"
 source test/teardown
 
-UPSTREAM="$TMP/upstream"
-OWNER="$TMP/owner"
-COLLAB="$TMP/collab"
+export GIT_EXEC_PATH="$PWD/lib:$(git --exec-path)"
+export UPSTREAM="$TMP/upstream"
+export OWNER="$TMP/owner"
+export COLLAB="$TMP/collab"
 
 mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 

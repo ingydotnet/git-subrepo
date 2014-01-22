@@ -25,8 +25,8 @@ This command assumes there are 3 main roles of people interacting with a repo,
 and attempts to serve them all well:
 
 * owner - The person who authors/owns/maintains a repo.
-* users - People who are just using/installing the repo.
-* collaborators - Other people who commit code to the repo and subrepos.
+* user - People who are just using/installing the repo.
+* collaborator - People who commit code to the repo and subrepos.
 
 The `git-subrepo` command benefits these roles in the following ways:
 
@@ -96,4 +96,4 @@ Written by Ingy döt Net <ingy@ingy.net>
 
 ## Copyright
 
-Copyright 2013 Ingy döt Net
+Copyright 2013, 2014 Ingy döt Net

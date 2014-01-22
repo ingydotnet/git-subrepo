@@ -39,9 +39,9 @@ like "$foo_merge_commit_msg" \
 gitrepo=$OWNER/foo/bar/.gitrepo
 ok "`[ -f $gitrepo ]`" "OWNER/foo/bar is a subrepo"
 
-is "`git config -f $gitrepo subrepo.url`" \
+is "`git config -f $gitrepo subrepo.remote`" \
    ../../../$UPSTREAM/bar \
-   "subrepo url is correct"
+   "subrepo remote is correct"
 
 is "`git config -f $gitrepo subrepo.branch`" \
    master \
@@ -51,9 +51,9 @@ is "`git config -f $gitrepo subrepo.commit`" \
    $bar_head_commit \
    "subrepo commit is correct"
 
-is "`git config -f $gitrepo subrepo.prev`" \
+is "`git config -f $gitrepo subrepo.former`" \
    $foo_clone_commit \
-   "subrepo prev is correct"
+   "subrepo former is correct"
 
 like "$foo_clone_commit_msg" \
   "subrepo cloned into 'bar/'" \
