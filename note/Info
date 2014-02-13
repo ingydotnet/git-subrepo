@@ -1,0 +1,4 @@
+- http://git-scm.com/book/ch6-7.html (Subtree Merge)
+- https://www.kernel.org/pub/software/scm/git/docs/howto/using-merge-subtree.html
+- https://help.github.com/articles/working-with-subtree-merge
+  - git pull -s subtree foo master
