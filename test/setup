@@ -6,6 +6,7 @@ export BASHLIB="`find $PWD -type d | grep -E '/(bin|lib)$' | xargs -n1 printf "%
 export PATH="$BASHLIB:$PATH"
 source bash+ :std
 
+# Move to test/tmp
 TMP="tmp"
 source test/teardown
 
