@@ -7,7 +7,6 @@ use Test::More
 # TODO:
 # * Make each commit be from a certain datetime to easily # see/test it.
 
-
 (
   # foo will act as the main repo
   git clone $UPSTREAM/foo $OWNER/foo
@@ -52,13 +51,15 @@ use Test::More
   git add ./FooBar bar/FooBar
   git commit -m 'change 3'
 
-) # &> /dev/null || die
+) &> /dev/null || die
 
 (
-  cd $OWNER/foo
-  git subrepo push bar
-)
-exit
+  cd $OWNER/bar
+  touch bargy
+  git add bargy
+  git commit -m 'bargy'
+  git push
+) &> /dev/null || die
 
 # Do the subrepo push and save the output:
 message="$(
@@ -69,12 +70,10 @@ message="$(
   git subrepo push bar
 )"
 
-
 # Test the output:
 is "$message" \
   "git subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)" \
   "push message is correct"
-
 
 # Pull the changes from UPSTREAM/bar
 (

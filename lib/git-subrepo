@@ -171,28 +171,58 @@ command:push() {
   # Read current subrepo state:
   get-subdir-state "$1"
 
-  # Pull first:
-  git subrepo pull $subdir
+  # XXX See if any changes to subdir since last push
+    # Say "no changes to push"
 
-  local tmpdir=.git/subrepo
-  local gitdir=$PWD/.git
-  [ -e $tmpdir ] && error "$tmpdir exists. Delete first."
+  # Save current head to get back it later
+  starting_rev=$(git rev-parse HEAD)
 
-  git clone .git $tmpdir
-  (
-    cd $tmpdir
-    git filter-branch \
-      --subdirectory-filter "$subdir" -- $subrepo_former..HEAD &> /dev/null
-#     head=$(git rev-parse HEAD)
-#     echo $head
-#     git reset --hard $subrepo_former
-  )
-  say OK
-  :
+  # Fetch the current subrepo objects:
+  git fetch --quiet "$subrepo_remote" "$subrepo_branch" \
+    2> /dev/null \
+    || die "failure: git fetch $subrepo_remote $subrepo_branch"
+
+  # Make hist of changes since last sync
+  git filter-branch -f \
+    --subdirectory-filter "$subdir" \
+    --parent-filter "sed 's/-p $subrepo_former//'" \
+    -- $subrepo_former..HEAD \
+    &> /dev/null
+
+  git filter-branch -f \
+    --tree-filter "rm -f .gitrepo" \
+    &> /dev/null
+
+  root=$(git rev-list --max-parents=0 HEAD)
+  echo "$root $subrepo_commit" >> .git/info/grafts
+
+  git rebase FETCH_HEAD \
+    &> /dev/null
+
+  # subrepo_new=$(git rev-parse HEAD)
+
+  # push to remote
+  git push $subrepo_remote $subrepo_branch \
+    &> /dev/null
+
+  # reset to starting commit
+  git reset --hard $starting_rev \
+    &> /dev/null
+
+  # Does $subdir/.gitrepo need updating?
+
+  # say OK
+  say "git subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
 # `git subrepo status …` command:
+# Should list all subrepos if no args
+# Should tell info about a subdir if argument given
 command:status() {
+  local subdir gitrepo
+}
+
+command:split() {
   local subdir gitrepo
 }
 
