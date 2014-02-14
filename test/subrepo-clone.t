@@ -41,6 +41,8 @@ like "$foo_merge_commit_msg" \
 gitrepo=$OWNER/foo/bar/.gitrepo
 ok "`[ -f $gitrepo ]`" "OWNER/foo/bar is a subrepo"
 
+# XXX Test for header comments
+
 is "`git config -f $gitrepo subrepo.remote`" \
    ../../../$UPSTREAM/bar \
    "subrepo remote is correct"

@@ -117,7 +117,7 @@ command:clone() {
   git reset "$merge_commit"
 
   # Add/amend the subdir/.gitrepo file:
-  update-gitrepo "$update_commit"
+  update-gitrepo "$update_commit" "clone"
 
   # Successful command output:
   say "git subrepo '$subrepo_remote' cloned into '$subdir'"
@@ -351,6 +351,16 @@ update-gitrepo() {
   local change_commit="$1"
   local subrepo_former="$change_commit"
   local short_commit=$(git rev-parse --short "$change_commit")
+
+  if [ "$2" == "clone" ]; then
+    cat <<... > $gitrepo
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git subrepo, and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+...
+  fi
 
   git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
   git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
