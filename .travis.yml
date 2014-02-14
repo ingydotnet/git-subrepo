@@ -2,4 +2,6 @@
 language: c
 
 script:
-- PROVEOPT=-v make test
+- GIT_COMMITTER_NAME=Bob
+  GIT_COMMITTER_EMAIL=bob@blob.net
+  PROVEOPT=-v make test
