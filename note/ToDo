@@ -1,0 +1,20 @@
+- Add new subcommands:
+  - split
+  - status
+  - rm
+
+- Review doc/readme
+
+- Switch this repo from submodule to subrepo:
+  - for test-more-bash & bashplus
+  - Need to switch those first
+  - Redo here
+
+- Write more tests:
+  - Multiple push sessions
+
+- Figure out conflicts:
+  - Maybe leave in the split state
+
+- Test all error conditions:
+  - test/error.t
