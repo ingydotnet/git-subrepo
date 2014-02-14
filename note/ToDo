@@ -3,6 +3,9 @@
   - status
   - rm
 
+- Add more meta info to .gitrepo file:
+  - cloned - original upstream commit
+
 - Review doc/readme
 
 - Switch this repo from submodule to subrepo:

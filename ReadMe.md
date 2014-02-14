@@ -9,6 +9,7 @@ git-subrepo(1) - Git Submodule Alternative
     git subrepo pull <subdir>
     git subrepo push <subdir>
     git subrepo status [<subdir>]
+    git subrepo split <subdir> [ <newdir> ]
 
 ## Description
 
@@ -33,7 +34,6 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Extremely simple and intuitive commandline usage.
 * Users get the repo and all subrepos just by cloning the repo.
 * Collaborators know when a subdir is a subrepo.
-* Owners are warned about commits with files in both the repo and subrepo.
 * Owners do not deal with any of the usual complications of keeping submodules
   in sync.
 * Subrepos can contain other subrepos.
@@ -78,7 +78,7 @@ subrepos.
 
 ## Status
 
-This software is very new (as of 1 Dec 2013). It has a test suite (run `make
+This software is new (as of 13 Feb 2014). It has a test suite (run `make
 test`), but surely has many bugs. If you have expertise in this area, please
 review the code, and file issues on anything that seems wrong.
 
