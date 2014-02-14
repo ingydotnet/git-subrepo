@@ -39,12 +39,27 @@ X,debug     Turn on -x Bash debugging
 #------------------------------------------------------------------------------
 main() {
   # Define globals:
-  local command= command_arguments=()
-  local quiet_output=false verbose_output=false
-  local subrepo_branch=master
+  local command=
+  local command_arguments=()
+  local quiet_output=false
+  local verbose_output=false
+
+  local subdir              # Subdirectory of the subrepo being used
+  local gitrepo             # Path to .gitrepo file
+
+  local head_commit         # HEAD commit id at start of command
+  local tree_commit
+  local update_commit
+  local merge_commit
+
+  local subrepo_remote
+  local subrepo_branch
+  local subrepo_commit
+  local subrepo_commit_old
+  local subrepo_former
 
   # Check environment and parse CLI options:
-  assert-sane-env
+  assert-ok
   get-opts "$@"
 
   # Make sure command exists:
@@ -61,18 +76,19 @@ main() {
 #------------------------------------------------------------------------------
 # API command functions:
 #------------------------------------------------------------------------------
+
+# Launch the manpage viewer:
 command:help() {
   exec git help subrepo
 }
 
-# `git subrepo pull …` command:
+# `git subrepo clone …` command:
 command:clone() {
-  local subrepo_remote="${1:?"subrepo remote url required"}"
-  local subdir gitrepo
-  local head_commit subrepo_commit tree_commit update_commit merge_commit
+  subrepo_remote="${1:?"subrepo remote url required"}"
+  subrepo_branch=${subrepo_branch:-master}
 
   # Set subdir and gitrepo values:
-  set-subdir "$2"
+  set-subdir-or-guess "$2"
   gitrepo="$subdir/.gitrepo"
 
   # Subdir must not already exist, for clone operation:
@@ -101,8 +117,7 @@ command:clone() {
   update_commit="$(
     action-message cloned |
     git commit-tree \
-      "$(git log --max-count=1 --format=%T $subrepo_commit)" \
-      -p $head_commit
+      "$(git log --max-count=1 --format=%T $subrepo_commit)"
   )"
 
   # Create a merge commit:
@@ -125,11 +140,9 @@ command:clone() {
 
 # `git subrepo pull …` command:
 command:pull() {
-  local subdir gitrepo subrepo_remote subrepo_branch subrepo_former
-  local subrepo_commit subrepo_old_commit update_commit
-
   # Read current subrepo state:
-  get-subdir-state "$1"
+  set-subdir "${1:?"subdir is required"}"
+  read-gitrepo
 
   # Fetch the current subrepo objects:
   git fetch --quiet "$subrepo_remote" "$subrepo_branch" 2> /dev/null ||
@@ -139,7 +152,7 @@ command:pull() {
   subrepo_commit=$(git rev-parse FETCH_HEAD)
 
   # Check if we already are up to date:
-  if [ "$subrepo_commit" == "$subrepo_old_commit" ]; then
+  if [ "$subrepo_commit" == "$subrepo_commit_old" ]; then
     say "subrepo '$subdir' is up to date"
     return
   fi
@@ -163,19 +176,16 @@ command:pull() {
 }
 
 # `git subrepo push …` command:
-
 command:push() {
-  local subdir gitrepo subrepo_remote subrepo_branch subrepo_former
-  local subrepo_commit update_commit
-
   # Read current subrepo state:
-  get-subdir-state "$1"
+  set-subdir "${1:?"subdir is required"}"
+  read-gitrepo
 
   # XXX See if any changes to subdir since last push
     # Say "no changes to push"
 
-  # Save current head to get back it later
-  starting_rev=$(git rev-parse HEAD)
+  # Save current head to get back to it later
+  head_commit=$(git rev-parse HEAD)
 
   # Fetch the current subrepo objects:
   git fetch --quiet "$subrepo_remote" "$subrepo_branch" \
@@ -206,7 +216,7 @@ command:push() {
     &> /dev/null
 
   # reset to starting commit
-  git reset --hard $starting_rev \
+  git reset --hard $head_commit \
     &> /dev/null
 
   # Does $subdir/.gitrepo need updating?
@@ -261,23 +271,28 @@ get-opts() {
   command_arguments=("$@")
 }
 
-# Determine the correct subdir path to use:
 set-subdir() {
   local dir="$1"
-  if [ -z "$dir" ]; then
-    dir="${subrepo_remote##*/}"
-    dir="${dir%.git}"
-    [[ "$dir" =~ [a-zA-Z] ]] ||
-      error "can't determine subdir from '$subrepo_remote'"
-  fi
   [[ "$dir" =~ ^/ ]] &&
     error "subdir '$dir' should not be absolute path"
   subdir="${dir%%/}"
 }
 
+# Determine the correct subdir path to use:
+set-subdir-or-guess() {
+  local dir="$1"
+  if [ -z "$dir" ]; then
+    dir="${subrepo_remote%/}"
+    dir="${dir##*/}"
+    dir="${dir%.git}"
+    [[ "$dir" =~ [a-zA-Z] ]] ||
+      error "can't determine subdir from '$subrepo_remote'"
+  fi
+  set-subdir "$dir"
+}
+
 # Set subdir and gitrepo vars:
-get-subdir-state() {
-  set-subdir "$1"
+read-gitrepo() {
   gitrepo="$subdir/.gitrepo"
 
   if [ ! -f "$gitrepo" ]; then
@@ -286,13 +301,14 @@ get-subdir-state() {
 
   # Read .gitrepo values:
   subrepo_remote="$(git config --file="$gitrepo" subrepo.remote)"
-  subrepo_branch="$(git config --file="$gitrepo" subrepo.branch)"
-  subrepo_old_commit="$(git config --file="$gitrepo" subrepo.commit)"
+  [ -z "$subrepo_branch" ] &&
+    subrepo_branch="$(git config --file="$gitrepo" subrepo.branch)"
+  subrepo_commit_old="$(git config --file="$gitrepo" subrepo.commit)"
   subrepo_former="$(git config --file="$gitrepo" subrepo.former)"
 }
 
-# Check git sanity:
-assert-sane-env() {
+# Check that system is ok for this command:
+assert-ok() {
   type git &> /dev/null ||
     error "can't find your 'git' command in '$PATH'"
   local version="$(git --version)"
