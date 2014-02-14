@@ -2,6 +2,8 @@
 language: c
 
 script:
-- GIT_AUTHOR_NAME='Bob Blob'
+- GIT_COMMITTER_NAME=Bob
+  GIT_COMMITTER_EMAIL=bob@blob.net
+  GIT_AUTHOR_NAME='Bob Blob'
   GIT_AUTHOR_EMAIL=bob@blob.net
   PROVEOPT=-v make test
