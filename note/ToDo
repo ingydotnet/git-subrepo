@@ -1,7 +1,10 @@
+- Save former pushed commit
+  - This can be saved in .git/info/subrepo/pushed
+
 - Add new subcommands:
-  - split
+  - extract
   - status
-  - rm
+  - remove
 
 - Add more meta info to .gitrepo file:
   - cloned - original upstream commit
@@ -16,8 +19,7 @@
 - Write more tests:
   - Multiple push sessions
 
-- Figure out conflicts:
-  - Maybe leave in the split state
-
 - Test all error conditions:
   - test/error.t
+
+- Remove grafts?
