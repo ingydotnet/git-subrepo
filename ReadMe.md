@@ -99,10 +99,12 @@ This command will extract a subrepo into a branch (default branch name is
 You can merge things by hand, then run a 'git subrep push' command with the
 same branchname.
 
-* `git subrepo remoave <subdir>`
+* `git subrepo remove <subdir>`
 
 This command will remove your subrepo and all of its history, as though it
-never existed.
+never existed. Please note that this will rewrite your entire history. If that
+would cause you problems, then maybe you just want 'git rm' the subrepo
+instead.
 
 ## Status
 
@@ -112,11 +114,10 @@ file issues on anything that seems wrong.
 
 ## Notes
 
+This command currently only works on POSIX systems.
+
 The `git-subrepo` repo itself has two subrepos. They are under the `./ext/`
 subdir.
-
-The `pull` command currently rebases the remote changes. This behavior may
-change.
 
 ## Author
 

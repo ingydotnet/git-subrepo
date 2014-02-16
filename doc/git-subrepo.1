@@ -166,21 +166,21 @@ Get the status of a subrepo\. If no subdir is provided, get the status of all su
 This command will extract a subrepo into a branch (default branch name is \'subrepo\')\. This is useful when a \'git subrepo push\' fails to merge properly\. You can merge things by hand, then run a \'git subrep push\' command with the same branchname\.
 .
 .IP "\(bu" 4
-\fBgit subrepo remoave <subdir>\fR
+\fBgit subrepo remove <subdir>\fR
 .
 .IP "" 0
 .
 .P
-This command will remove your subrepo and all of its history, as though it never existed\.
+This command will remove your subrepo and all of its history, as though it never existed\. Please note that this will rewrite your entire history\. If that would cause you problems, then maybe you just want \'git rm\' the subrepo instead\.
 .
 .SH "Status"
 This software is very new\. It has a test suite (run \fBmake test\fR), but surely has many bugs\. If you have expertise in this area, please review the code, and file issues on anything that seems wrong\.
 .
 .SH "Notes"
-The \fBgit\-subrepo\fR repo itself has two subrepos\. They are under the \fB\./ext/\fR subdir\.
+This command currently only works on POSIX systems\.
 .
 .P
-The \fBpull\fR command currently rebases the remote changes\. This behavior may change\.
+The \fBgit\-subrepo\fR repo itself has two subrepos\. They are under the \fB\./ext/\fR subdir\.
 .
 .SH "Author"
 Written by Ingy döt Net \fIingy@ingy\.net\fR
