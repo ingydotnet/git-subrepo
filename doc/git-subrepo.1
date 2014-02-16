@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "GIT\-SUBREPO" "1" "December 2013" "" ""
+.TH "GIT\-SUBREPO" "1" "February 2014" "" ""
 .
 .SH "NAME"
 \fBgit\-subrepo\fR \- Git Submodule Alternative
@@ -13,10 +13,15 @@
 .
 .nf
 
+git subrepo help
+
 git subrepo clone <repo\-url> [<subdir>]
 git subrepo pull <subdir>
 git subrepo push <subdir>
+
 git subrepo status [<subdir>]
+git subrepo extract <subdir>
+git subrepo remove <subdir>
 .
 .fi
 .
@@ -33,10 +38,10 @@ This command assumes there are 3 main roles of people interacting with a repo, a
 owner \- The person who authors/owns/maintains a repo\.
 .
 .IP "\(bu" 4
-users \- People who are just using/installing the repo\.
+user \- People who are just using/installing the repo\.
 .
 .IP "\(bu" 4
-collaborators \- Other people who commit code to the repo and subrepos\.
+collaborator \- People who commit code to the repo and subrepos\.
 .
 .IP "" 0
 .
@@ -47,22 +52,34 @@ The \fBgit\-subrepo\fR command benefits these roles in the following ways:
 Extremely simple and intuitive commandline usage\.
 .
 .IP "\(bu" 4
-Users get the repo and all subrepos just by cloning the repo\.
+Users get your repo and all your subrepos just by cloning your repo\.
 .
 .IP "\(bu" 4
-Collaborators know when a subdir is a subrepo\.
+Collaborators know when a subdir is a subrepo (it has a \.gitrepo file)\.
 .
 .IP "\(bu" 4
-Owners are warned about commits with files in both the repo and subrepo\.
-.
-.IP "\(bu" 4
-Owners do not deal with any of the usual complications of keeping submodules in sync\.
+Owners do not deal with the complications of keeping submodules in sync\.
 .
 .IP "\(bu" 4
 Subrepos can contain other subrepos\.
 .
 .IP "\(bu" 4
+Branching with subrepos just works\.
+.
+.IP "\(bu" 4
 Moving/renaming a subrepo subdir just works\.
+.
+.IP "\(bu" 4
+Your git history is kept squeaky clean\.
+.
+.IP "\(bu" 4
+Every clone and pull is just one commit (plus a merge)\.
+.
+.IP "\(bu" 4
+Upstream history is condensed into one commit\.
+.
+.IP "\(bu" 4
+A subrepo (and all related history) can be removed in one command\.
 .
 .IP "" 0
 .
@@ -93,6 +110,19 @@ make install        # Possibly with \'sudo\'
 .
 .IP "" 0
 .
+.P
+To use this without installing:
+.
+.IP "" 4
+.
+.nf
+
+export GIT_EXEC_PATH="/path/to/git\-subrepo/lib:$(git \-\-exec\-path)"
+.
+.fi
+.
+.IP "" 0
+.
 .SH "Commands"
 .
 .IP "\(bu" 4
@@ -104,20 +134,20 @@ make install        # Possibly with \'sudo\'
 This command adds a repository as a subrepo in a subdir of your repository\. It is similar in feel to \fBgit clone\fR\. You just specify the remote repo url, and optionally a sub\-directory and/or branch name\. The repo will be fetched and merged into the subdir\. The subrepo history is not added to your repo history, but a commit is added that contains the reference information\. This information is also stored in a special file called \fB<subdir>/\.gitrepo\fR\. The presence of this file indicates that the directory is a subrepo\.
 .
 .IP "\(bu" 4
-\fBgit subrepo pull <subdir>\fR
+\fBgit subrepo pull <subdir> [\-b <branch>]\fR
 .
 .IP "" 0
 .
 .P
-Update the subdir with the latest remote changes\. The subdir must be a subrepo (must contain a \.gitrepo file)\.
+Update the subdir with the latest remote changes\. The subdir must be a subrepo (must contain a \.gitrepo file)\. You can change the upstream branch to use with the \'\-b\' flag\.
 .
 .IP "\(bu" 4
-\fBgit subrepo push <subdir>\fR
+\fBgit subrepo push <subdir> [<branchname>]\fR
 .
 .IP "" 0
 .
 .P
-Split out the commits made to the subdir, and push them upstream\.
+Extract out the commits made to the subdir, merge them with upstream, and push them back upstream\. If you specify a \'branchname\', it means that you already ran a \'git subrepo extract\' (which created a branch) and you want to push it upstream\. See the \'extract\' command below\.
 .
 .IP "\(bu" 4
 \fBgit subrepo status [<subdir>]\fR
@@ -127,8 +157,24 @@ Split out the commits made to the subdir, and push them upstream\.
 .P
 Get the status of a subrepo\. If no subdir is provided, get the status of all subrepos\.
 .
+.IP "\(bu" 4
+\fBgit subrepo extract <subdir> [<branchname>]\fR
+.
+.IP "" 0
+.
+.P
+This command will extract a subrepo into a branch (default branch name is \'subrepo\')\. This is useful when a \'git subrepo push\' fails to merge properly\. You can merge things by hand, then run a \'git subrep push\' command with the same branchname\.
+.
+.IP "\(bu" 4
+\fBgit subrepo remoave <subdir>\fR
+.
+.IP "" 0
+.
+.P
+This command will remove your subrepo and all of its history, as though it never existed\.
+.
 .SH "Status"
-This software is very new (as of 1 Dec 2013)\. It has a test suite (run \fBmake test\fR), but surely has many bugs\. If you have expertise in this area, please review the code, and file issues on anything that seems wrong\.
+This software is very new\. It has a test suite (run \fBmake test\fR), but surely has many bugs\. If you have expertise in this area, please review the code, and file issues on anything that seems wrong\.
 .
 .SH "Notes"
 The \fBgit\-subrepo\fR repo itself has two subrepos\. They are under the \fB\./ext/\fR subdir\.
@@ -140,4 +186,4 @@ The \fBpull\fR command currently rebases the remote changes\. This behavior may 
 Written by Ingy döt Net \fIingy@ingy\.net\fR
 .
 .SH "Copyright"
-Copyright 2013 Ingy döt Net
+Copyright 2013, 2014 Ingy döt Net

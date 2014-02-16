@@ -5,11 +5,15 @@ git-subrepo(1) - Git Submodule Alternative
 
 ## Synopsis
 
+    git subrepo help
+
     git subrepo clone <repo-url> [<subdir>]
     git subrepo pull <subdir>
     git subrepo push <subdir>
+
     git subrepo status [<subdir>]
-    git subrepo split <subdir> [ <newdir> ]
+    git subrepo extract <subdir>
+    git subrepo remove <subdir>
 
 ## Description
 
@@ -32,12 +36,16 @@ and attempts to serve them all well:
 The `git-subrepo` command benefits these roles in the following ways:
 
 * Extremely simple and intuitive commandline usage.
-* Users get the repo and all subrepos just by cloning the repo.
-* Collaborators know when a subdir is a subrepo.
-* Owners do not deal with any of the usual complications of keeping submodules
-  in sync.
+* Users get your repo and all your subrepos just by cloning your repo.
+* Collaborators know when a subdir is a subrepo (it has a .gitrepo file).
+* Owners do not deal with the complications of keeping submodules in sync.
 * Subrepos can contain other subrepos.
+* Branching with subrepos just works.
 * Moving/renaming a subrepo subdir just works.
+* Your git history is kept squeaky clean.
+* Every clone and pull is just one commit (plus a merge).
+* Upstream history is condensed into one commit.
+* A subrepo (and all related history) can be removed in one command.
 
 ## Installation
 
@@ -49,6 +57,10 @@ Then run:
 
     make test
     make install        # Possibly with 'sudo'
+
+To use this without installing:
+
+    export GIT_EXEC_PATH="/path/to/git-subrepo/lib:$(git --exec-path)"
 
 ## Commands
 
@@ -62,25 +74,41 @@ but a commit is added that contains the reference information.  This
 information is also stored in a special file called `<subdir>/.gitrepo`.  The
 presence of this file indicates that the directory is a subrepo.
 
-* `git subrepo pull <subdir>`
+* `git subrepo pull <subdir> [-b <branch>]`
 
 Update the subdir with the latest remote changes. The subdir must be a subrepo
-(must contain a .gitrepo file).
+(must contain a .gitrepo file). You can change the upstream branch to use with
+the '-b' flag.
 
-* `git subrepo push <subdir>`
+* `git subrepo push <subdir> [<branchname>]`
 
-Split out the commits made to the subdir, and push them upstream.
+Extract out the commits made to the subdir, merge them with upstream, and push
+them back upstream. If you specify a 'branchname', it means that you already
+ran a 'git subrepo extract' (which created a branch) and you want to push it
+upstream. See the 'extract' command below.
 
 * `git subrepo status [<subdir>]`
 
 Get the status of a subrepo. If no subdir is provided, get the status of all
 subrepos.
 
+* `git subrepo extract <subdir> [<branchname>]`
+
+This command will extract a subrepo into a branch (default branch name is
+'subrepo'). This is useful when a 'git subrepo push' fails to merge properly.
+You can merge things by hand, then run a 'git subrep push' command with the
+same branchname.
+
+* `git subrepo remoave <subdir>`
+
+This command will remove your subrepo and all of its history, as though it
+never existed.
+
 ## Status
 
-This software is new (as of 13 Feb 2014). It has a test suite (run `make
-test`), but surely has many bugs. If you have expertise in this area, please
-review the code, and file issues on anything that seems wrong.
+This software is very new. It has a test suite (run `make test`), but surely
+has many bugs. If you have expertise in this area, please review the code, and
+file issues on anything that seems wrong.
 
 ## Notes
 
