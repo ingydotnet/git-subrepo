@@ -11,16 +11,17 @@ BASHLIB="${BASH_SOURCE%/*}/git-subrepo.d"
 PATH="$BASHLIB:$PATH" source bash+.bash
 bash+:import :std can
 
-VERSION=0.0.1
+VERSION=0.1.0
 
 # `git rev-parse` turns this into a getopt parser and a command usage:
 GETOPT_SPEC="\
-git subrepo <command> <options> <arguments>
+git subrepo <command> <arguments> <options>
 
 Commands:
   clone     Clone a remote repository into a local directory (subrepo)
   push      Push local subrepo changes upstream
   pull      Pull (merge) upstream changes to the subrepo
+
   status    Get status of a subrepo (or all of them)
   extract   Create a local branch containing just the subrepo (for manual push)
   remove    Remove a subrepo and its commits from your repository history
@@ -42,18 +43,6 @@ q,quiet     Show minimal output
 v,verbose   Show verbose output
 x,debug     Turn on -x Bash debugging
 "
-
-#------------------------------------------------------------------------------
-# Misc functions in progress
-#------------------------------------------------------------------------------
-Git() {
-  echo "Running: git $@"
-  git "$@"
-}
-
-OK() {
-  [ $OK ]
-}
 
 #------------------------------------------------------------------------------
 # Top level function:
@@ -89,7 +78,8 @@ main() {
     error "unknown 'git subrepo' command: '$command'"
 
   # Make sure repo is in the proper state:
-  [ $command == help ] || assert-repo-is-ready
+  [ "$command == help" -o "$command" == status ] \
+    || assert-repo-is-ready
 
   # Run the command:
   "command:$command" "${command_arguments[@]}"
@@ -488,6 +478,10 @@ assert-subdir-empty() {
 say() {
   $quiet_output && return
   echo "$@"
+}
+
+OK() {
+  [ $OK ]
 }
 
 # Nicely report common error messages:
