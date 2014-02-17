@@ -8,80 +8,92 @@ use Test::More
 
 source lib/git-subrepo
 
-(
-  git clone $UPSTREAM/foo $OWNER/foo
-  git clone $UPSTREAM/bar $OWNER/bar
-) &> /dev/null
+clone-foo-and-bar
 
-ok "`[ -d $OWNER/foo/.git ]`" \
-  "OWNER/foo/ is a cloned git repo"
-ok "`[ -f $OWNER/foo/Foo ]`" \
-  "OWNER/foo/Foo is a file"
+# Test that the repos look ok:
+{
+  test-exists \
+    "$OWNER/foo/.git/" \
+    "$OWNER/foo/Foo" \
+    "!$OWNER/foo/bar/" \
+    "$OWNER/bar/.git/" \
+    "$OWNER/bar/Bar"
+}
 
-(
-  cd $OWNER/foo
-  git subrepo clone ../../../$UPSTREAM/bar
-) > /dev/null
+# Do the subrepo clone and test the output:
+{
+  clone_output="$(
+    cd $OWNER/foo
+    git subrepo clone ../../../$UPSTREAM/bar
+  )"
 
-foo_clone_commit_msg="$(cd $OWNER/foo; git log --skip=1 --max-count=1)"
-foo_clone_commit="$(cd $OWNER/foo; git log --skip=1 --max-count=1 --format=%H)"
-foo_merge_commit_msg="$(cd $OWNER/foo; git log --max-count=1)"
-foo_head_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
-bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  # Check output is correct:
+  is "$clone_output" \
+    "git subrepo 'bar' cloned from '../../../tmp/upstream/bar' (master)" \
+    'subrepo clone command output is correct'
+}
 
-ok "`[ -d $OWNER/foo/bar ]`" \
-  "OWNER/foo/bar/ is a subdir"
-ok "`[ -f $OWNER/foo/bar/Bar ]`" \
-  "OWNER/foo/bar/Bar is a file"
-
-like "$foo_merge_commit_msg" \
-  "$foo_head_commit" \
-  'subrepo clone merge commit is head'
-
+# Check that subrepo files look ok:
 gitrepo=$OWNER/foo/bar/.gitrepo
-ok "`[ -f $gitrepo ]`" "OWNER/foo/bar is a subrepo"
+{
+  test-exists \
+    "$OWNER/foo/bar/" \
+    "$OWNER/foo/bar/Bar" \
+    "$gitrepo"
+}
 
-# XXX Test for header comments
+# Test foo/bar/.gitrepo file contents:
+{
+  foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^2)"
+  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  test-gitrepo-comment-block
+  test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
+  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "former" "$foo_clone_commit"
+  test-gitrepo-field "cmdver" "`git subrepo --version`"
+}
 
-is "`git config -f $gitrepo subrepo.remote`" \
-   ../../../$UPSTREAM/bar \
-   "subrepo remote is correct"
+# Check commit messages:
+{
+  # Check head commit msg contains head id:
+  foo_merge_commit_msg="$(cd $OWNER/foo; git log --max-count=1)"
+  foo_head_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
+  like "$foo_merge_commit_msg" \
+    "$foo_head_commit" \
+    'subrepo clone merge commit is head'
 
-is "`git config -f $gitrepo subrepo.branch`" \
-   master \
-   "subrepo branch is correct"
+  # Check the subrepo clone commit message:
+  foo_clone_commit_msg="$(cd $OWNER/foo; git log --skip=1 --max-count=1)"
+  pass TODO
+  # TODO: fix like to support regex meta chars
+  # like "$foo_clone_commit_msg" \
+  #   "subrepo clone: .+ bar/" \
+  #   'Subrepo clone commit msg is ok'
 
-is "`git config -f $gitrepo subrepo.commit`" \
-   $bar_head_commit \
-   "subrepo commit is correct"
+  like "$foo_clone_commit_msg" \
+    "commit: $(git rev-parse --short $bar_head_commit)" \
+    'Subrepo clone commit contains bar head commit'
 
-is "`git config -f $gitrepo subrepo.former`" \
-   $foo_clone_commit \
-   "subrepo former is correct"
+  like "$foo_merge_commit_msg" \
+    "Merge subrepo commit" \
+    'Subrepo clone commit msg is ok'
+}
 
-pass TODO
-# TODO: fix like to support regex meta chars
-# like "$foo_clone_commit_msg" \
-#   "subrepo clone: .+ bar/" \
-#   "Subrepo clone commit msg is ok"
+# Make sure status is clean:
+{
+  git_status="$(
+    cd $OWNER/foo
+    git status -s
+  )"
 
-like "$foo_merge_commit_msg" \
-  "Merge subrepo commit" \
-  "Subrepo clone commit msg is ok"
+  is "$git_status" \
+    "" \
+    'status is clean'
+}
 
-like "$foo_clone_commit_msg" \
-  "commit: $(git rev-parse --short $bar_head_commit)" \
-  "Subrepo clone commit contains bar head commit"
+done_testing 20
 
-git_status="$(
-  cd $OWNER/foo
-  git status -s
-)"
-
-is "$git_status" \
-  "" \
-  "status is clean"
-
-done_testing 14
+# (cd $OWNER/foo;bash);exit
 
 source test/teardown

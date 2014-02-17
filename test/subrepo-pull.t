@@ -6,12 +6,7 @@ source test/setup
 
 use Test::More
 
-source lib/git-subrepo
-
-(
-  git clone $UPSTREAM/foo $OWNER/foo
-  git clone $UPSTREAM/bar $OWNER/bar
-) &> /dev/null || die
+clone-foo-and-bar
 
 (
   cd $OWNER/foo
@@ -26,14 +21,41 @@ source lib/git-subrepo
   git push
 ) &> /dev/null || die
 
-(
-  cd $OWNER/foo
-  git subrepo pull bar
-) &> /dev/null || die
+# Do the pull and test the output:
+{
+  pull_output="$(
+    cd $OWNER/foo
+    git subrepo pull bar
+  )"
 
-ok "`[ -f $OWNER/foo/bar/Bar2 ]`" \
-  "git subrepo pull works"
+  # Check output is correct:
+  is "$pull_output" \
+    "git subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)" \
+    'subrepo pull command output is correct'
+}
 
-done_testing 1
+# Test subrepo file content:
+gitrepo=$OWNER/foo/bar/.gitrepo
+{
+  test-exists \
+    "$OWNER/foo/bar/Bar2" \
+    "$gitrepo"
+}
+
+# Test foo/bar/.gitrepo file contents:
+{
+  foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^2)"
+  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  test-gitrepo-comment-block
+  test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
+  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "former" "$foo_pull_commit"
+  test-gitrepo-field "cmdver" "`git subrepo --version`"
+}
+
+done_testing 9
+
+# (cd $OWNER/foo;bash);exit
 
 source test/teardown

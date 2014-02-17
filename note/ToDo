@@ -1,3 +1,7 @@
+- Implement verbose output
+
+- Save and reset rev state for push/extract
+
 - Save former pushed commit
   - This can be saved in .git/info/subrepo/pushed
 

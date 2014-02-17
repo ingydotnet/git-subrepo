@@ -6,18 +6,9 @@ source test/setup
 
 use Test::More
 
-# TODO:
-# * Make each commit be from a certain datetime to easily # see/test it.
+clone-foo-and-bar
 
-(
-  # foo will act as the main repo
-  git clone $UPSTREAM/foo $OWNER/foo
-
-  # bar will act as the subrepo
-  git clone $UPSTREAM/bar $OWNER/bar
-
-) &> /dev/null || die
-
+# Make various changes to the repos for testing subrepo push:
 (
   # In the main repo:
   cd $OWNER/foo
@@ -53,9 +44,7 @@ use Test::More
   git add ./FooBar bar/FooBar
   git commit -m 'change 3'
 
-) &> /dev/null || die
-
-(
+  cd -
   cd $OWNER/bar
   touch bargy
   git add bargy
@@ -63,39 +52,40 @@ use Test::More
   git push
 ) &> /dev/null || die
 
-# Do the subrepo push and save the output:
-message="$(
-  cd $OWNER/foo
+save-original-state "$OWNER/foo" "bar"
 
-  # This command should tease out the commits made to bar, and push them back
-  # to UPSTREAM/bar
-  git subrepo push bar
-)"
+# Do the subrepo push and test the output:
+{
+  message="$(
+    cd $OWNER/foo
 
-# Test the output:
-is "$message" \
-  "git subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)" \
-  "push message is correct"
+    # This command should tease out the commits made to bar, and push them
+    # back to UPSTREAM/bar
+    git subrepo push bar || true
+  )"
 
-# Pull the changes from UPSTREAM/bar
+  # Test the output:
+  is "$message" \
+    "git subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)" \
+    'push message is correct'
+}
+
+# Pull the changes from UPSTREAM/bar in OWNER/bar
 (
   cd $OWNER/bar
   git fetch
   git rebase -p
 ) &> /dev/null || die
 
-# Test the state of the bar repo:
-# - Check for right files
-# - Check for right file content
-# - Check log messages
-# - Check commit/tree/blob ids
+test-exists \
+  "$OWNER/bar/Bar" \
+  "$OWNER/bar/FooBar" \
+  "$OWNER/bar/bard/" \
+  "$OWNER/bar/bargy" \
+  "!$OWNER/bar/.gitrepo" \
 
-ok "`[ -f $OWNER/bar/FooBar ]`" \
-  "subrepo push file made it upstream"
+assert-original-state "$OWNER/foo" "bar"
 
-ok "`[ ! -f $OWNER/bar/.gitrepo ]`" \
-  ".gitrepo file was not pushed"
-
-done_testing 3
+done_testing 10
 
 source test/teardown
