@@ -1,5 +1,0 @@
-[subrepo]
-	url = git@github.com:ingydotnet/test-tap-bash
-	branch = master
-	commit = ae171e0f465939acb6aefd006a58cbf91b1e5c33
-	prev = 1fec797c249ad1128322fa2b19b91603b8869d64
