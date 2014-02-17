@@ -22,6 +22,8 @@ git subrepo push <subdir>
 git subrepo status [<subdir>]
 git subrepo extract <subdir>
 git subrepo remove <subdir>
+
+git subrepo version
 .
 .fi
 .
@@ -126,7 +128,7 @@ export GIT_EXEC_PATH="/path/to/git\-subrepo/lib:$(git \-\-exec\-path)"
 .SH "Commands"
 .
 .IP "\(bu" 4
-\fBgit subrepo clone <repository> [<subdir>] [\-b <branch>]\fR
+\fBgit subrepo clone <repository> [<subdir>] [\-b <upstream\-branch>]\fR
 .
 .IP "" 0
 .
@@ -134,7 +136,7 @@ export GIT_EXEC_PATH="/path/to/git\-subrepo/lib:$(git \-\-exec\-path)"
 This command adds a repository as a subrepo in a subdir of your repository\. It is similar in feel to \fBgit clone\fR\. You just specify the remote repo url, and optionally a sub\-directory and/or branch name\. The repo will be fetched and merged into the subdir\. The subrepo history is not added to your repo history, but a commit is added that contains the reference information\. This information is also stored in a special file called \fB<subdir>/\.gitrepo\fR\. The presence of this file indicates that the directory is a subrepo\.
 .
 .IP "\(bu" 4
-\fBgit subrepo pull <subdir> [\-b <branch>]\fR
+\fBgit subrepo pull <subdir> [\-b <upstream\-branch>]\fR
 .
 .IP "" 0
 .
@@ -142,12 +144,20 @@ This command adds a repository as a subrepo in a subdir of your repository\. It 
 Update the subdir with the latest remote changes\. The subdir must be a subrepo (must contain a \.gitrepo file)\. You can change the upstream branch to use with the \'\-b\' flag\.
 .
 .IP "\(bu" 4
-\fBgit subrepo push <subdir> [<branchname>]\fR
+\fBgit subrepo push <subdir> [<extract\-branch>] [\-b <upstream\-branch>]\fR
 .
 .IP "" 0
 .
 .P
-Extract out the commits made to the subdir, merge them with upstream, and push them back upstream\. If you specify a \'branchname\', it means that you already ran a \'git subrepo extract\' (which created a branch) and you want to push it upstream\. See the \'extract\' command below\.
+Extract out the commits made to the subdir, merge them with upstream, and push them back upstream\. If you specify an \'extract\-branch\', it means that you already ran a \'git subrepo extract\' (which created a branch) and you want to push it upstream\. See the \'extract\' command below\. Use the \'\-b\' flag to push to a remote branch that is different than the one the subrepo is tracking\.
+.
+.IP "\(bu" 4
+\fBgit subrepo extract <subdir> [<extract\-branch>]\fR
+.
+.IP "" 0
+.
+.P
+This command will extract a subrepo into a branch (default branch name is \'subrepo\')\. This is useful when a \'git subrepo push\' fails to merge properly\. You can merge things by hand, then run a \'git subrep push\' command with the same branch name\.
 .
 .IP "\(bu" 4
 \fBgit subrepo status [<subdir>]\fR
@@ -158,20 +168,20 @@ Extract out the commits made to the subdir, merge them with upstream, and push t
 Get the status of a subrepo\. If no subdir is provided, get the status of all subrepos\.
 .
 .IP "\(bu" 4
-\fBgit subrepo extract <subdir> [<branchname>]\fR
-.
-.IP "" 0
-.
-.P
-This command will extract a subrepo into a branch (default branch name is \'subrepo\')\. This is useful when a \'git subrepo push\' fails to merge properly\. You can merge things by hand, then run a \'git subrep push\' command with the same branchname\.
-.
-.IP "\(bu" 4
 \fBgit subrepo remove <subdir>\fR
 .
 .IP "" 0
 .
 .P
 This command will remove your subrepo and all of its history, as though it never existed\. Please note that this will rewrite your entire history\. If that would cause you problems, then maybe you just want \'git rm\' the subrepo instead\.
+.
+.IP "\(bu" 4
+\fBgit subrepo version\fR
+.
+.IP "" 0
+.
+.P
+This command will display version information about git\-subrepo and its environment\.
 .
 .SH "Status"
 This software is very new\. It has a test suite (run \fBmake test\fR), but surely has many bugs\. If you have expertise in this area, please review the code, and file issues on anything that seems wrong\.
