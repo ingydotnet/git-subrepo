@@ -116,21 +116,27 @@ environment.
 
 ## Status
 
-This software is very new. It has a test suite (run `make test`), but surely
-has many bugs. If you have expertise in this area, please review the code, and
-file issues on anything that seems wrong.
+The git-subrepo command is at version 0.1.0. I consider it ready to use in
+anger for my personal projects, but will wait a bit before promoting it widely.
+Use your best judgement.
+
+It has a test suite (run `make test`), but surely has many bugs. If you have
+expertise in this area, please review the code, and file issues on anything
+that seems wrong.
+
+I am 'ingy' on irc.freenode.net. Find me if you want to chat about subrepo.
 
 ## Notes
 
-This command currently only works on POSIX systems.
-
-The `git-subrepo` repo itself has two subrepos. They are under the `./ext/`
-subdir.
+* This command currently only works on POSIX systems.
+* The `git-subrepo` repo itself has 2 subrepos under the `ext/` subdirectory.
 
 ## Author
 
 Written by Ingy döt Net <ingy@ingy.net>
 
-## Copyright
+## License and Copyright
 
-Copyright 2013, 2014 Ingy döt Net
+The MIT License (MIT)
+
+Copyright (c) 2013-2014 Ingy döt Net
