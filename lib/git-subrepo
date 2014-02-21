@@ -21,10 +21,8 @@ Commands:
   clone     Clone a remote repository into a local directory (subrepo)
   push      Push local subrepo changes upstream
   pull      Pull (merge) upstream changes to the subrepo
-
-  status    Get status of a subrepo (or all of them)
   extract   Create a local branch containing just the subrepo (for manual push)
-  remove    Remove a subrepo and its commits from your repository history
+  status    Get status of a subrepo (or all of them)
 
   help      Read the (full) git-subrepo documentation
   version   Display git-subrepo version info
@@ -246,10 +244,6 @@ command:status() {
   for s in $*; do
     subrepo-status "${s%.gitrepo}"
   done
-}
-
-command:remove() {
-  say "XXX: The 'remove' command is not yet implemented"
 }
 
 # Extract the subrepo changes since last push:

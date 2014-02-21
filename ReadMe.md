@@ -10,10 +10,8 @@ git-subrepo(1) - Git Submodule Alternative
     git subrepo clone <repo-url> [<subdir>]
     git subrepo pull <subdir>
     git subrepo push <subdir>
-
-    git subrepo status [<subdir>]
     git subrepo extract <subdir>
-    git subrepo remove <subdir>
+    git subrepo status [<subdir>]
 
     git subrepo version
 
@@ -102,12 +100,10 @@ same branch name.
 Get the status of a subrepo. If no subdir is provided, get the status of all
 subrepos.
 
-* `git subrepo remove <subdir>`
+* `git subrepo help`
 
-This command will remove your subrepo and all of its history, as though it
-never existed. Please note that this will rewrite your entire history. If that
-would cause you problems, then maybe you just want 'git rm' the subrepo
-instead.
+Same as `git help subrepo`. Will launch the manpage. For the shorter usage, use
+`git subrepo -h`.
 
 * `git subrepo version`
 

@@ -1,29 +1,37 @@
-- Implement verbose output
-
-- Save and reset rev state for push/extract
-
-- Save former pushed commit
-  - This can be saved in .git/info/subrepo/pushed
-
-- Add new subcommands:
-  - extract
-  - status
-  - remove
-
-- Add more meta info to .gitrepo file:
-  - cloned - original upstream commit
+- Find default upstream branch (instead of master)
 
 - Review doc/readme
 
-- Switch this repo from submodule to subrepo:
-  - for test-more-bash & bashplus
-  - Need to switch those first
-  - Redo here
+- Allow commands from any subdir.
+
+- Implement verbose output
+
+- Add new subcommands:
+  + extract
+  - status
+    - See what submodule and subtree do.
 
 - Write more tests:
   - Multiple push sessions
-
-- Test all error conditions:
-  - test/error.t
+  - Test all error conditions:
+    - test/error.t
 
 - Remove grafts?
+
+----
+
++ Switch this repo from submodule to subrepo:
+  + for test-more-bash & bashplus
+  + Need to switch those first
+  + Redo here
+
++ Save and reset rev state for push/extract
+
+x Save former pushed commit
+  x This can be saved in .git/info/subrepo/pushed
+
+x Add more meta info to .gitrepo file:
+  x cloned - original upstream commit
+
++ Remove the 'remove' command.
+
