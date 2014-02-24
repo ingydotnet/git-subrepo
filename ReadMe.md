@@ -17,9 +17,9 @@ git-subrepo(1) - Git Submodule Alternative
 
 ## Description
 
-This git command clones an external git repo and merges it into a subdirectory
-of your repo. Later on, upstream changes can be pulled in, and local changes
-can be pushed back. Simple.
+This git command "clones" an external git repo and merges it into a
+subdirectory of your repo. Later on, upstream changes can be pulled in, and
+local changes can be pushed back. Simple.
 
 ## Benefits
 
@@ -37,18 +37,19 @@ The `git-subrepo` command benefits these roles in the following ways:
 
 * Extremely simple and intuitive commandline usage.
 * Users get your repo and all your subrepos just by cloning your repo.
-* Collaborators know when a subdir is a subrepo (it has a .gitrepo file).
+* Users don't need to install git-subrepo, ever.
+* Collaborators don't need to install unless they want to push/pull.
+* Collaborators know when a subdir is a subrepo (it has a `.gitrepo` file).
+* A project with subrepos also has branches like `subrepo/remote/foo`.
+* And it also has remotes for each subrepo, like `subrepo/foo`.
 * Owners do not deal with the complications of keeping submodules in sync.
 * Subrepos can contain other subrepos.
 * Branching with subrepos just works.
 * Moving/renaming a subrepo subdir just works.
 * Your git history is kept squeaky clean.
+* Upstream history is condensed into single commits.
 * Every clone and pull is just one commit (plus a merge).
-* Upstream history is condensed into one commit.
 * A subrepo (and all related history) can be removed in one command.
-
-Note that users never need to install `git-subrepo`, and even collaborators
-only need it when they want to push/pull.
 
 ## Installation
 
@@ -61,7 +62,10 @@ Then run:
     make test
     make install        # Possibly with 'sudo'
 
-To use this without installing:
+This will install the `git-subrepo` command next to your other Git subcommands.
+It will also install the manpage (for `git help subrepo`).
+
+To use git-subrepo WITHOUT installing:
 
     export GIT_EXEC_PATH="/path/to/git-subrepo/lib:$(git --exec-path)"
 
@@ -75,29 +79,37 @@ optionally a sub-directory and/or branch name. The repo will be fetched and
 merged into the subdir. The subrepo history is not added to your repo history,
 but a commit is added that contains the reference information.  This
 information is also stored in a special file called `<subdir>/.gitrepo`.  The
-presence of this file indicates that the directory is a subrepo.
+presence of this file indicates that the directory is a subrepo. The `clone`
+command also adds a new remote called `subrepo/<subdir>` and a remote branch
+called `subrepo/remote/<subdir>`.
 
-* `git subrepo pull <subdir> [-b <upstream-branch>]`
+* `git subrepo pull <subdir> [--<merge-strategy>] [-b <upstream-branch>]`
 
 Update the subdir with the latest remote changes. The subdir must be a subrepo
 (must contain a .gitrepo file). You can change the upstream branch to use with
-the '-b' flag.
+the '-b' flag. If you specify a merge-strategy like `--rebase` or `--ours`, the
+command will attempt to fetch, merge and integrate all in one step. If you want
+to merge yourself, run a `git subrepo checkout` first, merge yourself, then run
+`git subrepo pull <subdir>` (with no merge flag), and your branch will be
+integrated (pulled) into the mainline repo.
 
 * `git subrepo push <subdir> [--<merge-strategy>]`
 
-Extract out the commits made to a branch called subrepo/<subdir>, merge them
-with upstream, and push them back upstream. If you don't specify a
-merge-strategy, it means that you already ran a 'git subrepo checkout' (which
-created a branch) and you want to push it upstream. See the 'checkout' command
-below. Use the '-b' flag to push to a remote branch that is different than the
-one the subrepo is tracking.
+Extract out the recent subrepo commits into to a branch called
+subrepo/<subdir>, merge them with upstream, and push them back upstream. Use
+the '-b' flag to push to a remote branch that is different than the one the
+subrepo is tracking. If you specify a merge-strategy like `--rebase` or
+`--ours`, the command will attempt to fetch, merge and push back all in one
+step. If you want to merge yourself, run a `git subrepo checkout` first, merge
+yourself, then run `git subrepo pull <subdir>` (with no merge flag), and your
+branch will be integrated (pulled) into the mainline repo.
 
 * `git subrepo checkout <subdir>`
 
 This command create a local branch called subrepo/<subrepo>, that contains all
 the subdir commit since the last pull. This is useful when a subrepo push or
 pull has failed.  You can merge things by hand, then run a 'git subrepo push'
-command with the same branch name.
+(or pull) command with the same branch name.
 
 * `git subrepo status [<subdir>]`
 
@@ -130,6 +142,7 @@ I am 'ingy' on irc.freenode.net. Find me if you want to chat about subrepo.
 
 * This command currently only works on POSIX systems.
 * The `git-subrepo` repo itself has 2 subrepos under the `ext/` subdirectory.
+* Written in (very modern) Bash, with full test suite. Take a look.
 
 ## Author
 
