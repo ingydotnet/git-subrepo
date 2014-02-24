@@ -21,7 +21,7 @@ Commands:
   clone     Clone a remote repository into a local directory (subrepo)
   push      Push local subrepo changes upstream
   pull      Pull (merge) upstream changes to the subrepo
-  extract   Create a local branch containing just the subrepo (for manual push)
+  checkout  Create/checkout a local branch containing just the subrepo
   status    Get status of a subrepo (or all of them)
 
   help      Read the (full) git-subrepo documentation
@@ -55,7 +55,7 @@ main() {
 
   local subdir                # Subdirectory of the subrepo being used
   local gitrepo               # Path to .gitrepo file
-  local extract_branch        # Branch name to extract to (push from)
+  local checkout_branch       # Branch name to checkout to (push from)
 
   local original_head_commit  # HEAD commit id at start of command
   local original_branch       # HEAD ref at start of command
@@ -181,17 +181,17 @@ command:push() {
   command-setup
   fetch-subrepo
 
-  # Extract the subrepo to a branch:
-  extract_branch="${2:-subrepo}"
-  subrepo-extract
+  # Checkout the subrepo to a branch:
+  checkout_branch="${2:-subrepo}"
+  subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
-  git rebase $upstream_head $extract_branch \
+  git rebase $upstream_head $checkout_branch \
     &> /dev/null \
     || OK=1
 
   if OK; then
-    git push "$subrepo_remote" "+$extract_branch:$subrepo_branch" \
+    git push "$subrepo_remote" "+$checkout_branch:$subrepo_branch" \
       &> /dev/null \
       || OK=1
   fi
@@ -200,34 +200,38 @@ command:push() {
     say "git subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
   else
     say "The subrepo push command failed to rebase to upstream."
-    say "Try 'git subrepo extract', and then merge by hand."
+    say "Try 'git subrepo checkout', and then merge by hand."
     say "See doc for more info: 'git subrepo help'."
   fi
 
   # Checkout starting branch:
   git checkout $original_branch \
     &> /dev/null
-  # Delete the extract branch:
-  git branch -D $extract_branch \
+  # Delete the checkout branch:
+  git branch -D $checkout_branch \
     &> /dev/null
 }
 
-# `git subrepo extract …` command:
-command:extract() {
+# `git subrepo checkout …` command:
+command:checkout() {
   subdir="${1:?"subdir is required"}"
   command-setup
   fetch-subrepo
 
-  # Extract the subrepo to a branch:
-  extract_branch="${2:-subrepo}"
-  subrepo-extract
+  # Checkout the subrepo to a branch:
+  checkout_branch="${2:-subrepo}"
+  subrepo-checkout
 
-  say "Subrepo '$subdir' extracted to local branch '$extract_branch'."
+  say "Subrepo '$subdir' checked out to local branch '$checkout_branch'."
   say ""
-  say "You can checkout that branch and merge your upstream subrepo changes."
-  say "When you have finishing merging, run this command:"
+  say "Your remote tracking branch '...' is up to date."
   say ""
-  say "  git subrepo push $subdir $extract_branch"
+  say "You can now merge/rebsae your local changes with the upstream."
+  say ""
+  say "When you have finishing merging, pull or push the subrepo with:"
+  say ""
+  say "  git subrepo pull $subdir"
+  say "  git subrepo push $subdir"
   say ""
 }
 
@@ -246,10 +250,10 @@ command:status() {
   done
 }
 
-# Extract the subrepo changes since last push:
-subrepo-extract() {
-  # Delete old extract branch if exists:
-  git branch -d "$extract_branch" \
+# Checkout the subrepo changes since last push:
+subrepo-checkout() {
+  # Delete old checkout branch if exists:
+  git branch -d "$checkout_branch" \
     &> /dev/null \
     || true
 
@@ -268,8 +272,8 @@ subrepo-extract() {
   root=$(git rev-list --max-parents=0 HEAD)
   echo "$root $subrepo_commit_old" >> .git/info/grafts
 
-  # Create a branch for this extract:
-  git checkout -f -b $extract_branch \
+  # Create a branch for this checkout:
+  git checkout -f -b $checkout_branch \
     &> /dev/null
 
   # Reset to original state:

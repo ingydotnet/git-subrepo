@@ -7,7 +7,7 @@
 - Implement verbose output
 
 - Add new subcommands:
-  + extract
+  + checkout
   - status
     - See what submodule and subtree do.
 
@@ -25,7 +25,7 @@
   + Need to switch those first
   + Redo here
 
-+ Save and reset rev state for push/extract
++ Save and reset rev state for push/checkout
 
 x Save former pushed commit
   x This can be saved in .git/info/subrepo/pushed

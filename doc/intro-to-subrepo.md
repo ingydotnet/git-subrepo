@@ -304,8 +304,23 @@ subtree and subrepo. Let's say I run this command sequence using both methods:
     $ git subxxxx push tree2 <remote> <commit2>
 
 The syntax above is pseudo, but you get the idea. The resulting history using
-subtree is:
+subrepo is:
 
+    * 7aa5a63 (HEAD, master) Merge subrepo commit 'b1f60cc'
+    |\
+    | * b1f60cc subrepo pull: git@github.com:user/xyz (commit2) -> tree2/
+    * 353f38f Merge subrepo commit '4fb0276'
+    |\
+    | * 4fb0276 subrepo pull: git@github.com:user/xyz (commit2) -> tree1/
+    * 3f09025 Merge subrepo commit 'bcef2a0'
+    |\
+    | * bcef2a0 subrepo clone: git@github.com:user/xyz (commit1) -> tree2/
+    * 6ec38a0 Merge subrepo commit 'bebf0db'
+    |\
+    | * bebf0db subrepo clone: git@github.com:user/xyz (commit1) -> tree1/
+    * 64eeaa6 (origin/master, origin/HEAD) O HAI FREND
+
+Compare that to this history using subtree:
     * 739e45a (HEAD, master) Merge commit '5f563469d886d53e19cb908b3a64e4229f88a2d1'
     |\
     | * 5f56346 Squashed 'tree2/' changes from 08c7421..365409f
@@ -324,22 +339,6 @@ subtree is:
     | * cd2b30a Squashed 'tree1/' content from commit 08c7421
     * 64eeaa6 (origin/master, origin/HEAD) O HAI FREND
 
-Compare that to this history using subrepo
-
-    * 7aa5a63 (HEAD, master) Merge subrepo commit 'b1f60cc'
-    |\
-    | * b1f60cc subrepo pull: git@github.com:user/xyz (commit2) -> tree2/
-    * 353f38f Merge subrepo commit '4fb0276'
-    |\
-    | * 4fb0276 subrepo pull: git@github.com:user/xyz (commit2) -> tree1/
-    * 3f09025 Merge subrepo commit 'bcef2a0'
-    |\
-    | * bcef2a0 subrepo clone: git@github.com:user/xyz (commit1) -> tree2/
-    * 6ec38a0 Merge subrepo commit 'bebf0db'
-    |\
-    | * bebf0db subrepo clone: git@github.com:user/xyz (commit1) -> tree1/
-    * 64eeaa6 (origin/master, origin/HEAD) O HAI FREND
-
 This was from a minimal case. Subtree history (when viewed this way at least)
 gets unreasonably ugly fast. Subrepo history, by contrast, always looks as
 clean as shown. There is one clone/pull commit, and one merge per operation.
@@ -348,24 +347,24 @@ Both commits are needed because it the clone/pull commit is stored under the
 By adding the file to the *merge* commit, this becomes possible.
 
 The final command, push, is slightly more complicated. Effectively, it tries to
-extract the changes made to the subdirectory, rebase them with the upstream,
-and push the resulting history back. It does not squash the commits made
-locally, because it assumed that when you changed the local subrepo, you made
-messages that were intended to eventually be published back upstream.
+extract (checkout) the changes made to the subdirectory, rebase them with the
+upstream, and push the resulting history back. It does not squash the commits
+made locally, because it assumed that when you changed the local subrepo, you
+made messages that were intended to eventually be published back upstream.
 
 Here are the steps:
 
 * Fetch the remote content.
-* Filter out the local subdir changes into an "extract branch".
-* Remove the .gitrepo state file from the extract history.
-* Graft the extract history in the remote history.
+* Filter out the local subdir changes into an "local subrepo branch".
+* Remove the .gitrepo state file from the subrepo history.
+* Graft the local subrepo history in the remote history.
 * Rebase the local changes on top of the remote ones.
 * Push the new history upstream.
 * Reset local HEAD to the point before the command was run.
-* Delete the extract branch.
+* Delete the subrepo branch.
 
 Automatic pushing is a bit tricky because you need to account for merge
-failures. That's why there is also an 'extract' command that does everything
+failures. That's why there is also an 'checkout' command that does everything
 above except for the merge and push parts. I won't explain it here (read the
 doc), but basically it lets you do the merge part by hand.
 
