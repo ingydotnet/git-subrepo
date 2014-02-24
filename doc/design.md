@@ -21,6 +21,7 @@ This is the action that adds a new subrepo. It feels very much like a clone, so
 we call it that.
 
 Usages:
+
     # Add a subrepo into a subdir (track remote HEAD branch):
     git subrepo clone <remote> <subdir>
     # Guess subdir from remote url:
@@ -47,6 +48,7 @@ Fetch and merge the remote content. This could be a single operation, or may
 require a manual process: (see checkout)
 
 Usages:
+
     # Fetch and rebase subdir/subrepo:
     git subrepo pull --rebase subdir
     # Strategies: --rebase --ours --theirs --merge (recursive):
@@ -84,6 +86,7 @@ Push a merged subrepo history to the remote. This could be a single operation,
 or may require a manual process.
 
 Usages:
+
     # Fetch, apply strategy, push to remote:
     git subrepo push --<strategy> subdir
     # Do all subrepos:
@@ -117,6 +120,7 @@ finish up. There will be a remote called subrepo/<subdir> to push to yourself
 if you want.
 
 Usages:
+
     # Checkout a subdir/subrepo
     git checkout <subdir>
 
@@ -133,6 +137,7 @@ Steps:
 Give a full status of specific subrepos or all of them.
 
 Usages:
+
     # Get status for all subrepos:
     git subrepo status
     # Get status for specific subrepos:
