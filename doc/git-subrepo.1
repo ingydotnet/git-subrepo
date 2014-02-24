@@ -16,9 +16,9 @@
 git subrepo help
 
 git subrepo clone <repo\-url> [<subdir>]
-git subrepo pull \-\-<merge\-strategy> <subdir>
-git subrepo push \-\-<merge\-strategy> <subdir>
-git subrepo checkout \-\-<merge\-strategy> <subdir>
+git subrepo pull <subdir> [\-\-<merge\-strategy>]
+git subrepo push <subdir> [\-\-<merge\-strategy>]
+git subrepo checkout <subdir>
 git subrepo status [<subdir>]
 
 git subrepo version
@@ -83,6 +83,9 @@ A subrepo (and all related history) can be removed in one command\.
 .
 .IP "" 0
 .
+.P
+Note that users never need to install \fBgit\-subrepo\fR, and even collaborators only need it when they want to push/pull\.
+.
 .SH "Installation"
 Get the source code from GitHub:
 .
@@ -142,12 +145,12 @@ This command adds a repository as a subrepo in a subdir of your repository\. It 
 Update the subdir with the latest remote changes\. The subdir must be a subrepo (must contain a \.gitrepo file)\. You can change the upstream branch to use with the \'\-b\' flag\.
 .
 .IP "\(bu" 4
-\fBgit subrepo push <subdir> [\-\-<merge\-strategy>] [\-b <upstream\-branch>]\fR
+\fBgit subrepo push <subdir> [\-\-<merge\-strategy>]\fR
 .
 .IP "" 0
 .
 .P
-Extract out the commits made to the subdir, merge them with upstream, and push them back upstream\. If you specify an \'extract\-branch\', it means that you already ran a \'git subrepo extract\' (which created a branch) and you want to push it upstream\. See the \'extract\' command below\. Use the \'\-b\' flag to push to a remote branch that is different than the one the subrepo is tracking\.
+Extract out the commits made to a branch called subrepo/\fIsubdir\fR, merge them with upstream, and push them back upstream\. If you don\'t specify a merge\-strategy, it means that you already ran a \'git subrepo checkout\' (which created a branch) and you want to push it upstream\. See the \'checkout\' command below\. Use the \'\-b\' flag to push to a remote branch that is different than the one the subrepo is tracking\.
 .
 .IP "\(bu" 4
 \fBgit subrepo checkout <subdir>\fR
@@ -155,7 +158,7 @@ Extract out the commits made to the subdir, merge them with upstream, and push t
 .IP "" 0
 .
 .P
-This command will extract a subrepo into a branch (default branch name is \'subrepo\')\. This is useful when a \'git subrepo push\' fails to merge properly\. You can merge things by hand, then run a \'git subrep push\' command with the same branch name\.
+This command create a local branch called subrepo/\fIsubrepo\fR, that contains all the subdir commit since the last pull\. This is useful when a subrepo push or pull has failed\. You can merge things by hand, then run a \'git subrepo push\' command with the same branch name\.
 .
 .IP "\(bu" 4
 \fBgit subrepo status [<subdir>]\fR
