@@ -97,9 +97,8 @@ command:clone() {
   subrepo_remote="${1:?"subrepo remote url required"}"
   subdir="${2:-"`guess-subdir $subrepo_remote`"}"
   subrepo_branch=${subrepo_branch:-master}
-  assert-subdir-empty
+
   command-setup
-  fetch-subrepo
 
   # Read the subrepo into the index (under subdir):
   git read-tree --prefix="$subdir" $upstream_head
@@ -139,8 +138,8 @@ command:clone() {
 # `git subrepo pull …` command:
 command:pull() {
   subdir="${1:?"subdir is required"}"
+
   command-setup
-  fetch-subrepo
 
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit_old" ]; then
@@ -179,10 +178,8 @@ command:pull() {
 command:push() {
   subdir="${1:?"subdir is required"}"
   command-setup
-  fetch-subrepo
 
   # Checkout the subrepo to a branch:
-  checkout_branch="${2:-subrepo}"
   subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
@@ -216,10 +213,8 @@ command:push() {
 command:checkout() {
   subdir="${1:?"subdir is required"}"
   command-setup
-  fetch-subrepo
 
   # Checkout the subrepo to a branch:
-  checkout_branch="${2:-subrepo}"
   subrepo-checkout
 
   say "Subrepo '$subdir' checked out to local branch '$checkout_branch'."
@@ -333,14 +328,21 @@ command-setup() {
     die "subdir not set"
   [[ "$subdir" =~ ^/ ]] &&
     error "subdir '$dir' should not be absolute path"
+  checkout_branch="subrepo/$subdir"
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
   gitrepo="$subdir/.gitrepo"
-  if [ "$command" != "clone" ]; then
+  if [ "$command" == "clone" ]; then
+    assert-subdir-empty
+    fetch-subrepo
+    git remote add "subrepo/$subdir" "$subrepo_remote"
+    git branch "subrepo/remote/$subdir" "$upstream_head"
+  else
     if [ ! -f "$gitrepo" ]; then
       error "'$subdir' is not a subrepo"
     fi
     read-gitrepo-file
+    fetch-subrepo
   fi
 
   # Get the original branch and commit:
