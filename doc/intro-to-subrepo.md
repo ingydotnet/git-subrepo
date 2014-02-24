@@ -321,6 +321,7 @@ subrepo is:
     * 64eeaa6 (origin/master, origin/HEAD) O HAI FREND
 
 Compare that to this history using subtree:
+
     * 739e45a (HEAD, master) Merge commit '5f563469d886d53e19cb908b3a64e4229f88a2d1'
     |\
     | * 5f56346 Squashed 'tree2/' changes from 08c7421..365409f
