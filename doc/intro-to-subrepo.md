@@ -295,6 +295,8 @@ The pull command does these steps:
 * Put the pull commit id into the merge commit
 * Update/amend the .gitrepo file
 
+### Clean History
+
 I've talked a bit about clean history but let me show you a comparison between
 subtree and subrepo. Let's say I run this command sequence using both methods:
 
