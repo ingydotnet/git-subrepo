@@ -29,9 +29,9 @@ While the main point is to show how subrepo addresses the shortcomings of
 submodule and subtree, I'll start by giving a quick intro to the subrepo
 command.
 
-Let's say that you have a project repo on called 'freebird' and you want to
-have it include 2 other external repos, 'lynyrd' and 'skynyrd'. You would do
-the following:
+Let's say that you have a project repo called 'freebird' and you want to have
+it include 2 other external repos, 'lynyrd' and 'skynyrd'. You would do the
+following:
 
     git clone git@github.com/you/freebird
     cd freebird
@@ -46,7 +46,7 @@ subrepos is easy. If you need to update the subrepos later:
     git subrepo pull ext/lynyrd
     git subrepo pull ext/skynyrd --branch=1976
 
-The lynyrd repo is tracking the upstream master branch, and you've moved the
+The lynyrd repo is tracking the upstream master branch, and you've changed the
 skynyrd subrepo to the 1976 branch. Since these subrepos are owned by 'you',
 you might want to change them in the context of your freebird repo. When things
 are working, you can push the subrepo changes back:
