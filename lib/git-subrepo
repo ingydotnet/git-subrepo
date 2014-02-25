@@ -133,6 +133,8 @@ command:clone() {
 
   # Successful command output:
   say "git subrepo '$subdir' cloned from '$subrepo_remote' ($subrepo_branch)"
+
+  update-remotes-branches
 }
 
 # `git subrepo pull …` command:
@@ -172,6 +174,8 @@ command:pull() {
 
   # Successful command output:
   say "git subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
+
+  update-remotes-branches
 }
 
 # `git subrepo push …` command:
@@ -207,6 +211,8 @@ command:push() {
   # Delete the checkout branch:
   git branch -D $checkout_branch \
     &> /dev/null
+
+  update-remotes-branches
 }
 
 # `git subrepo checkout …` command:
@@ -293,9 +299,11 @@ Git subrepo '$subdir':
   remote name:     subrepo/$subdir
   remote url:      $subrepo_remote
   remote branch:   subrepo/remote/$subdir
-  tracking branch: $subrepo_branch 
+  tracking branch: $subrepo_branch
 
 ...
+
+  update-remotes-branches
 }
 
 #------------------------------------------------------------------------------
@@ -348,8 +356,6 @@ command-setup() {
   if [ "$command" == "clone" ]; then
     assert-subdir-empty
     fetch-subrepo
-    git remote add "subrepo/$subdir" "$subrepo_remote"
-    git branch "subrepo/remote/$subdir" "$upstream_head"
   else
     read-gitrepo-file
     fetch-subrepo
@@ -425,6 +431,13 @@ update-gitrepo-file() {
     --quiet \
     --amend \
     --message="Merge subrepo commit '$short_commit'"
+}
+
+# TODO Make this smarter:
+update-remotes-branches() {
+  git remote rm "subrepo/$subdir" &> /dev/null || true
+  git remote add "subrepo/$subdir" "$subrepo_remote"
+  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit_old}"
 }
 
 # Commit msg for an action commit:
