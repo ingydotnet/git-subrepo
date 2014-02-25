@@ -88,36 +88,25 @@ or may require a manual process.
 Usages:
 
     # Fetch, apply strategy, push to remote:
-    git subrepo push --<strategy> subdir
+    git subrepo push <subdir>
     # Do all subrepos:
-    git subrepo push --<strategy> --all
-    # Push from a hand merged branch
-    git subrepo push subdir
+    git subrepo push --all
 
 Steps:
 * Assert clean, and chdir to root (adjusting subdir)
 * Update remotes and the refs in .git/
 * Fetch the remote branch content
-* If not hand merged
-  * Create a branch of local subrepo changes subrepo/local/<subdir>
-  * Checkout the new branch
-  * Apply the merge strategy to the remote branch
-  * If not clean
-    * Error message
-  * Reset to starting state
+* Make sure we have pulled the latest remote changes
 * Checkout subrepo/<subdir> branch
+* Rebase the local change s on top
 * Push it to subrepo/<subdir> remote
-* Update the .gitrepo file
-* Amend .gitrepo into HEAD
-* Delete the subrepo/subdir branch
 
 ## checkout
 
 Create a branch of the local changes to the subrepo and checkout it. Also fetch
 the remote tracking branch, so it can can be used for merges. This command is
-used to do things by hand. You can merge and then use a pull or push command to
-finish up. There will be a remote called subrepo/<subdir> to push to yourself
-if you want.
+used to do a pull/merge by hand. After you merge, use the `pull` command to
+finish up.
 
 Usages:
 

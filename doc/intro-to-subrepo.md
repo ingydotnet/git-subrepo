@@ -366,11 +366,6 @@ Here are the steps:
 * Reset local HEAD to the point before the command was run.
 * Delete the subrepo branch.
 
-Automatic pushing is a bit tricky because you need to account for merge
-failures. That's why there is also an 'checkout' command that does everything
-above except for the merge and push parts. I won't explain it here (read the
-doc), but basically it lets you do the merge part by hand.
-
 ## Side-by-Side Comparison
 
 Hopefully by now, you see that submodules are a painful choice with a dubious
