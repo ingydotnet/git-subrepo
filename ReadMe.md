@@ -8,8 +8,8 @@ git-subrepo(1) - Git Submodule Alternative
     git subrepo help
 
     git subrepo clone <repo-url> [<subdir>]
-    git subrepo pull <subdir> [--<merge-strategy>]
-    git subrepo push <subdir> [--<merge-strategy>]
+    git subrepo pull <subdir> --rebase
+    git subrepo push <subdir>
     git subrepo checkout <subdir>
     git subrepo status [<subdir>]
 
@@ -35,7 +35,7 @@ and attempts to serve them all well:
 
 The `git-subrepo` command benefits these roles in the following ways:
 
-* Extremely simple and intuitive commandline usage.
+* Simple and intuitive commandline usage.
 * Users get your repo and all your subrepos just by cloning your repo.
 * Users don't need to install git-subrepo, ever.
 * Collaborators don't need to install unless they want to push/pull.
@@ -49,7 +49,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Your git history is kept squeaky clean.
 * Upstream history is condensed into single commits.
 * Every clone and pull is just one commit (plus a merge).
-* A subrepo (and all related history) can be removed in one command.
+* Commits pushed back upstream are NOT condensed.
 
 ## Installation
 
@@ -93,28 +93,27 @@ to merge yourself, run a `git subrepo checkout` first, merge yourself, then run
 `git subrepo pull <subdir>` (with no merge flag), and your branch will be
 integrated (pulled) into the mainline repo.
 
-* `git subrepo push <subdir> [--<merge-strategy>]`
+* `git subrepo push <subdir> [-b <upstream-branch>]`
 
-Extract out the recent subrepo commits into to a branch called
-subrepo/<subdir>, merge them with upstream, and push them back upstream. Use
-the '-b' flag to push to a remote branch that is different than the one the
-subrepo is tracking. If you specify a merge-strategy like `--rebase` or
-`--ours`, the command will attempt to fetch, merge and push back all in one
-step. If you want to merge yourself, run a `git subrepo checkout` first, merge
-yourself, then run `git subrepo pull <subdir>` (with no merge flag), and your
-branch will be integrated (pulled) into the mainline repo.
+This command will make sure that you have already pulled (merged) the upstream
+head. Then it will create a branch of the local history involving the subrepo,
+and push that back to the remote. Use the '-b' flag to push to a remote branch
+that is different than the one the subrepo is tracking.
 
-* `git subrepo checkout <subdir>`
+* `git subrepo checkout <subdir> [--<merge-strategy>]`
 
-This command create a local branch called subrepo/<subrepo>, that contains all
-the subdir commit since the last pull. This is useful when a subrepo push or
-pull has failed.  You can merge things by hand, then run a 'git subrepo push'
-(or pull) command with the same branch name.
+This command creates a local branch called subrepo/<subrepo>, that contains all
+the subdir commits since the last pull. This is useful when a subrepo pull has
+failed. You can merge things by hand, then run a 'git subrepo push' command.
+If you specify a merge-strategy, then it will be applied against the remote
+head, in this new branch. Finally, the `checkout` command will actually
+checkout the new branch.
 
-* `git subrepo status [<subdir>]`
+* `git subrepo status [<subdir>] [-v|--verbose]`
 
 Get the status of a subrepo. If no subdir is provided, get the status of all
-subrepos.
+subrepos. If the `--verbose` flag is used, the remote repository will be
+queried to provide more information.
 
 * `git subrepo help`
 
@@ -125,6 +124,18 @@ Same as `git help subrepo`. Will launch the manpage. For the shorter usage, use
 
 This command will display version information about git-subrepo and its
 environment.
+
+## Merge Strategy Flags
+
+When you `pull` from a subrepo, your local changes need to be merged in. The
+following flags can be used to specify which merge strategy to use:
+
+* `--rebase`
+* `--merge`
+* `--ours`
+* `--theirs`
+
+These flags also can be used with the `checkout` command.
 
 ## Status
 

@@ -56,9 +56,10 @@ main() {
   local subdir                # Subdirectory of the subrepo being used
   local gitrepo               # Path to .gitrepo file
   local checkout_branch       # Branch name to checkout to (push from)
+  local current_branch        # Branch we were on at start of the command
 
   local original_head_commit  # HEAD commit id at start of command
-  local original_branch       # HEAD ref at start of command
+  local original_head_branch  # HEAD ref at start of command
   local upstream_head         # HEAD commit id from a subrepo fetch
   local update_commit         # Commit made for clone or pull
 
@@ -66,6 +67,8 @@ main() {
   local subrepo_branch        # Upstream branch to clone/push/pull
   local subrepo_commit_old    # Upstream HEAD from previous clone/pull
   local subrepo_former        # Local commit from previous clone/pull
+
+  local git_version           # Git version in use
 
   # Check environment and parse CLI options:
   assert-environment-ok
@@ -98,7 +101,6 @@ command:clone() {
   subdir="${2:-"`guess-subdir $subrepo_remote`"}"
   # TODO Need to retrieve upstream HEAD (not assume master)
   subrepo_branch=${subrepo_branch:-master}
-
   command-setup
 
   # Read the subrepo into the index (under subdir):
@@ -141,7 +143,6 @@ command:clone() {
 # `git subrepo pull …` command:
 command:pull() {
   subdir="${1:?"subdir is required"}"
-
   command-setup
 
   # Check if we already are up to date:
@@ -207,7 +208,7 @@ command:push() {
   fi
 
   # Checkout starting branch:
-  git checkout $original_branch \
+  git checkout $original_head_branch \
     &> /dev/null
   # Delete the checkout branch:
   git branch -D $checkout_branch \
@@ -224,17 +225,24 @@ command:checkout() {
   # Checkout the subrepo to a branch:
   subrepo-checkout
 
-  say "Subrepo '$subdir' checked out to local branch '$checkout_branch'."
-  say ""
-  say "Your remote tracking branch '...' is up to date."
-  say ""
-  say "You can now merge/rebsae your local changes with the upstream."
-  say ""
-  say "When you have finishing merging, pull or push the subrepo with:"
-  say ""
-  say "  git subrepo pull $subdir"
-  say "  git subrepo push $subdir"
-  say ""
+  echo ">>$upstream_head<<"
+
+  # Checkout the checkout branch:
+  git checkout $checkout_branch \
+    &> /dev/null
+
+  cat <<...
+Subrepo '$subdir' checked out to local branch '$checkout_branch'.
+Your remote tracking branch 'subrepo/remote/$subdir' is up to date.
+
+You can now merge/rebase your local changes with the upstream.
+When you have finishing merging, pull the subrepo in the main repo with:
+
+  git subrepo pull $subdir
+
+...
+
+  update-remotes-branches
 }
 
 # `git subrepo status …` command:
@@ -255,13 +263,26 @@ command:status() {
   done
 }
 
+# Print version info.
+command:version() {
+  cat <<...
+git-subrepo Version: $VERSION
+Copyright 2013, 2014 Ingy döt Net
+https://github.com/ingydotnet/git-subrepo
+$BASH_SOURCE
+Git Version: $git_version
+
+...
+  :
+}
+
+#------------------------------------------------------------------------------
+# Subrepo command guts functions:
+#------------------------------------------------------------------------------
+
 # Checkout the subrepo changes since last push:
 subrepo-checkout() {
-  # Delete old checkout branch if exists:
-  git branch -d "$checkout_branch" \
-    &> /dev/null \
-    || true
-
+  # TODO Actually only filter commits since last push.
   # Make history of subdir changes:
   git filter-branch -f \
     --subdirectory-filter "$subdir" \
@@ -273,23 +294,20 @@ subrepo-checkout() {
     --tree-filter "rm -f .gitrepo" \
     &> /dev/null
 
+  # Create a branch for this checkout:
+  git branch -f "$checkout_branch"
+
+  # TODO Figure out if we really need this:
   # Graft the history to the upstream (for rebase's sake):
-  root=$(git rev-list --max-parents=0 HEAD)
+  local root=$(git rev-list --max-parents=0 HEAD)
   echo "$root $subrepo_commit_old" >> .git/info/grafts
 
-  # Create a branch for this checkout:
-  git checkout -f -b $checkout_branch \
-    &> /dev/null
-
-  # Reset to original state:
-  echo "$original_head_commit" > ".git/refs/heads/$original_branch"
-  git checkout $original_branch \
+  git reset --hard "$original_head_commit" \
     &> /dev/null
 }
 
 subrepo-status() {
   local subdir="${1#./}"
-  local subdir_path="$subdir"
   subdir="${subdir%/}"
   read-gitrepo-file
 
@@ -350,6 +368,8 @@ command-setup() {
     die "subdir not set"
   [[ "$subdir" =~ ^/ ]] &&
     error "subdir '$dir' should not be absolute path"
+  subdir="${subdir%/}"
+
   checkout_branch="subrepo/$subdir"
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
@@ -363,11 +383,14 @@ command-setup() {
   fi
 
   # Get the original branch and commit:
-  local original_head="$(cat .git/HEAD)"
-  [[ "$original_head" =~ ^ref:\ refs/heads/ ]] ||
-    error "you need to be on a branch"
-  original_branch="${original_head#ref: refs/heads/}"
-  original_head_commit=$(git rev-parse HEAD)
+  original_head_branch="$(git rev-parse --abbrev-ref HEAD)"
+  original_head_commit="$(git rev-parse HEAD)"
+
+  # Make sure we are on a branch:
+  [ "$original_head_branch" == HEAD -o -z "$original_head_branch" ] &&
+    error "must be on a branch to run this command."
+
+  true
 }
 
 fetch-subrepo() {
@@ -460,9 +483,9 @@ git-subrepo version: $VERSION
 assert-environment-ok() {
   type git &> /dev/null ||
     error "can't find your 'git' command in '$PATH'"
-  local version="$(git --version)"
-  if [[ "$version" < "git version 1.7" ]]; then
-    error "requires git version 1.7 or higher; you have '$version'"
+  git_version="$(git --version)"
+  if [[ "$git_version" < "git version 1.7" ]]; then
+    error "requires git version 1.7 or higher; you have '$git_version'"
   fi
 }
 

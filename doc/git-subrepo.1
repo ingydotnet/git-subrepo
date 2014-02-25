@@ -16,8 +16,8 @@
 git subrepo help
 
 git subrepo clone <repo\-url> [<subdir>]
-git subrepo pull <subdir> [\-\-<merge\-strategy>]
-git subrepo push <subdir> [\-\-<merge\-strategy>]
+git subrepo pull <subdir> \-\-rebase
+git subrepo push <subdir>
 git subrepo checkout <subdir>
 git subrepo status [<subdir>]
 
@@ -26,7 +26,7 @@ git subrepo version
 .fi
 .
 .SH "Description"
-This git command clones an external git repo and merges it into a subdirectory of your repo\. Later on, upstream changes can be pulled in, and local changes can be pushed back\. Simple\.
+This git command "clones" an external git repo and merges it into a subdirectory of your repo\. Later on, upstream changes can be pulled in, and local changes can be pushed back\. Simple\.
 .
 .SH "Benefits"
 This command is an improvement on \fBgit\-submodule\fR and \fBgit\-subtree\fR; two other git commands with similar goals, but various problems\.
@@ -49,13 +49,25 @@ collaborator \- People who commit code to the repo and subrepos\.
 The \fBgit\-subrepo\fR command benefits these roles in the following ways:
 .
 .IP "\(bu" 4
-Extremely simple and intuitive commandline usage\.
+Simple and intuitive commandline usage\.
 .
 .IP "\(bu" 4
 Users get your repo and all your subrepos just by cloning your repo\.
 .
 .IP "\(bu" 4
-Collaborators know when a subdir is a subrepo (it has a \.gitrepo file)\.
+Users don\'t need to install git\-subrepo, ever\.
+.
+.IP "\(bu" 4
+Collaborators don\'t need to install unless they want to push/pull\.
+.
+.IP "\(bu" 4
+Collaborators know when a subdir is a subrepo (it has a \fB\.gitrepo\fR file)\.
+.
+.IP "\(bu" 4
+A project with subrepos also has branches like \fBsubrepo/remote/foo\fR\.
+.
+.IP "\(bu" 4
+And it also has remotes for each subrepo, like \fBsubrepo/foo\fR\.
 .
 .IP "\(bu" 4
 Owners do not deal with the complications of keeping submodules in sync\.
@@ -73,18 +85,15 @@ Moving/renaming a subrepo subdir just works\.
 Your git history is kept squeaky clean\.
 .
 .IP "\(bu" 4
+Upstream history is condensed into single commits\.
+.
+.IP "\(bu" 4
 Every clone and pull is just one commit (plus a merge)\.
 .
 .IP "\(bu" 4
-Upstream history is condensed into one commit\.
-.
-.IP "\(bu" 4
-A subrepo (and all related history) can be removed in one command\.
+Commits pushed back upstream are NOT condensed\.
 .
 .IP "" 0
-.
-.P
-Note that users never need to install \fBgit\-subrepo\fR, and even collaborators only need it when they want to push/pull\.
 .
 .SH "Installation"
 Get the source code from GitHub:
@@ -114,7 +123,10 @@ make install        # Possibly with \'sudo\'
 .IP "" 0
 .
 .P
-To use this without installing:
+This will install the \fBgit\-subrepo\fR command next to your other Git subcommands\. It will also install the manpage (for \fBgit help subrepo\fR)\.
+.
+.P
+To use git\-subrepo WITHOUT installing:
 .
 .IP "" 4
 .
@@ -134,39 +146,39 @@ export GIT_EXEC_PATH="/path/to/git\-subrepo/lib:$(git \-\-exec\-path)"
 .IP "" 0
 .
 .P
-This command adds a repository as a subrepo in a subdir of your repository\. It is similar in feel to \fBgit clone\fR\. You just specify the remote repo url, and optionally a sub\-directory and/or branch name\. The repo will be fetched and merged into the subdir\. The subrepo history is not added to your repo history, but a commit is added that contains the reference information\. This information is also stored in a special file called \fB<subdir>/\.gitrepo\fR\. The presence of this file indicates that the directory is a subrepo\.
+This command adds a repository as a subrepo in a subdir of your repository\. It is similar in feel to \fBgit clone\fR\. You just specify the remote repo url, and optionally a sub\-directory and/or branch name\. The repo will be fetched and merged into the subdir\. The subrepo history is not added to your repo history, but a commit is added that contains the reference information\. This information is also stored in a special file called \fB<subdir>/\.gitrepo\fR\. The presence of this file indicates that the directory is a subrepo\. The \fBclone\fR command also adds a new remote called \fBsubrepo/<subdir>\fR and a remote branch called \fBsubrepo/remote/<subdir>\fR\.
 .
 .IP "\(bu" 4
-\fBgit subrepo pull <subdir> [\-b <upstream\-branch>]\fR
+\fBgit subrepo pull <subdir> [\-\-<merge\-strategy>] [\-b <upstream\-branch>]\fR
 .
 .IP "" 0
 .
 .P
-Update the subdir with the latest remote changes\. The subdir must be a subrepo (must contain a \.gitrepo file)\. You can change the upstream branch to use with the \'\-b\' flag\.
+Update the subdir with the latest remote changes\. The subdir must be a subrepo (must contain a \.gitrepo file)\. You can change the upstream branch to use with the \'\-b\' flag\. If you specify a merge\-strategy like \fB\-\-rebase\fR or \fB\-\-ours\fR, the command will attempt to fetch, merge and integrate all in one step\. If you want to merge yourself, run a \fBgit subrepo checkout\fR first, merge yourself, then run \fBgit subrepo pull <subdir>\fR (with no merge flag), and your branch will be integrated (pulled) into the mainline repo\.
 .
 .IP "\(bu" 4
-\fBgit subrepo push <subdir> [\-\-<merge\-strategy>]\fR
+\fBgit subrepo push <subdir> [\-b <upstream\-branch>]\fR
 .
 .IP "" 0
 .
 .P
-Extract out the commits made to a branch called subrepo/\fIsubdir\fR, merge them with upstream, and push them back upstream\. If you don\'t specify a merge\-strategy, it means that you already ran a \'git subrepo checkout\' (which created a branch) and you want to push it upstream\. See the \'checkout\' command below\. Use the \'\-b\' flag to push to a remote branch that is different than the one the subrepo is tracking\.
+This command will make sure that you have already pulled (merged) the upstream head\. Then it will create a branch of the local history involving the subrepo, and push that back to the remote\. Use the \'\-b\' flag to push to a remote branch that is different than the one the subrepo is tracking\.
 .
 .IP "\(bu" 4
-\fBgit subrepo checkout <subdir>\fR
+\fBgit subrepo checkout <subdir> [\-\-<merge\-strategy>]\fR
 .
 .IP "" 0
 .
 .P
-This command create a local branch called subrepo/\fIsubrepo\fR, that contains all the subdir commit since the last pull\. This is useful when a subrepo push or pull has failed\. You can merge things by hand, then run a \'git subrepo push\' command with the same branch name\.
+This command creates a local branch called subrepo/\fIsubrepo\fR, that contains all the subdir commits since the last pull\. This is useful when a subrepo pull has failed\. You can merge things by hand, then run a \'git subrepo push\' command\. If you specify a merge\-strategy, then it will be applied against the remote head, in this new branch\. Finally, the \fBcheckout\fR command will actually checkout the new branch\.
 .
 .IP "\(bu" 4
-\fBgit subrepo status [<subdir>]\fR
+\fBgit subrepo status [<subdir>] [\-v|\-\-verbose]\fR
 .
 .IP "" 0
 .
 .P
-Get the status of a subrepo\. If no subdir is provided, get the status of all subrepos\.
+Get the status of a subrepo\. If no subdir is provided, get the status of all subrepos\. If the \fB\-\-verbose\fR flag is used, the remote repository will be queried to provide more information\.
 .
 .IP "\(bu" 4
 \fBgit subrepo help\fR
@@ -184,6 +196,26 @@ Same as \fBgit help subrepo\fR\. Will launch the manpage\. For the shorter usage
 .P
 This command will display version information about git\-subrepo and its environment\.
 .
+.SH "Merge Strategy Flags"
+When you \fBpull\fR from a subrepo, your local changes need to be merged in\. The following flags can be used to specify which merge strategy to use:
+.
+.IP "\(bu" 4
+\fB\-\-rebase\fR
+.
+.IP "\(bu" 4
+\fB\-\-merge\fR
+.
+.IP "\(bu" 4
+\fB\-\-ours\fR
+.
+.IP "\(bu" 4
+\fB\-\-theirs\fR
+.
+.IP "" 0
+.
+.P
+These flags also can be used with the \fBcheckout\fR command\.
+.
 .SH "Status"
 The git\-subrepo command is at version 0\.1\.0\. I consider it ready to use in anger for my personal projects, but will wait a bit before promoting it widely\. Use your best judgement\.
 .
@@ -200,6 +232,9 @@ This command currently only works on POSIX systems\.
 .
 .IP "\(bu" 4
 The \fBgit\-subrepo\fR repo itself has 2 subrepos under the \fBext/\fR subdirectory\.
+.
+.IP "\(bu" 4
+Written in (very modern) Bash, with full test suite\. Take a look\.
 .
 .IP "" 0
 .
