@@ -136,8 +136,6 @@ command:clone() {
 
   # Successful command output:
   say "git subrepo '$subdir' cloned from '$subrepo_remote' ($subrepo_branch)"
-
-  update-remotes-branches
 }
 
 # `git subrepo pull …` command:
@@ -176,8 +174,6 @@ command:pull() {
 
   # Successful command output:
   say "git subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
-
-  update-remotes-branches
 }
 
 # `git subrepo push …` command:
@@ -213,8 +209,6 @@ command:push() {
   # Delete the checkout branch:
   git branch -D $checkout_branch \
     &> /dev/null
-
-  update-remotes-branches
 }
 
 # `git subrepo checkout …` command:
@@ -241,8 +235,6 @@ When you have finishing merging, pull the subrepo in the main repo with:
   git subrepo pull $subdir
 
 ...
-
-  update-remotes-branches
 }
 
 # `git subrepo status …` command:
@@ -297,7 +289,7 @@ subrepo-checkout() {
   # Create a branch for this checkout:
   git branch -f "$checkout_branch"
 
-  # TODO Figure out if we really need this:
+  # TODO Figure out if we really need this graft:
   # Graft the history to the upstream (for rebase's sake):
   local root=$(git rev-list --max-parents=0 HEAD)
   echo "$root $subrepo_commit_old" >> .git/info/grafts
@@ -311,6 +303,10 @@ subrepo-status() {
   subdir="${subdir%/}"
   read-gitrepo-file
 
+  if $verbose_output; then
+    fetch-subrepo
+  fi
+
   [ ! -f "$subdir/.gitrepo" ] &&
     error "'$subdir' is not a subrepo"
   cat <<...
@@ -321,8 +317,6 @@ Git subrepo '$subdir':
   tracking branch: $subrepo_branch
 
 ...
-
-  update-remotes-branches
 }
 
 #------------------------------------------------------------------------------
@@ -376,11 +370,10 @@ command-setup() {
   gitrepo="$subdir/.gitrepo"
   if [ "$command" == "clone" ]; then
     assert-subdir-empty
-    fetch-subrepo
   else
     read-gitrepo-file
-    fetch-subrepo
   fi
+  fetch-subrepo
 
   # Get the original branch and commit:
   original_head_branch="$(git rev-parse --abbrev-ref HEAD)"
@@ -401,6 +394,12 @@ fetch-subrepo() {
 
   # Get the subrepo HEAD commit:
   upstream_head="$(git rev-parse FETCH_HEAD)"
+
+  # Update the remote url and the remote branch:
+  # TODO Make this smarter:
+  git remote rm "subrepo/$subdir" &> /dev/null || true
+  git remote add "subrepo/$subdir" "$subrepo_remote"
+  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit_old}"
 }
 
 # Determine the correct subdir path to use:
@@ -455,13 +454,6 @@ update-gitrepo-file() {
     --quiet \
     --amend \
     --message="Merge subrepo commit '$short_commit'"
-}
-
-# TODO Make this smarter:
-update-remotes-branches() {
-  git remote rm "subrepo/$subdir" &> /dev/null || true
-  git remote add "subrepo/$subdir" "$subrepo_remote"
-  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit_old}"
 }
 
 # Commit msg for an action commit:
