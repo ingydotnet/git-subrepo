@@ -1,7 +1,7 @@
 Introducing Git Subrepos
 ========================
 by: Ingy döt Net
-on: February 20, 2014
+on: February 24, 2014
 
 
 There is a new git command called `subrepo` that is meant to be a solid
@@ -48,14 +48,14 @@ subrepos is easy. If you need to update the subrepos later:
 
 The lynyrd repo is tracking the upstream master branch, and you've changed the
 skynyrd subrepo to the 1976 branch. Since these subrepos are owned by 'you',
-you might want to change them in the context of your freebird repo. When things
-are working, you can push the subrepo changes back:
+you might want to change them in the context of your freebird repo. When
+things are working, you can push the subrepo changes back:
 
-    git subrepo push ext/lynyrd
-    git subrepo push ext/skynyrd
+    git subrepo push --rebase ext/lynyrd
+    git subrepo push --rebase ext/skynyrd
 
 Looks simple right? It's supposed to be. The intent of `git-subrepo` is to do
-the right things, and don't cause problems.
+the right things, and to not cause problems.
 
 Of course there's more to it under the hood, and that's what the rest of this
 article is about.
@@ -192,8 +192,8 @@ where they came from.
 Consider the equivalent subrepo commands:
 
     $ git subrepo clone foo git@github.com:my/thing -b mybranch
-    $ git subrepo pull foo
-    $ git subrepo push foo
+    $ git subrepo pull --rebase foo
+    $ git subrepo push --rebase foo
 
 Collaborators see a file called 'foo/.gitrepo', and know that the subdir is a
 subrepo. The file contains all the information needed by future commands

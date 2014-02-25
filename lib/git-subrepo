@@ -35,7 +35,7 @@ h           Show the command summary
 help        Show the complete documentation
 version     Print the git-subrepo version number
 
-b,branch=   Upstream branch/commit/refspec (default to master)
+b,branch=   Upstream branch/commit/refspec (default to remote HEAD)
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
@@ -96,6 +96,7 @@ command:help() {
 command:clone() {
   subrepo_remote="${1:?"subrepo remote url required"}"
   subdir="${2:-"`guess-subdir $subrepo_remote`"}"
+  # TODO Need to retrieve upstream HEAD (not assume master)
   subrepo_branch=${subrepo_branch:-master}
 
   command-setup
