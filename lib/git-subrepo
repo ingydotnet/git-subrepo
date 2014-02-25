@@ -36,6 +36,10 @@ help        Show the complete documentation
 version     Print the git-subrepo version number
 
 b,branch=   Upstream branch/commit/refspec (default to remote HEAD)
+rebase      Rebase upstream changes
+merge       Merge (recursive) upstream changes
+ours        Merge (recursive/ours) upstream changes
+theirs      Merge (recursive/theirs) upstream changes
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
@@ -57,6 +61,7 @@ main() {
   local gitrepo               # Path to .gitrepo file
   local checkout_branch       # Branch name to checkout to (push from)
   local current_branch        # Branch we were on at start of the command
+  local merge_strategy        # Merge strategy to use
 
   local original_head_commit  # HEAD commit id at start of command
   local original_head_branch  # HEAD ref at start of command
@@ -275,6 +280,7 @@ Git Version: $git_version
 # Checkout the subrepo changes since last push:
 subrepo-checkout() {
   # TODO Actually only filter commits since last push.
+  # TODO Check for all possible failures, and reset.
   # Make history of subdir changes:
   git filter-branch -f \
     --subdirectory-filter "$subdir" \
@@ -285,6 +291,10 @@ subrepo-checkout() {
   git filter-branch -f \
     --tree-filter "rm -f .gitrepo" \
     &> /dev/null
+
+  if [ -n "$merge_strategy" ]; then
+    merge-upstream
+  fi
 
   # Create a branch for this checkout:
   git branch -f "$checkout_branch"
@@ -344,6 +354,10 @@ get-command-options() {
       -v) verbose_output=true ;;
       -x) set -x ;;
       -b) subrepo_branch="$1"; shift ;;
+      --rebase) merge_strategy=rebase ;;
+      --merge)  merge_strategy=merge ;;
+      --ours)   merge_strategy=ours ;;
+      --theirs) merge_strategy=theirs ;;
       --version)
         echo $VERSION
         exit ;;
@@ -412,6 +426,11 @@ guess-subdir() {
   [[ "$dir" =~ ^[-a-zA-Z0-9]+$ ]] ||
     error "can't determine subdir from '$subrepo_remote'"
   echo "$dir"
+}
+
+# Attempt a merge of the upstream history, according to merge_strategy
+merge-upstream() {
+  die 'merge logic not yet implemented'
 }
 
 # Set subdir and gitrepo vars:
