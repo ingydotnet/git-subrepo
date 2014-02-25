@@ -237,11 +237,14 @@ command:status() {
   local subrepos=()
 
   if [ $# -eq 0 ]; then
-    set -- $(find . -type f -name '.gitrepo')
+    get-all-subrepos
+  else
+    all_subrepos=$*
   fi
 
-  for s in $*; do
-    subrepo-status "${s%.gitrepo}"
+  local s
+  for s in ${all_subrepos[@]}; do
+    subrepo-status "$s"
   done
 }
 
@@ -278,11 +281,21 @@ subrepo-checkout() {
 }
 
 subrepo-status() {
-  local subdir="$1"
+  local subdir="${1#./}"
+  local subdir_path="$subdir"
+  subdir="${subdir%/}"
+  read-gitrepo-file
+
   [ ! -f "$subdir/.gitrepo" ] &&
     error "'$subdir' is not a subrepo"
-  echo "Subrepo: $subdir"
-  echo
+  cat <<...
+Git subrepo '$subdir':
+  remote name:     subrepo/$subdir
+  remote url:      $subrepo_remote
+  remote branch:   subrepo/remote/$subdir
+  tracking branch: $subrepo_branch 
+
+...
 }
 
 #------------------------------------------------------------------------------
@@ -338,9 +351,6 @@ command-setup() {
     git remote add "subrepo/$subdir" "$subrepo_remote"
     git branch "subrepo/remote/$subdir" "$upstream_head"
   else
-    if [ ! -f "$gitrepo" ]; then
-      error "'$subdir' is not a subrepo"
-    fi
     read-gitrepo-file
     fetch-subrepo
   fi
@@ -472,6 +482,24 @@ assert-subdir-empty() {
   if [ -e "$subdir" ] && [ -n "$(ls -A $subdir)" ]; then
     error "subdir '$subdir' exists and is not empty"
   fi
+}
+
+get-all-subrepos() {
+  local paths=($(
+    find . -name '.gitrepo' | grep '/.gitrepo$' | sed 's/.gitrepo$//' | sort
+  ))
+  all_subrepos=()
+  local path
+  for path in "${paths[@]}"; do
+    add-subrepo "$path"
+  done
+}
+
+add-subrepo() {
+  for path in "${all_subrepos[@]}"; do
+    [[ "$1" =~ ^$path ]] && return
+  done
+  all_subrepos+=("$1")
 }
 
 # Smart output:
