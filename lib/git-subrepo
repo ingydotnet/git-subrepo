@@ -132,7 +132,7 @@ command:clone() {
       -p $update_commit
   )"
 
-  # Set HEAD ref:
+  # Reset head to merge commit:
   git reset --hard "$merge_commit" \
     &> /dev/null
 
@@ -161,6 +161,9 @@ command:pull() {
       "$(git log --max-count=1 --format=%T "$upstream_head")" \
       -p "$subrepo_former"
   )"
+
+  # TODO:
+  # This merge can fail, so we need to checkout/merge/remerge instead.
 
   # Merge the update with the subtree strategy:
   git merge -s recursive -X subtree="$subdir" "$update_commit" > /dev/null
