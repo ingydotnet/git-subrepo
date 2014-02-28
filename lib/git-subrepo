@@ -104,8 +104,7 @@ command:help() {
 command:clone() {
   subrepo_remote="${1:?"subrepo remote url required"}"
   subdir="${2:-"`guess-subdir $subrepo_remote`"}"
-  # TODO Need to retrieve upstream HEAD (not assume master)
-  subrepo_branch=${subrepo_branch:-master}
+  subrepo_branch=${subrepo_branch:-$(get-upstream-head-branch)}
   command-setup
 
   # Read the subrepo into the index (under subdir):
@@ -429,6 +428,25 @@ guess-subdir() {
   [[ "$dir" =~ ^[-a-zA-Z0-9]+$ ]] ||
     error "can't determine subdir from '$subrepo_remote'"
   echo "$dir"
+}
+
+# Determine the upstream's default head branch:
+get-upstream-head-branch() {
+  local remotes=$(git ls-remote $subrepo_remote)
+  local commit="$(
+    echo "$remotes" |
+    grep HEAD |
+    cut -f1
+  )"
+  local branch="$(
+    echo "$remotes" |
+    grep "$commit" |
+    grep -v HEAD |
+    cut -f2
+  )"
+  [[ "$branch" =~ refs/heads/ ]] ||
+    error "problem finding remote default head branch"
+  echo "${branch#refs/heads/}"
 }
 
 # Attempt a merge of the upstream history, according to merge_strategy

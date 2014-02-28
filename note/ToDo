@@ -1,5 +1,3 @@
-- Find default upstream branch (instead of master)
-
 - Review doc/readme
 
 - Allow commands from any subdir.
