@@ -103,12 +103,11 @@ command:help() {
 # `git subrepo clone …` command:
 command:clone() {
   subrepo_remote="${1:?"subrepo remote url required"}"
-  subdir="${2:-"`guess-subdir $subrepo_remote`"}"
-  subrepo_branch=${subrepo_branch:-$(get-upstream-head-branch)}
+  subdir="${2:-"`guess-subdir "$subrepo_remote"`"}"
   command-setup
 
   # Read the subrepo into the index (under subdir):
-  git read-tree --prefix="$subdir" $upstream_head
+  git read-tree --prefix="$subdir" "$upstream_head"
 
   # Checkout the subrepo as a new subdir:
   git checkout -- "$subdir"
@@ -386,6 +385,7 @@ command-setup() {
   gitrepo="$subdir/.gitrepo"
   if [ "$command" == "clone" ]; then
     assert-subdir-empty
+    subrepo_branch=${subrepo_branch:-$(get-upstream-head-branch)}
   else
     read-gitrepo-file
   fi
@@ -432,7 +432,9 @@ guess-subdir() {
 
 # Determine the upstream's default head branch:
 get-upstream-head-branch() {
-  local remotes=$(git ls-remote $subrepo_remote)
+  local remotes=$(git ls-remote $subrepo_remote 2>/dev/null)
+  [ -n "$remotes" ] ||
+    error "failed to 'git ls-remote $subrepo_remote'"
   local commit="$(
     echo "$remotes" |
     grep HEAD |
