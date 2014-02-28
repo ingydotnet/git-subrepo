@@ -113,21 +113,21 @@ command:clone() {
   git checkout -- "$subdir"
 
   # Create a tree object from the index:
-  local tree_commit=$(git write-tree)
+  local tree_commit="$(git write-tree)"
 
   # Create a commit object from the tree:
   update_commit="$(
     action-message |
     git commit-tree \
-      "$(git log --max-count=1 --format=%T $upstream_head)"
+      "$(git log --max-count=1 --format=%T "$upstream_head")"
   )"
 
   # Create a merge commit:
   local merge_commit="$(
     echo "..." |
-    git commit-tree $tree_commit \
-      -p $original_head_commit \
-      -p $update_commit
+    git commit-tree "$tree_commit" \
+      -p "$original_head_commit" \
+      -p "$update_commit"
   )"
 
   # Reset head to merge commit:
@@ -169,11 +169,11 @@ command:pull() {
   # Prune the merge history to keep things looking clean:
   git filter-branch -f \
     --parent-filter "sed 's/ -p $subrepo_former//'" \
-    -- $update_commit^..HEAD ^HEAD^ \
+    -- "$update_commit"^..HEAD ^HEAD^ \
     &> /dev/null
 
   # The update_commit just got rewritten. Need new id:
-  update_commit=$(git rev-parse HEAD^2)
+  update_commit="$(git rev-parse HEAD^2)"
 
   # Update the subdir/.gitrepo file:
   update-gitrepo-file
@@ -191,7 +191,7 @@ command:push() {
   subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
-  git rebase $upstream_head $checkout_branch \
+  git rebase "$upstream_head" "$checkout_branch" \
     &> /dev/null \
     || OK=1
 
@@ -210,10 +210,10 @@ command:push() {
   fi
 
   # Checkout starting branch:
-  git checkout $original_head_branch \
+  git checkout "$original_head_branch" \
     &> /dev/null
   # Delete the checkout branch:
-  git branch -D $checkout_branch \
+  git branch -D "$checkout_branch" \
     &> /dev/null
 }
 
@@ -228,10 +228,10 @@ command:checkout() {
   echo ">>$upstream_head<<"
 
   # Checkout the checkout branch:
-  git checkout $checkout_branch \
+  git checkout "$checkout_branch" \
     &> /dev/null
 
-  cat <<...
+  say "\
 Subrepo '$subdir' checked out to local branch '$checkout_branch'.
 Your remote tracking branch 'subrepo/remote/$subdir' is up to date.
 
@@ -240,7 +240,7 @@ When you have finishing merging, pull the subrepo in the main repo with:
 
   git subrepo pull $subdir
 
-...
+"
 }
 
 # `git subrepo status …` command:
@@ -302,7 +302,7 @@ subrepo-checkout() {
 
   # TODO Figure out if we really need this graft:
   # Graft the history to the upstream (for rebase's sake):
-  local root=$(git rev-list --max-parents=0 HEAD)
+  local root=$"(git rev-list --max-parents=0 HEAD)"
   echo "$root $subrepo_commit_old" >> .git/info/grafts
 
   git reset --hard "$original_head_commit" \
@@ -320,6 +320,7 @@ subrepo-status() {
 
   [ ! -f "$subdir/.gitrepo" ] &&
     error "'$subdir' is not a subrepo"
+
   cat <<...
 Git subrepo '$subdir':
   remote name:     subrepo/$subdir
@@ -360,7 +361,7 @@ get-command-options() {
       --ours)   merge_strategy=ours ;;
       --theirs) merge_strategy=theirs ;;
       --version)
-        echo $VERSION
+        echo "$VERSION"
         exit ;;
       --) break ;;
       *) error "unexpected option: $option" ;;
@@ -385,7 +386,7 @@ command-setup() {
   gitrepo="$subdir/.gitrepo"
   if [ "$command" == "clone" ]; then
     assert-subdir-empty
-    subrepo_branch=${subrepo_branch:-$(get-upstream-head-branch)}
+    subrepo_branch="${subrepo_branch:-$(get-upstream-head-branch)}"
   else
     read-gitrepo-file
   fi
@@ -432,7 +433,7 @@ guess-subdir() {
 
 # Determine the upstream's default head branch:
 get-upstream-head-branch() {
-  local remotes=$(git ls-remote $subrepo_remote 2>/dev/null)
+  local remotes="$(git ls-remote $subrepo_remote 2>/dev/null)"
   [ -n "$remotes" ] ||
     error "failed to 'git ls-remote $subrepo_remote'"
   local commit="$(
@@ -474,10 +475,10 @@ read-gitrepo-file() {
 
 # Update the subdir/.gitrepo state file:
 update-gitrepo-file() {
-  local short_commit=$(git rev-parse --short "$update_commit")
+  local short_commit="$(git rev-parse --short "$update_commit")"
 
   if [ "$command" == "clone" ]; then
-    cat <<... > $gitrepo
+    cat <<... > "$gitrepo"
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git "subrepo", and this file is maintained by the
@@ -500,7 +501,7 @@ update-gitrepo-file() {
 
 # Commit msg for an action commit:
 action-message() {
-  local commit=$(git rev-parse --short $upstream_head)
+  local commit="$(git rev-parse --short "$upstream_head")"
   cat <<...
 subrepo $command: $subrepo_remote ($subrepo_branch) -> $subdir/
 
