@@ -17,38 +17,16 @@ clone-foo-and-bar
   git subrepo clone ../../../$UPSTREAM/bar
 
   # Make a series of commits:
+  add-new-files bar/FooBar
+  add-new-files ./FooBar
+  modify-files bar/FooBar
+  modify-files ./FooBar
+  modify-files ./FooBar bar/FooBar
+) &> /dev/null || die
 
-  # First add a file to the sub repo
-  touch bar/FooBar
-  git add bar/FooBar
-  git commit -m 'added bar/FooBar'
-
-  # Next add a file to the main repo
-  touch ./FooBar
-  git add ./FooBar
-  git commit -m 'added ./FooBar'
-
-  # Now change the subrepo file
-  echo 'change 1' >> bar/FooBar
-  git add bar/FooBar
-  git commit -m 'change 1'
-
-  # Then change the main repo file
-  echo 'change 2' >> ./FooBar
-  git add ./FooBar
-  git commit -m 'change 2'
-
-  # Then change both files in one commit
-  echo 'change 3' >> ./FooBar
-  echo 'change 3' >> bar/FooBar
-  git add ./FooBar bar/FooBar
-  git commit -m 'change 3'
-
-  cd -
+(
   cd $OWNER/bar
-  touch bargy
-  git add bargy
-  git commit -m 'bargy'
+  add-new-files bargy
   git push
 ) &> /dev/null || die
 
@@ -58,9 +36,6 @@ save-original-state "$OWNER/foo" "bar"
 {
   message="$(
     cd $OWNER/foo
-
-    # This command should tease out the commits made to bar, and push them
-    # back to UPSTREAM/bar
     git subrepo push bar || true
   )"
 

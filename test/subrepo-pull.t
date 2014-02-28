@@ -15,9 +15,7 @@ clone-foo-and-bar
 
 (
   cd $OWNER/bar
-  touch Bar2
-  git add Bar2
-  git commit -m Bar2
+  add-new-files Bar2
   git push
 ) &> /dev/null || die
 

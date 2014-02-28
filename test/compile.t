@@ -7,7 +7,9 @@ source test/setup
 use Test::More
 
 source lib/git-subrepo
-
 pass 'source lib/git-subrepo'
 
-done_testing 1
+source lib/git-subrepo.d/bash+.bash
+pass 'source lib/git-subrepo.d/bash+.bash'
+
+done_testing 2

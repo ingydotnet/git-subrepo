@@ -35,6 +35,24 @@ clone-foo-and-bar() {
   ) &> /dev/null || die
 }
 
+add-new-files() {
+  local file
+  for file in $*; do
+    echo "new file $file" > "$file"
+    git add "$file"
+  done
+  git commit -m "add new file: $file"
+}
+
+modify-files() {
+  local file
+  for file in $*; do
+    echo 'a new line' >> "$file"
+    git add "$file"
+  done
+  git commit -m "modified file: $file"
+}
+
 test-exists() {
   for f in $*; do
     if [[ "$f" =~ ^! ]]; then
