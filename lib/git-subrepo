@@ -84,7 +84,7 @@ main() {
     error "unknown 'git subrepo' command: '$command'"
 
   # Make sure repo is in the proper state:
-  [ "$command == help" -o "$command" == status ] \
+  [ "$command" == "help" -o "$command" == status ] \
     || assert-repo-is-ready
 
   # Run the command:
