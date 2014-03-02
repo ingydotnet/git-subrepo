@@ -43,6 +43,7 @@ r,remote=   Specify an upstream remote
 u,update    Add the --branch and/or --remote overrides to .gitrepo
 continue    Finish the (pull|push) operation after checkout/hand-merge
 
+reclone     Replace current content with upstream content
 rebase      Rebase upstream changes
 merge       Merge (recursive) upstream changes
 ours        Merge (recursive/ours) upstream changes
@@ -415,6 +416,7 @@ get-command-options() {
       --fetch)    fetch_wanted=true ;;
       --graft)    graft_wanted=true ;;
       --continue) continue_wanted=true ;;
+      --reclone)  merge_strategy=reclone ;;
       --rebase)   merge_strategy=rebase ;;
       --merge)    merge_strategy=merge ;;
       --ours)     merge_strategy=ours ;;

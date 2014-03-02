@@ -208,6 +208,14 @@ On a pull or push, you often want to do things by hand\. This involves a \fBsubr
 When doing a \fBpull\fR command (or doing a \fBcheckout\fR for manual merge/pull) you can specify a \'merge strategy\' to be tried:
 .
 .IP "\(bu" 4
+\fB\-\-reclone\fR
+.
+.IP "" 0
+.
+.P
+Use this option when you have no local changes to the subrepo, and you simply want to replace the old content with the new upstream content\. If you use \fB\-\-branch\fR or \fB\-\-remote\fR options with this option, the \fB\-\-update\fR option is turned on automatically\. (new remote and branch are stored in \.gitrepo file)
+.
+.IP "\(bu" 4
 \fB\-\-rebase\fR
 .
 .IP "" 0

@@ -114,6 +114,13 @@ relevant pull or push command.
 When doing a `pull` command (or doing a `checkout` for manual merge/pull) you
 can specify a 'merge strategy' to be tried:
 
+* `--reclone`
+
+Use this option when you have no local changes to the subrepo, and you simply
+want to replace the old content with the new upstream content. If you use
+`--branch` or `--remote` options with this option, the `--update` option is
+turned on automatically. (new remote and branch are stored in .gitrepo file)
+
 * `--rebase`
 
 Attempt a rebase on top off the remote head.
