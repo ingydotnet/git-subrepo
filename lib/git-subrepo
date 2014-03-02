@@ -142,11 +142,21 @@ command:clone() {
   # Create a tree object from the index:
   local tree_commit="$(git write-tree)"
 
+  local parent2_orig_tree="$(git log --max-count=1 --format=%T $upstream_head)"
+
+  # Make a tree object with one dir "subdir" which points to parent2_orig_tree
+  # WARNING: Arbitrary code execution risk here.
+  local parent2_tree="$(
+      (
+        echo -n "040000 ${subdir}";
+        perl -e "print chr(0) . pack q[H*], q[$parent2_orig_tree];";
+      ) | git hash-object -w -t tree --stdin
+  )";
+
   # Create a commit object from the tree:
   update_commit="$(
     action-message |
-    git commit-tree \
-      "$(git log --max-count=1 --format=%T "$upstream_head")"
+    git commit-tree "$parent2_tree"
   )"
 
   # Create a merge commit:
