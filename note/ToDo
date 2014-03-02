@@ -1,16 +1,7 @@
-- Invent a good symbolic system for dags
-  - main and sub repo
-  - users: owner, user, collab
-  - commits: upstream sr head, local sr head, clone, pull, gitrepo
+- Apply the transplant_prefix branch (use xxd)
 
-  owner/main: A-----B
-  owner/subr: S-----T
-  git subrepo clone owner/subr foo
-  A-----B-----C
-             /
-      T'--T'+
+- Resolve outstanding github issues
 
-- Implement --all
 - Wrap external commands
   - Show them on verbose
   - Always check return status
@@ -23,6 +14,10 @@
     - test/error.t
   - Tests for reported rebase errors and other subtree badness
 
+- Make the 'clean' command remove grafts
+
+- Allow commands from any subdir.
+
 - Git Commands
   - #git-commands
   - github.com/git-commands
@@ -30,11 +25,17 @@
   - git-commands.hacktive.com
   - Make a CogWeb site
 
-- Remove grafts?
+- Invent a good symbolic system for dags
+  - main and sub repo
+  - users: owner, user, collab
+  - commits: upstream sr head, local sr head, clone, pull, gitrepo
 
-- Allow commands from any subdir.
-
-- Review doc/readme
+  owner/main: A-----B
+  owner/subr: S-----T
+  git subrepo clone owner/subr foo
+  A-----B-----C
+             /
+      T'--T'+
 
 ----
 
@@ -59,3 +60,5 @@ x Add more meta info to .gitrepo file:
     + See what submodule and subtree do.
 
 + Implement clean
++ Implement --all
++ Review doc/readme
