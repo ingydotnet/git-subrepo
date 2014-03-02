@@ -18,11 +18,13 @@ GETOPT_SPEC="\
 git subrepo <command> <arguments> <options>
 
 Commands:
-  clone     Clone a remote repository into a local directory (subrepo)
+  clone     Clone a remote repository into a local sub-directory
+  pull      Pull upstream changes to the subrepo
   push      Push local subrepo changes upstream
-  pull      Pull (merge) upstream changes to the subrepo
   checkout  Create/checkout a local branch containing just the subrepo
+
   status    Get status of a subrepo (or all of them)
+  clean     Remove branches, remotes and grafts for a subrepo
 
   help      Read the (full) git-subrepo documentation
   version   Display git-subrepo version info
@@ -35,11 +37,18 @@ h           Show the command summary
 help        Show the complete documentation
 version     Print the git-subrepo version number
 
-b,branch=   Upstream branch/commit/refspec (default to remote HEAD)
+all         Perform command on all current subrepos
+b,branch=   Specify an upstream branch
+r,remote=   Specify an upstream remote
+u,update    Add the --branch and/or --remote overrides to .gitrepo
+continue    Finish the (pull|push) operation after checkout/hand-merge
+
 rebase      Rebase upstream changes
 merge       Merge (recursive) upstream changes
 ours        Merge (recursive/ours) upstream changes
 theirs      Merge (recursive/theirs) upstream changes
+graft       Create a graft (needed for some hand merges)
+fetch       Fetch the remote content (usually on by default)
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
@@ -53,8 +62,14 @@ main() {
   # Define global variables:
   local command=              # Subrepo subcommand to run
   local command_arguments=()  # Command args after getopt parsing
-  local quiet_output=false    # Output should be quiet
-  local verbose_output=false  # Output should be verbose
+  local subrepos=()           # List of multiple subrepos
+  local quiet_wanted=false    # Output should be quiet
+  local verbose_wanted=false  # Output should be verbose
+  local all_wanted=false      # Apply command to all subrepos
+  local graft_wanted=false    # Checkout a branch grafted to remote branch
+  local fetch_wanted=false    # Fetch requested for checkout
+  local update_wanted=false   # Update .gitrepo with --branch and/or --remote
+  local continue_wanted=false # Continue/finish a pull or push
   local OK=0                  # Flag that commands have succeeded
 
   local subdir                # Subdirectory of the subrepo being used
@@ -84,11 +99,18 @@ main() {
     error "unknown 'git subrepo' command: '$command'"
 
   # Make sure repo is in the proper state:
-  [ "$command" == "help" -o "$command" == status ] \
-    || assert-repo-is-ready
+  [[ "$command" =~ ^(help|version)$ ]] ||
+    assert-repo-is-ready
 
   # Run the command:
-  "command:$command" "${command_arguments[@]}"
+  if $all_wanted; then
+    get-all-subrepos
+    for subdir in ${subrepos[*]}; do
+      "command:$command" "$subdir" "${command_arguments[@]}"
+    done
+  else
+    "command:$command" "${command_arguments[@]}"
+  fi
 }
 
 #------------------------------------------------------------------------------
@@ -100,11 +122,15 @@ command:help() {
   exec git help subrepo
 }
 
+# TODO Run commands with a 'run' function
+
 # `git subrepo clone …` command:
 command:clone() {
-  subrepo_remote="${1:?"subrepo remote url required"}"
+  subrepo_remote="${1:?"remote-url is required first argument"}"
   subdir="${2:-"`guess-subdir "$subrepo_remote"`"}"
+
   command-setup
+  fetch-subrepo
 
   # Read the subrepo into the index (under subdir):
   git read-tree --prefix="$subdir" "$upstream_head"
@@ -142,9 +168,12 @@ command:clone() {
 }
 
 # `git subrepo pull …` command:
+# TODO Command needs rewrite:
 command:pull() {
-  subdir="${1:?"subdir is required"}"
+  subdir="${1:?"subdir is required first argument"}"
+
   command-setup
+  fetch-subrepo
 
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit_old" ]; then
@@ -183,9 +212,13 @@ command:pull() {
 }
 
 # `git subrepo push …` command:
+# TODO Command needs rewrite:
 command:push() {
-  subdir="${1:?"subdir is required"}"
+  subdir="${1:?"subdir is required first argument"}"
+
   command-setup
+  # XXX Probably don't fetch on push.
+  fetch-subrepo
 
   # Checkout the subrepo to a branch:
   subrepo-checkout
@@ -219,7 +252,7 @@ command:push() {
 
 # `git subrepo checkout …` command:
 command:checkout() {
-  subdir="${1:?"subdir is required"}"
+  subdir="${1:?"subdir is required first argument"}"
   command-setup
 
   # Checkout the subrepo to a branch:
@@ -244,29 +277,52 @@ When you have finishing merging, pull the subrepo in the main repo with:
 }
 
 # `git subrepo status …` command:
-# Should list all subrepos if no args
-# Should tell info about a subdir if argument given
+# TODO just print subdir name if --quiet
 command:status() {
-  local subrepos=()
+  subdir="${1:?"subdir is required first argument"}"
+  subdir="${subdir#./}"
+  subdir="${subdir%/}"
 
-  if [ $# -eq 0 ]; then
-    get-all-subrepos
-  else
-    all_subrepos=$*
+  read-gitrepo-file
+
+  if $quiet_wanted; then
+    echo "$subdir"
+    return
   fi
 
-  local s
-  for s in ${all_subrepos[@]}; do
-    subrepo-status "$s"
-  done
+  if $verbose_wanted; then
+    fetch-subrepo
+  fi
+
+  [ ! -f "$subdir/.gitrepo" ] &&
+    error "'$subdir' is not a subrepo"
+
+  cat <<...
+Git subrepo '$subdir':
+  remote name:     subrepo/$subdir
+  remote url:      $subrepo_remote
+  remote branch:   subrepo/remote/$subdir
+  tracking branch: $subrepo_branch
+
+...
+}
+
+# `git subrepo clean …` command
+command:clean() {
+  local subdir="${1:?"subdir is required first argument"}"
+  subdir="${subdir#./}"
+  subdir="${subdir%/}"
+  subrepo:clean
 }
 
 # Print version info.
+# TODO: Add short commit id after version.
+#       Will need to get it from repo or make install can put it somewhere.
 command:version() {
   cat <<...
 git-subrepo Version: $VERSION
 Copyright 2013, 2014 Ingy döt Net
-https://github.com/ingydotnet/git-subrepo
+https://github.com/git-commands/git-subrepo
 $BASH_SOURCE
 Git Version: $git_version
 
@@ -298,37 +354,33 @@ subrepo-checkout() {
   fi
 
   # Create a branch for this checkout:
+  checkout_branch="subrepo/$subdir"
   git branch -f "$checkout_branch"
 
   # TODO Figure out if we really need this graft:
   # Graft the history to the upstream (for rebase's sake):
-  local root=$"(git rev-list --max-parents=0 HEAD)"
+  local root="$(git rev-list --max-parents=0 HEAD)"
   echo "$root $subrepo_commit_old" >> .git/info/grafts
 
   git reset --hard "$original_head_commit" \
     &> /dev/null
+
+  # Update the remote url and the remote branch:
+  # TODO Make this smarter:
+  git remote rm "subrepo/$subdir" &> /dev/null || true
+  git remote add "subrepo/$subdir" "$subrepo_remote"
+  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit_old}"
 }
 
-subrepo-status() {
-  local subdir="${1#./}"
-  subdir="${subdir%/}"
-  read-gitrepo-file
-
-  if $verbose_output; then
-    fetch-subrepo
-  fi
-
-  [ ! -f "$subdir/.gitrepo" ] &&
-    error "'$subdir' is not a subrepo"
-
-  cat <<...
-Git subrepo '$subdir':
-  remote name:     subrepo/$subdir
-  remote url:      $subrepo_remote
-  remote branch:   subrepo/remote/$subdir
-  tracking branch: $subrepo_branch
-
-...
+# Clean up branches, remotes and grafts
+subrepo:clean() {
+  git remote rm "subrepo/$subdir" \
+    &> /dev/null || true
+  git branch -D "subrepo/$subdir" \
+    &> /dev/null || true
+  git branch -D "subrepo/remote/$subdir" \
+    &> /dev/null || true
+  :
 }
 
 #------------------------------------------------------------------------------
@@ -340,8 +392,8 @@ get-command-options() {
   [ $# -eq 0 ] && set -- --help
 
   [ -n "$GIT_SUBREPO_DEBUG" ] && set -x
-  [ -n "$GIT_SUBREPO_QUIET" ] && quiet_output=true
-  [ -n "$GIT_SUBREPO_VERBOSE" ] && verbose_output=true
+  [ -n "$GIT_SUBREPO_QUIET" ] && quiet_wanted=true
+  [ -n "$GIT_SUBREPO_VERBOSE" ] && verbose_wanted=true
 
   eval "$(
     echo "$GETOPT_SPEC" |
@@ -352,24 +404,48 @@ get-command-options() {
   while [ $# -gt 0 ]; do
     local option="$1"; shift
     case "$option" in
-      -q) quiet_output=true ;;
-      -v) verbose_output=true ;;
-      -x) set -x ;;
+      --) break ;;
       -b) subrepo_branch="$1"; shift ;;
-      --rebase) merge_strategy=rebase ;;
-      --merge)  merge_strategy=merge ;;
-      --ours)   merge_strategy=ours ;;
-      --theirs) merge_strategy=theirs ;;
+      -r) subrepo_remote="$1"; shift ;;
+      -u) update_wanted=true ;;
+      -q) quiet_wanted=true ;;
+      -v) verbose_wanted=true ;;
+      -x) set -x ;;
+      --all)      all_wanted=true ;;
+      --fetch)    fetch_wanted=true ;;
+      --graft)    graft_wanted=true ;;
+      --continue) continue_wanted=true ;;
+      --rebase)   merge_strategy=rebase ;;
+      --merge)    merge_strategy=merge ;;
+      --ours)     merge_strategy=ours ;;
+      --theirs)   merge_strategy=theirs ;;
       --version)
         echo "$VERSION"
         exit ;;
-      --) break ;;
       *) error "unexpected option: $option" ;;
     esac
   done
 
   command="$1"; shift
   command_arguments=("$@")
+
+  if $all_wanted; then
+    [[ "$command" =~ ^(pull|push|checkout|status|clean)$ ]] ||
+      error "can't use '--all' with '$command' command"
+  fi
+  if $continue_wanted; then
+    [[ "$command" =~ ^(pull|push)$ ]] ||
+      error "can't use '--continue' with '$command' command"
+  fi
+  if $update_wanted; then
+    [ -n "$subrepo_branch" -o -n "$subrepo_remote" ] ||
+      error "can't use '--update' without '--branch' or '--remote'"
+    [ "$command" == pull ] ||
+      error "can't use '--update' with '$command' command"
+  fi
+  # TODO validate subrepo_branch
+  # TODO validate subrepo_remote
+  :
 }
 
 command-setup() {
@@ -380,8 +456,6 @@ command-setup() {
     error "subdir '$dir' should not be absolute path"
   subdir="${subdir%/}"
 
-  checkout_branch="subrepo/$subdir"
-
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
   gitrepo="$subdir/.gitrepo"
   if [ "$command" == "clone" ]; then
@@ -390,33 +464,18 @@ command-setup() {
   else
     read-gitrepo-file
   fi
-  fetch-subrepo
 
-  # Get the original branch and commit:
-  original_head_branch="$(git rev-parse --abbrev-ref HEAD)"
-  original_head_commit="$(git rev-parse HEAD)"
-
-  # Make sure we are on a branch:
-  [ "$original_head_branch" == HEAD -o -z "$original_head_branch" ] &&
-    error "must be on a branch to run this command."
-
-  true
+  :
 }
 
 fetch-subrepo() {
   # Fetch all the git objects from the subrepo/branch:
   git fetch --quiet "$subrepo_remote" "$subrepo_branch" \
-    &> /dev/null \
-    || error "command failed: git fetch $subrepo_remote $subrepo_branch"
+    &> /dev/null ||
+    error "command failed: git fetch $subrepo_remote $subrepo_branch"
 
   # Get the subrepo HEAD commit:
   upstream_head="$(git rev-parse FETCH_HEAD)"
-
-  # Update the remote url and the remote branch:
-  # TODO Make this smarter:
-  git remote rm "subrepo/$subdir" &> /dev/null || true
-  git remote add "subrepo/$subdir" "$subrepo_remote"
-  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit_old}"
 }
 
 # Determine the correct subdir path to use:
@@ -477,18 +536,20 @@ read-gitrepo-file() {
 update-gitrepo-file() {
   local short_commit="$(git rev-parse --short "$update_commit")"
 
-  if [ "$command" == "clone" ]; then
+  if [ "$command" == clone ]; then
     cat <<... > "$gitrepo"
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git "subrepo", and this file is maintained by the
-; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 ...
   fi
 
-  git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
-  git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
+  # TODO: only update remote and branch if supplied and $update_wanted
+    git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
+    git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
+
   git config --file="$gitrepo" subrepo.commit "$upstream_head"
   git config --file="$gitrepo" subrepo.former "$update_commit"
   git config --file="$gitrepo" subrepo.cmdver "$VERSION"
@@ -526,6 +587,14 @@ assert-environment-ok() {
 
 # Make sure git repo is ready:
 assert-repo-is-ready() {
+  # Get the original branch and commit:
+  original_head_branch="$(git rev-parse --abbrev-ref HEAD)"
+  original_head_commit="$(git rev-parse HEAD)"
+
+  # Make sure we are on a branch:
+  [ "$original_head_branch" == HEAD -o -z "$original_head_branch" ] &&
+    error "must be on a branch to run this command."
+
   # In a work-tree:
   [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" == true ] ||
     error "can't 'subrepo $command' outside a working tree."
@@ -534,13 +603,15 @@ assert-repo-is-ready() {
   git rev-parse --verify HEAD >/dev/null || die
 
   # Repo is in a clean state:
-  git update-index -q --ignore-submodules --refresh
-  git diff-files --quiet --ignore-submodules ||
-    error "can't $command subrepo. Unstaged changes."
-  git diff-index --quiet --ignore-submodules HEAD ||
-    error "can't $command subrepo. Working tree has changes."
-  git diff-index --quiet --cached --ignore-submodules HEAD ||
-    error "can't $command subrepo. Index has changes."
+  if [[ "$command" =~ ^(clone|pull|push|checkout)$ ]]; then
+    git update-index -q --ignore-submodules --refresh
+    git diff-files --quiet --ignore-submodules ||
+      error "can't $command subrepo. Unstaged changes."
+    git diff-index --quiet --ignore-submodules HEAD ||
+      error "can't $command subrepo. Working tree has changes."
+    git diff-index --quiet --cached --ignore-submodules HEAD ||
+      error "can't $command subrepo. Index has changes."
+  fi
 
   # For now, only support actions from top of repo:
   [ "$(git rev-parse --git-dir)" == '.git' ] ||
@@ -560,7 +631,7 @@ get-all-subrepos() {
   local paths=($(
     find . -name '.gitrepo' | grep '/.gitrepo$' | sed 's/.gitrepo$//' | sort
   ))
-  all_subrepos=()
+  subrepos=()
   local path
   for path in "${paths[@]}"; do
     add-subrepo "$path"
@@ -568,15 +639,15 @@ get-all-subrepos() {
 }
 
 add-subrepo() {
-  for path in "${all_subrepos[@]}"; do
+  for path in "${subrepos[@]}"; do
     [[ "$1" =~ ^$path ]] && return
   done
-  all_subrepos+=("$1")
+  subrepos+=("$1")
 }
 
 # Smart output:
 say() {
-  $quiet_output && return
+  $quiet_wanted && return
   echo "$@"
 }
 

@@ -30,7 +30,6 @@
   - git-commands.hacktive.com
   - Make a CogWeb site
 
-- Implement clean
 - Remove grafts?
 
 - Allow commands from any subdir.
@@ -58,3 +57,5 @@ x Add more meta info to .gitrepo file:
   + checkout
   + status
     + See what submodule and subtree do.
+
++ Implement clean
