@@ -2,6 +2,9 @@
 
 - Change former/parent to before
 - Add comments before each config field
+- Add remote-url and remote-branch on fetch
+  - unless config.subrepo.auto-remote-add
+  - unless config.subrepo.auto-branch-add
 
 - Apply the transplant_prefix branch (use xxd)
 
