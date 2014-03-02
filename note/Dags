@@ -1,0 +1,199 @@
+== ASCII commmit DAG diagrams
+
+         D--E--F--G--H
+        /     /
+    A--B-----C
+
+      .-A---M---N---O---P
+     /     /   /   /   /
+    I     B   C   D   E
+     \   /   /   /   /
+      `-------------'
+
+      .-A---N---O
+     /     /   /
+    I---------D
+
+      .-A---M---N---O---P
+     /     /   /   /   /
+    I     B   /   D   /
+     \   /   /   /   /
+      `-------------'
+
+      .-A---M---N---O
+     /     /       /
+    I     B       D
+     \   /       /
+      `---------'
+
+        D---E-------F
+       /     \       \
+      B---C---G---H---I---J
+     /                     \
+    A-------K---------------L--M
+
+    E-------F
+     \       \
+      G---H---I---J
+                   \
+                    L--M
+
+          A---B---C topic
+         /
+    D---E---F---G master
+
+
+          A---B---C topic
+         /         \
+    D---E---F---G---H master
+
+             o---o---o---B
+            /
+    ---o---1---o---o---o---A
+
+           o---o---o---o---C
+          /
+         /   o---o---o---B
+        /   /
+    ---2---1---o---o---o---A
+
+           o---o---o---o---o
+          /                 \
+         /   o---o---o---o---M
+        /   /
+    ---2---1---o---o---o---A
+
+    ---1---o---A
+        \ /
+         X
+        / \
+    ---2---o---o---B
+
+          A---B---C master on origin
+         /
+    D---E---F---G master
+
+          A---B---C remotes/origin/master
+         /         \
+    D---E---F---G---H master
+
+         B
+        /
+    ---X---A
+
+         B---C
+        /   /
+    ---X---A
+
+         B   D
+        /   /
+    ---X---A
+
+    o---o---o---A---B  origin/master
+             \
+              X---Y---Z  dev
+
+              A---B  (unnamed branch)
+             /
+    o---o---o---X---Y---Z  master
+
+          A---B---C topic
+         /
+    D---E---F---G master
+
+                  A'--B'--C' topic
+                 /
+    D---E---F---G master
+
+          A---B---C topic
+         /
+    D---E---A'---F master
+
+                   B'---C' topic
+                  /
+    D---E---A'---F master
+
+    o---o---o---o---o  master
+        |            \
+        |             o'--o'--o'  topic
+         \
+          o---o---o---o---o  next
+
+                            H---I---J topicB
+                           /
+                  E---F---G  topicA
+                 /
+    A---B---C---D  master
+
+                 H'--I'--J'  topicB
+                /
+                | E---F---G  topicA
+                |/
+    A---B---C---D  master
+
+    E---F---G---H---I---J  topicA
+
+    E---H'---I'---J'  topicA
+
+               X
+                \
+             A---M---B
+            /
+    ---o---O---P---Q
+
+    o---o---o---o---o---o---o---o---o  master
+         \
+          o---o---o---o---o  subsystem
+                                      \
+                                       *---*---*  topic
+
+    o---o---o---o---o---o---o---o  master
+        \                       \
+            o---o---o---o---o       o'--o'--o'--o'--o'  subsystem
+                            \
+                            *---*---*  topic
+
+    o---o---o---o---o---o---o---o  master
+         \                       \
+          o---o---o---o---o       o'--o'--o'--o'--o'--M  subsystem
+                           \                         /
+                            *---*---*-..........-*--*  topic
+
+    o---o---o---o---o---o---o---o  master
+                                 \
+                                  o'--o'--o'--o'--o'  subsystem
+                                                   \
+                                                    *---*---*  topic
+              o---*---o topic
+             /
+    o---o---o---*---o---o master
+
+              o---*---o---+ topic
+             /           /
+    o---o---o---*---o---o master
+
+              o---*---o---+---o---o topic
+             /           /         \
+    o---o---o---*---o---o---o---o---+ master
+
+              o---*---o-------o---o topic
+             /
+    o---o---o---*---o---o---o---o   master
+
+        $ git rebase master topic
+
+                                  o---*---o-------o---o topic
+                                 /
+    o---o---o---*---o---o---o---o   master
+
+    G   H   I   J
+     \ /     \ /
+      D   E   F
+       \  |  / \
+        \ | /   |
+         \|/    |
+          B     C
+           \   /
+            \ /
+             A
+

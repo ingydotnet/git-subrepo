@@ -1,20 +1,41 @@
-- Review doc/readme
+- Invent a good symbolic system for dags
+  - main and sub repo
+  - users: owner, user, collab
+  - commits: upstream sr head, local sr head, clone, pull, gitrepo
 
-- Allow commands from any subdir.
+  owner/main: A-----B
+  owner/subr: S-----T
+  git subrepo clone owner/subr foo
+  A-----B-----C
+             /
+      T'--T'+
 
+- Implement --all
+- Wrap external commands
+  - Show them on verbose
+  - Always check return status
 - Implement verbose output
 
-- Add new subcommands:
-  + checkout
-  - status
-    - See what submodule and subtree do.
-
 - Write more tests:
+  - Make simple fixtures
   - Multiple push sessions
   - Test all error conditions:
     - test/error.t
+  - Tests for reported rebase errors and other subtree badness
 
+- Git Commands
+  - #git-commands
+  - github.com/git-commands
+  - Fork projects
+  - git-commands.hacktive.com
+  - Make a CogWeb site
+
+- Implement clean
 - Remove grafts?
+
+- Allow commands from any subdir.
+
+- Review doc/readme
 
 ----
 
@@ -33,3 +54,7 @@ x Add more meta info to .gitrepo file:
 
 + Remove the 'remove' command.
 
++ Add new subcommands:
+  + checkout
+  + status
+    + See what submodule and subtree do.

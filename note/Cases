@@ -1,0 +1,32 @@
+== Users
+
+- art — project lead
+- bob — end user
+- cab — collab dev (push rights)
+- dim — forker dev (no push rights)
+- ell — third party repo owner
+
+== Repos
+- art/gallery  — art's main repo
+- art/painting — subrepo owned by art
+- ell/tickets  — subrepo owned by ell
+
+== Starting histories:
+- art/gallery  — A---B
+- art/painting — P---Q
+- ell/tickets  — T
+
+== Scenario 1
+art art/gallery$ git log
+A---B
+art art/gallery$ git subrepo clone art/painting
+art art/gallery$ ls
+painting/
+art art/gallery$ git log
+A---B---C
+       /
+     Q'
+art art/gallery$ 
+
+
+
