@@ -64,7 +64,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 # Test foo/bar/.gitrepo file contents:
 {
-  foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^2)"
+  foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
   test-gitrepo-comment-block
   test-gitrepo-field "remote" "../../../$UPSTREAM/bar"

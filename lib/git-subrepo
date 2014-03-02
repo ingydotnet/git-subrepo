@@ -131,35 +131,17 @@ command:clone() {
   subdir="${2:-"`guess-subdir "$subrepo_remote"`"}"
 
   command-setup
-  fetch-subrepo
 
-  # Read the subrepo into the index (under subdir):
-  git read-tree --prefix="$subdir" "$upstream_head"
+  update_commit="$(git rev-parse HEAD)"
 
-  # Checkout the subrepo as a new subdir:
-  git checkout -- "$subdir"
-
-  # Create a tree object from the index:
-  local tree_commit="$(git write-tree)"
-
-  # Create a commit object from the tree:
-  update_commit="$(
-    action-message |
-    git commit-tree \
-      "$(git log --max-count=1 --format=%T "$upstream_head")"
-  )"
-
-  # Create a merge commit:
-  local merge_commit="$(
-    echo "..." |
-    git commit-tree "$tree_commit" \
-      -p "$original_head_commit" \
-      -p "$update_commit"
-  )"
-
-  # Reset head to merge commit:
-  git reset --hard "$merge_commit" \
+  git clone "$subrepo_remote" "$subdir" -b "$subrepo_branch" \
     &> /dev/null
+
+  rm -fr "$subdir/.git"
+
+  git add "$subdir"
+
+  git commit -m "$(action-message)" &> /dev/null
 
   # Add the subdir/.gitrepo file:
   update-gitrepo-file
