@@ -19,3 +19,10 @@
 - http://stackoverflow.com/questions/2428137/how-to-rebase-one-git-repository-onto-another-one
 - http://stackoverflow.com/questions/3080509/git-list-commits-not-pushed-to-the-origin-yet
 - http://stackoverflow.com/questions/2263674/how-do-i-find-the-next-commit-in-git
+
+- http://git-scm.com/book/ch6-7.html (Subtree Merge)
+- https://www.kernel.org/pub/software/scm/git/docs/howto/using-merge-subtree.html
+- https://help.github.com/articles/working-with-subtree-merge
+  - git pull -s subtree foo master
+
+- http://git-scm.com/2010/03/17/replace.html

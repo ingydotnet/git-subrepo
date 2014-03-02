@@ -1,11 +1,11 @@
 $$$ for cmd in `cat AllGitCmds`; do git help $cmd; done
 
-git-cherry - find commits in one branch that are not in another
 
-== Plumbing Commands:
+== Inteesting Plumbing Commands:
 - git ls-tree HEAD
 - git cat-file -t <object>
 - git cat-file commit <commit>
+- git cat-file -p <commit>
 - git ls-tree <tree>
 - git ls-files --stage
 - git write-tree
@@ -14,7 +14,11 @@ git-cherry - find commits in one branch that are not in another
 - git show-branch
 - git hash-object <file>
 
-== With DAG diagrams
+- git rev-list --max-parents=0 HEAD     — Find root commit
+- git cherry        — find commits in one branch that are not in another
+- git replace
+
+== Commands with DAG diagrams in their manpages:
 
 - git-commit
 - git-filter-branch
