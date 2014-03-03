@@ -1,3 +1,8 @@
+== Development
+
+- Change former/parent to before
+- Add comments before each config field
+
 - Apply the transplant_prefix branch (use xxd)
 
 - Resolve outstanding github issues
@@ -5,6 +10,7 @@
 - Wrap external commands
   - Show them on verbose
   - Always check return status
+    - die with output on failure
 - Implement verbose output
 
 - Write more tests:
@@ -17,6 +23,8 @@
 - Make the 'clean' command remove grafts
 
 - Allow commands from any subdir.
+
+== Promotion
 
 - Git Commands
   - #git-commands
@@ -37,7 +45,7 @@
              /
       T'--T'+
 
-----
+== Done
 
 + Switch this repo from submodule to subrepo:
   + for test-more-bash & bashplus
