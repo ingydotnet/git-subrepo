@@ -91,6 +91,9 @@ main() {
   local subrepo_commit        # Upstream HEAD from previous clone/pull
   local subrepo_parent        # Local commit from before previous clone/pull
 
+  local override_remote       # Remote specified with -r
+  local override_branch       # Remote specified with -b
+
   local git_version           # Git version in use
 
   # Check environment and parse CLI options:
@@ -404,8 +407,12 @@ get-command-options() {
     local option="$1"; shift
     case "$option" in
       --) break ;;
-      -b) subrepo_branch="$1"; shift ;;
-      -r) subrepo_remote="$1"; shift ;;
+      -b) subrepo_branch="$1"
+          override_branch="$1"
+          shift ;;
+      -r) subrepo_remote="$1"
+          override_remote="$1"
+          shift ;;
       -u) update_wanted=true ;;
       -q) quiet_wanted=true ;;
       -v) verbose_wanted=true ;;
@@ -531,7 +538,8 @@ read-gitrepo-file() {
   fi
 
   # Read .gitrepo values:
-  subrepo_remote="$(git config --file="$gitrepo" subrepo.remote)"
+  [ -z "$subrepo_remote" ] &&
+    subrepo_remote="$(git config --file="$gitrepo" subrepo.remote)"
   [ -z "$subrepo_branch" ] &&
     subrepo_branch="$(git config --file="$gitrepo" subrepo.branch)"
   subrepo_commit="$(git config --file="$gitrepo" subrepo.commit)"
@@ -543,19 +551,26 @@ read-gitrepo-file() {
 update-gitrepo-file() {
   local short_commit=
 
-  if [ "$command" == clone ]; then
-    cat <<... > "$gitrepo"
+  local newfile=false
+  [ ! -e "$gitrepo" ] &&
+    newfile=true
+
+  $newfile && cat <<... > "$gitrepo"
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git "subrepo", and this file is maintained by the
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 ...
-  fi
 
   # TODO: only update remote and branch if supplied and $update_wanted
+  if $newfile || [ $update_wanted -a -n "$override_remote" ]; then
     git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
+  fi
+
+  if $newfile || [ $update_wanted -a -n "$override_branch" ]; then
     git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
+  fi
 
   git config --file="$gitrepo" subrepo.commit "$upstream_head"
   git config --file="$gitrepo" subrepo.parent "$original_head_commit"

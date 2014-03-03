@@ -1,12 +1,8 @@
 == Development
 
-- Change former/parent to before
-- Add comments before each config field
-- Add remote-url and remote-branch on fetch
-  - unless config.subrepo.auto-remote-add
-  - unless config.subrepo.auto-branch-add
-
-- Apply the transplant_prefix branch (use xxd)
++ Add remote-url and remote-branch on fetch
+  - unless config.subrepo.auto-remote-add == false
+  - unless config.subrepo.auto-branch-add == false
 
 - Resolve outstanding github issues
 
@@ -15,6 +11,8 @@
   - Always check return status
     - die with output on failure
 - Implement verbose output
+
+- Write `git subrepo fetch`
 
 - Write more tests:
   - Make simple fixtures
@@ -26,6 +24,18 @@
 - Make the 'clean' command remove grafts
 
 - Allow commands from any subdir.
+
+- Update VERSION to 0.1.1
+  - Tag when ready.
+
+- Add version commit id to cmdver in .gitrepo.
+
+- When .gitrepo is stable:
+  - Delete and re-clone all subrepos in all repos using them
+
+- Update Makefile to install:
+  - git-subrepo.d/remote
+  - git-subrepo.d/commit
 
 == Promotion
 
@@ -73,3 +83,6 @@ x Add more meta info to .gitrepo file:
 + Implement clean
 + Implement --all
 + Review doc/readme
+x Change former/parent to before
+x Add comments before each config field
+x Apply the transplant_prefix branch (use xxd)
