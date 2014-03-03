@@ -72,7 +72,6 @@ main() {
   local fetch_wanted=false    # Fetch requested for checkout
   local update_wanted=false   # Update .gitrepo with --branch and/or --remote
   local continue_wanted=false # Continue/finish a pull or push
-  local OK=0                  # Flag that commands have succeeded
   local command_remote='???'  # Remote repo for git-subrepo
   local command_commit='???'  # Commit of git-repo being used
 
@@ -94,6 +93,11 @@ main() {
 
   local override_remote       # Remote specified with -r
   local override_branch       # Remote specified with -b
+
+  local OK=0                  # Flag that commands have succeeded
+  local FAIL=true             # Flag for RUN: fail on error
+  local OUT=false             # Flag for RUN: put output in $output
+  local SAY=true              # Flag for RUN: print command for verbose
 
   local git_version           # Git version in use
 
@@ -183,8 +187,8 @@ command:pull() {
     return
   fi
 
-  OUTPUT=1 RUN git log --max-count=1 --format=%T "$upstream_head"
-  OUTPUT=1 RUN git commit-tree "$output" -p "$subrepo_parent" -m "$(action-message)"
+  OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
+  OUT=true RUN git commit-tree "$output" -p "$subrepo_parent" -m "$(action-message)"
   update_commit="$output"
 
   # TODO:
@@ -199,7 +203,7 @@ command:pull() {
     -- "$update_commit"^..HEAD ^HEAD^ \
 
   # The update_commit just got rewritten. Need new id:
-  OUTPUT=1 RUN git rev-parse HEAD^2
+  OUT=true RUN git rev-parse HEAD^2
   update_commit="$output"
 
   # Update the subdir/.gitrepo file:
@@ -363,7 +367,7 @@ subrepo-checkout() {
 
   # Graft subrepo branch to upstream (if requested):
   if $graft_wanted; then
-    OUTPUT=1 RUN git rev-list --max-parents=0 HEAD
+    OUT=true RUN git rev-list --max-parents=0 HEAD
     local root="$output"
     echo "$root $subrepo_commit" >> .git/info/grafts
   fi
@@ -374,9 +378,9 @@ subrepo-checkout() {
 
 # Clean up branches, remotes and grafts
 subrepo:clean() {
-  NOFAIL=1 RUN git remote rm "subrepo/$subdir"
-  NOFAIL=1 RUN git branch -D "subrepo/$subdir"
-  NOFAIL=1 RUN git branch -D "subrepo/remote/$subdir"
+  FAIL=false RUN git remote rm "subrepo/$subdir"
+  FAIL=false RUN git branch -D "subrepo/$subdir"
+  FAIL=false RUN git branch -D "subrepo/remote/$subdir"
 }
 
 #------------------------------------------------------------------------------
@@ -477,7 +481,7 @@ fetch-subrepo() {
   $say && say "Fetched '$subrepo_remote' ($subrepo_branch)"
 
   # Get the subrepo HEAD commit:
-  OUTPUT=1 RUN git rev-parse FETCH_HEAD
+  OUT=true RUN git rev-parse FETCH_HEAD
   upstream_head="$output"
 
   local output=$(git config "remote.subrepo/$subdir.url")
@@ -513,7 +517,7 @@ guess-subdir() {
 
 # Determine the upstream's default head branch:
 get-upstream-head-branch() {
-  OUTPUT=1 RUN git ls-remote $subrepo_remote
+  OUT=true RUN git ls-remote $subrepo_remote
   local remotes="$output"
   [ -n "$remotes" ] ||
     error "failed to 'git ls-remote $subrepo_remote'"
@@ -549,20 +553,20 @@ read-gitrepo-file() {
 
   # Read .gitrepo values:
   if [ -z "$subrepo_remote" ]; then
-    OUTPUT=1 RUN git config --file="$gitrepo" subrepo.remote
+    OUT=true RUN git config --file="$gitrepo" subrepo.remote
     subrepo_remote="$output"
   fi
 
   if [ -z "$subrepo_branch" ]; then
-    OUTPUT=1 RUN git config --file="$gitrepo" subrepo.branch
+    OUT=true RUN git config --file="$gitrepo" subrepo.branch
     subrepo_branch="$output"
   fi
 
-  OUTPUT=1 RUN git config --file="$gitrepo" subrepo.commit
+  OUT=true RUN git config --file="$gitrepo" subrepo.commit
   subrepo_commit="$output"
 
-  # XXX NOFAIL is a hack for missing 'former'
-  NOFAIL=1 OUTPUT=1 RUN git config --file="$gitrepo" subrepo.parent
+  # XXX FAIL=false is a hack for missing 'former'
+  FAIL=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
   subrepo_parent="$output"
 }
 
@@ -662,7 +666,7 @@ get-command-info() {
             command_remote="$remote"
           fi
         fi
-        GIT_DIR="$lib/.git" OUTPUT=1 RUN git rev-parse --short HEAD
+        GIT_DIR="$lib/.git" OUT=true RUN git rev-parse --short HEAD
         commit="$output"
         if [ -n "$commit" ]; then
           command_commit="$commit"
@@ -675,9 +679,9 @@ get-command-info() {
 # Make sure git repo is ready:
 assert-repo-is-ready() {
   # Get the original branch and commit:
-  OUTPUT=1 RUN git rev-parse --abbrev-ref HEAD
+  OUT=true RUN git rev-parse --abbrev-ref HEAD
   original_head_branch="$output"
-  OUTPUT=1 RUN git rev-parse HEAD
+  OUT=true RUN git rev-parse HEAD
   original_head_commit="$output"
 
   # Make sure we are on a branch:
@@ -685,7 +689,7 @@ assert-repo-is-ready() {
     error "must be on a branch to run this command."
 
   # In a work-tree:
-  OUTPUT=1 RUN git rev-parse --is-inside-work-tree
+  OUT=true RUN git rev-parse --is-inside-work-tree
   [ "$output" == true ] ||
     error "can't 'subrepo $command' outside a working tree."
 
@@ -736,13 +740,13 @@ add-subrepo() {
 
 # Smart command runner
 RUN() {
-  vsay '>>>' $*
+  $verbose_wanted && $SAY && say '>>>' $*
 
   set +e
   if $verbose_wanted; then
     local out="$("$@")"
   else
-    if [ -n "$OUTPUT" ]; then
+    if $OUT; then
       local out="$("$@" 2>/dev/null)"
     else
       local out="$("$@" 2>&1)"
@@ -751,10 +755,10 @@ RUN() {
   local rc=$?
   set -e
 
-  if [ ! "$rc" -a -z "$NOFAIL" ]; then
+  if [ ! "$rc" ] && $FAIL; then
     error "command failed: $*"
   fi
-  if [ -n "$OUTPUT" ]; then
+  if $OUT; then
     output="$out"
   fi
 }
