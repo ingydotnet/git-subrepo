@@ -353,12 +353,6 @@ subrepo-checkout() {
 
   git reset --hard "$original_head_commit" \
     &> /dev/null
-
-  # Update the remote url and the remote branch:
-  # TODO Make this smarter:
-  git remote rm "subrepo/$subdir" &> /dev/null || true
-  git remote add "subrepo/$subdir" "$subrepo_remote"
-  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit}"
 }
 
 # Clean up branches, remotes and grafts
@@ -466,6 +460,12 @@ fetch-subrepo() {
 
   # Get the subrepo HEAD commit:
   upstream_head="$(git rev-parse FETCH_HEAD)"
+
+  # Update the remote url and the remote branch:
+  # TODO Make this smarter:
+  git remote rm "subrepo/$subdir" &> /dev/null || true
+  git remote add "subrepo/$subdir" "$subrepo_remote"
+  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit}"
 }
 
 # Determine the correct subdir path to use:
@@ -556,17 +556,17 @@ action-message() {
   cat <<...
 git subrepo $command ${args[@]}
 
-  {"local":
-    {"subdir":  "$subdir"
-    ,"action":  "$command"}
-  ,"remote":
-    {"url":     "$subrepo_remote"
-    ,"branch":  "$subrepo_branch"
-    ,"commit":  "$commit"}
-  ,"git-subrepo":
-    {"version": "$VERSION"
-    ,"commit":  "$command_commit"
-    ,"origin":  "$command_remote"}}
+{"local":
+  {"subdir":  "$subdir"
+  ,"action":  "$command"}
+,"remote":
+  {"url":     "$subrepo_remote"
+  ,"branch":  "$subrepo_branch"
+  ,"commit":  "$commit"}
+,"git-subrepo":
+  {"version": "$VERSION"
+  ,"commit":  "$command_commit"
+  ,"origin":  "$command_remote"}}
 ...
 }
 
