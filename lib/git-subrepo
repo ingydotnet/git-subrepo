@@ -72,6 +72,8 @@ main() {
   local update_wanted=false   # Update .gitrepo with --branch and/or --remote
   local continue_wanted=false # Continue/finish a pull or push
   local OK=0                  # Flag that commands have succeeded
+  local command_remote='???'  # Remote repo for git-subrepo
+  local command_commit='???'  # Commit of git-repo being used
 
   local subdir                # Subdirectory of the subrepo being used
   local gitrepo               # Path to .gitrepo file
@@ -83,17 +85,19 @@ main() {
   local original_head_branch  # HEAD ref at start of command
   local upstream_head         # HEAD commit id from a subrepo fetch
   local update_commit         # Commit made for clone or pull
+  local parent_commit         # Commit before clone or pull
 
   local subrepo_remote        # Remote url for subrepo's upstream repo
   local subrepo_branch        # Upstream branch to clone/push/pull
   local subrepo_commit_old    # Upstream HEAD from previous clone/pull
-  local subrepo_former        # Local commit from previous clone/pull
+  local subrepo_parent        # Local commit from before previous clone/pull
 
   local git_version           # Git version in use
 
   # Check environment and parse CLI options:
   assert-environment-ok
   get-command-options "$@"
+  get-command-info
 
   # Make sure command exists:
   can "command:$command" ||
@@ -131,13 +135,15 @@ command:clone() {
   subdir="${2:-"`guess-subdir "$subrepo_remote"`"}"
 
   command-setup
+  fetch-subrepo
 
-  update_commit="$(git rev-parse HEAD)"
+  parent_commit="$(git rev-parse HEAD)"
 
   git clone "$subrepo_remote" "$subdir" -b "$subrepo_branch" \
     &> /dev/null
 
   rm -fr "$subdir/.git"
+  update-gitrepo-file
 
   git add "$subdir"
 
@@ -158,6 +164,8 @@ command:pull() {
   command-setup
   fetch-subrepo
 
+  parent_commit="$(git rev-parse HEAD)"
+
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit_old" ]; then
     say "subrepo '$subdir' is up to date"
@@ -169,7 +177,7 @@ command:pull() {
     action-message |
     git commit-tree \
       "$(git log --max-count=1 --format=%T "$upstream_head")" \
-      -p "$subrepo_former"
+      -p "$subrepo_parent"
   )"
 
   # TODO:
@@ -180,7 +188,7 @@ command:pull() {
 
   # Prune the merge history to keep things looking clean:
   git filter-branch -f \
-    --parent-filter "sed 's/ -p $subrepo_former//'" \
+    --parent-filter "sed 's/ -p $subrepo_parent//'" \
     -- "$update_commit"^..HEAD ^HEAD^ \
     &> /dev/null
 
@@ -189,6 +197,9 @@ command:pull() {
 
   # Update the subdir/.gitrepo file:
   update-gitrepo-file
+  git add "$gitrepo"
+  git commit --quiet --amend \
+    --message="Merge subrepo commit '$(git rev-parse --short "$update_commit")'"
 
   # Successful command output:
   say "git subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
@@ -513,12 +524,12 @@ read-gitrepo-file() {
   [ -z "$subrepo_branch" ] &&
     subrepo_branch="$(git config --file="$gitrepo" subrepo.branch)"
   subrepo_commit_old="$(git config --file="$gitrepo" subrepo.commit)"
-  subrepo_former="$(git config --file="$gitrepo" subrepo.former)"
+  subrepo_parent="$(git config --file="$gitrepo" subrepo.parent)"
 }
 
 # Update the subdir/.gitrepo state file:
 update-gitrepo-file() {
-  local short_commit="$(git rev-parse --short "$update_commit")"
+  local short_commit=
 
   if [ "$command" == clone ]; then
     cat <<... > "$gitrepo"
@@ -535,27 +546,32 @@ update-gitrepo-file() {
     git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
 
   git config --file="$gitrepo" subrepo.commit "$upstream_head"
-  git config --file="$gitrepo" subrepo.former "$update_commit"
+  git config --file="$gitrepo" subrepo.parent "$parent_commit"
   git config --file="$gitrepo" subrepo.cmdver "$VERSION"
-  git add "$gitrepo"
-  git commit \
-    --quiet \
-    --amend \
-    --message="Merge subrepo commit '$short_commit'"
 }
 
 # Commit msg for an action commit:
 action-message() {
   local commit="$(git rev-parse --short "$upstream_head")"
+  local args=()
+  if $all_wanted; then
+    args+=("$subdir")
+  fi
+  args+=(${command_arguments[@]})
   cat <<...
-subrepo $command: $subrepo_remote ($subrepo_branch) -> $subdir/
+git subrepo $command ${args[@]}
 
-  subdir: $subdir
-  remote: $subrepo_remote
-  branch: $subrepo_branch
-  commit: $commit
-
-git-subrepo version: $VERSION
+  {"local":
+    {"subdir":  "$subdir"
+    ,"action":  "$command"}
+  ,"remote":
+    {"url":     "$subrepo_remote"
+    ,"branch":  "$subrepo_branch"
+    ,"commit":  "$commit"}
+  ,"git-subrepo":
+    {"version": "$VERSION"
+    ,"commit":  "$command_commit"
+    ,"origin":  "$command_remote"}}
 ...
 }
 
@@ -566,6 +582,46 @@ assert-environment-ok() {
   git_version="$(git --version)"
   if [[ "$git_version" < "git version 1.7" ]]; then
     error "requires git version 1.7 or higher; you have '$git_version'"
+  fi
+}
+
+get-command-info() {
+  local bin="$0"
+  if [[ "$bin" =~ / ]]; then
+    local lib="$(dirname "$bin")"
+    if [ -e "$lib/git-subrepo.d/remote" ] &&
+       [ -e "$lib/git-subrepo.d/commit" ]; then
+      command_remote=$(readlink "$lib/git-subrepo.d/remote")
+      command_commit=$(readlink "$lib/git-subrepo.d/commit")
+    elif [[ "$lib" =~ / ]]; then
+      lib="$(dirname "$lib")"
+      if [ -d "$lib/.git" ]; then
+        local remote="$(
+          GIT_DIR=$lib/.git git remote -v |
+            grep '^origin' |
+            head -n1 |
+            cut -f2 |
+            cut -d ' ' -f1
+        )"
+        if [ -n "$remote" ]; then
+          command_remote="$remote"
+        else
+          local remote="$(
+            GIT_DIR=$lib/.git git remote -v |
+              head -n1 |
+              cut -f2 |
+              cut -d ' ' -f1
+          )"
+          if [ -n "$remote" ]; then
+            command_remote="$remote"
+          fi
+        fi
+        commit="$(GIT_DIR="$lib/.git" git rev-parse --short HEAD)"
+        if [ -n "$commit" ]; then
+          command_commit="$commit"
+        fi
+      fi
+    fi
   fi
 }
 
