@@ -1,12 +1,12 @@
 == Development
 
+- Implement pull with a --reclone default
+
+- Add version commit id to cmdver in .gitrepo.
+
 + Add remote-url and remote-branch on fetch
   - unless config.subrepo.auto-remote-add == false
   - unless config.subrepo.auto-branch-add == false
-
-- Resolve outstanding github issues
-
-- Write `git subrepo fetch`
 
 - Write more tests:
   - Make simple fixtures
@@ -17,12 +17,11 @@
 
 - Make the 'clean' command remove grafts
 
-- Allow commands from any subdir.
+- Resolve outstanding github issues:
+  - Allow commands from any subdir.
 
 - Update VERSION to 0.1.1
   - Tag when ready.
-
-- Add version commit id to cmdver in .gitrepo.
 
 - When .gitrepo is stable:
   - Delete and re-clone all subrepos in all repos using them
@@ -86,4 +85,8 @@ x Apply the transplant_prefix branch (use xxd)
   + Always check return status
     + die with output on failure
 + Implement verbose output
+
++ Write `git subrepo fetch`
+
++ Implement --quiet for status
 

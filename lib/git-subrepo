@@ -24,6 +24,7 @@ Commands:
   checkout  Create/checkout a local branch containing just the subrepo
 
   status    Get status of a subrepo (or all of them)
+  fetch     Fetch subrepo remote and update remote branch
   clean     Remove branches, remotes and grafts for a subrepo
 
   help      Read the (full) git-subrepo documentation
@@ -113,6 +114,8 @@ main() {
   if $all_wanted; then
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
+      subrepo_remote=
+      subrepo_branch=
       "command:$command" "$subdir" "${command_arguments[@]}"
     done
   else
@@ -284,10 +287,6 @@ command:status() {
     return
   fi
 
-  if $verbose_wanted; then
-    fetch-subrepo
-  fi
-
   [ ! -f "$subdir/.gitrepo" ] &&
     error "'$subdir' is not a subrepo"
 
@@ -299,6 +298,19 @@ Git subrepo '$subdir':
   tracking branch: $subrepo_branch
 
 ...
+}
+
+# `git subrepo fetch …` command
+command:fetch() {
+  local subdir="${1:?"subdir is required first argument"}"
+  subdir="${subdir#./}"
+  subdir="${subdir%/}"
+
+  read-gitrepo-file
+
+  fetch-subrepo true
+
+  say ""
 }
 
 # `git subrepo clean …` command
@@ -419,7 +431,7 @@ get-command-options() {
   command_arguments=("$@")
 
   if $all_wanted; then
-    [[ "$command" =~ ^(pull|push|checkout|status|clean)$ ]] ||
+    [[ "$command" =~ ^(pull|push|checkout|status|fetch|clean)$ ]] ||
       error "can't use '--all' with '$command' command"
   fi
   if $continue_wanted; then
@@ -458,8 +470,11 @@ command-setup() {
 }
 
 fetch-subrepo() {
+  local say="${1:-false}"
   # Fetch all the git objects from the subrepo/branch:
   srun git fetch --quiet "$subrepo_remote" "$subrepo_branch"
+
+  $say && say "Fetched '$subrepo_remote' ($subrepo_branch)"
 
   # Get the subrepo HEAD commit:
   orun git rev-parse FETCH_HEAD
@@ -469,9 +484,12 @@ fetch-subrepo() {
   # TODO Make this smarter:
   NOFAIL=1 srun git remote rm "subrepo/$subdir"
   srun git remote add "subrepo/$subdir" "$subrepo_remote"
+  $say && say "Created remote 'subrepo/$subdir'"
   srun git branch --force \
     "subrepo/remote/$subdir" \
     "${upstream_head:-$subrepo_commit}"
+  $say && say "Created branch 'subrepo/remote/$subdir'"
+  :
 }
 
 # Determine the correct subdir path to use:
@@ -710,11 +728,13 @@ add-subrepo() {
 
 # Output Runner - run command and save output.
 orun() {
+  set +e
   vsay $*
   output="$("$@" 2>/dev/null)"
   if [ ! $? -a -z "$NOFAIL" ]; then
     error "command failed: $*"
   fi
+  set -e
 }
 
 # Silent Runner - run command, but suppress output.

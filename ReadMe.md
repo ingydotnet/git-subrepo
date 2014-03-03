@@ -13,6 +13,7 @@ git-subrepo(1) - Git Submodule Alternative
     git subrepo checkout <subdir>
 
     git subrepo status <subdir>
+    git subrepo fetch --all
     git subrepo clean --all
 
     git subrepo version
@@ -189,18 +190,22 @@ merging, but can also be used to see what the local subrepo changes look like,
 by themselves. Note: the `.gitrepo` file will be deleted in this subrepo
 branch.
 
-* `git subrepo status <subdir>|--all [--verbose | --quiet]`
+* `git subrepo status <subdir>|--all [--quiet]`
 
 Get the status of a subrepo. If `--all` provided, get the status of all
-subrepos. If the `--verbose` flag is used, the remote repository will be
-queried to provide more information. If the `--quiet` flag is used, print less
-info, and on 1 line per subrepo.
+subrepos.  If the `--quiet` flag is used, print less info, and on 1 line per
+subrepo.
+
+* `git subrepo fetch <subdir>|--all`
+
+This command will fetch the remote content for a subrepo. It will create a
+branch pointing at the FETCH_HEAD called `subrepo/remote/<subdir>` and a
+remote called `subrepo/<subdir>`.
 
 * `git subrepo clean <subdir>|--all`
 
-When you run a checkout command, extra branches, remotes and grafts are
-created for you. This command will remove them. Note: they are automatically
-removed when you do a pull or push with --continue.
+When you run a subrepo command that does a remote fetch, extra branches,
+remotes and grafts are created for you. This command will remove them.
 
 * `git subrepo help`
 

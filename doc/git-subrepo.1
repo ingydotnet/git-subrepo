@@ -21,6 +21,7 @@ git subrepo push <subdir>
 git subrepo checkout <subdir>
 
 git subrepo status <subdir>
+git subrepo fetch \-\-all
 git subrepo clean \-\-all
 
 git subrepo version
@@ -298,12 +299,20 @@ This command will make sure that you have already pulled (merged) the upstream h
 This command creates a local branch called subrepo/\fIsubrepo\fR, that contains all the subdir commits since the last pull\. This is useful when a subrepo pull has failed\. You can merge things by hand, then run a \'git subrepo push\' command\. If you specify a merge\-strategy, then it will be applied using the remote head (which is automatically fetched) and this new branch\. With no merge\-strategy, just make the branch\. After all this, the \fBcheckout\fR command will actually checkout the new branch\. This command is normally used for hand merging, but can also be used to see what the local subrepo changes look like, by themselves\. Note: the \fB\.gitrepo\fR file will be deleted in this subrepo branch\.
 .
 .IP "\(bu" 4
-\fBgit subrepo status <subdir>|\-\-all [\-\-verbose | \-\-quiet]\fR
+\fBgit subrepo status <subdir>|\-\-all [\-\-quiet]\fR
 .
 .IP "" 0
 .
 .P
-Get the status of a subrepo\. If \fB\-\-all\fR provided, get the status of all subrepos\. If the \fB\-\-verbose\fR flag is used, the remote repository will be queried to provide more information\. If the \fB\-\-quiet\fR flag is used, print less info, and on 1 line per subrepo\.
+Get the status of a subrepo\. If \fB\-\-all\fR provided, get the status of all subrepos\. If the \fB\-\-quiet\fR flag is used, print less info, and on 1 line per subrepo\.
+.
+.IP "\(bu" 4
+\fBgit subrepo fetch <subdir>|\-\-all\fR
+.
+.IP "" 0
+.
+.P
+This command will fetch the remote content for a subrepo\. It will create a branch pointing at the FETCH_HEAD called \fBsubrepo/remote/<subdir>\fR and a remote called \fBsubrepo/<subdir>\fR\.
 .
 .IP "\(bu" 4
 \fBgit subrepo clean <subdir>|\-\-all\fR
@@ -311,7 +320,7 @@ Get the status of a subrepo\. If \fB\-\-all\fR provided, get the status of all s
 .IP "" 0
 .
 .P
-When you run a checkout command, extra branches, remotes and grafts are created for you\. This command will remove them\. Note: they are automatically removed when you do a pull or push with \-\-continue\.
+When you run a subrepo command that does a remote fetch, extra branches, remotes and grafts are created for you\. This command will remove them\.
 .
 .IP "\(bu" 4
 \fBgit subrepo help\fR
