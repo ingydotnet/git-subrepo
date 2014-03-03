@@ -89,7 +89,7 @@ main() {
 
   local subrepo_remote        # Remote url for subrepo's upstream repo
   local subrepo_branch        # Upstream branch to clone/push/pull
-  local subrepo_commit_old    # Upstream HEAD from previous clone/pull
+  local subrepo_commit        # Upstream HEAD from previous clone/pull
   local subrepo_parent        # Local commit from before previous clone/pull
 
   local git_version           # Git version in use
@@ -167,7 +167,7 @@ command:pull() {
   parent_commit="$(git rev-parse HEAD)"
 
   # Check if we already are up to date:
-  if [ "$upstream_head" == "$subrepo_commit_old" ]; then
+  if [ "$upstream_head" == "$subrepo_commit" ]; then
     say "subrepo '$subdir' is up to date"
     return
   fi
@@ -354,7 +354,7 @@ subrepo-checkout() {
   # TODO Figure out if we really need this graft:
   # Graft the history to the upstream (for rebase's sake):
   local root="$(git rev-list --max-parents=0 HEAD)"
-  echo "$root $subrepo_commit_old" >> .git/info/grafts
+  echo "$root $subrepo_commit" >> .git/info/grafts
 
   git reset --hard "$original_head_commit" \
     &> /dev/null
@@ -363,7 +363,7 @@ subrepo-checkout() {
   # TODO Make this smarter:
   git remote rm "subrepo/$subdir" &> /dev/null || true
   git remote add "subrepo/$subdir" "$subrepo_remote"
-  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit_old}"
+  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit}"
 }
 
 # Clean up branches, remotes and grafts
@@ -523,7 +523,7 @@ read-gitrepo-file() {
   subrepo_remote="$(git config --file="$gitrepo" subrepo.remote)"
   [ -z "$subrepo_branch" ] &&
     subrepo_branch="$(git config --file="$gitrepo" subrepo.branch)"
-  subrepo_commit_old="$(git config --file="$gitrepo" subrepo.commit)"
+  subrepo_commit="$(git config --file="$gitrepo" subrepo.commit)"
   subrepo_parent="$(git config --file="$gitrepo" subrepo.parent)"
 }
 
