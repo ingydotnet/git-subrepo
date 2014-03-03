@@ -136,18 +136,34 @@ command:clone() {
   command-setup
   fetch-subrepo
 
-  git clone "$subrepo_remote" "$subdir" -b "$subrepo_branch" \
+  # Make subdir for clone:
+  mkdir -p "$subdir"
+
+  # Put remote subrepo content in subdir:
+  GIT_WORK_TREE="$subdir" \
+    git reset --hard subrepo/remote/bar \
     &> /dev/null
 
-  rm -fr "$subdir/.git"
+  # Set old head ref:
+  git update-ref \
+    "refs/heads/$original_head_branch" \
+    "$original_head_commit" \
+    &> /dev/null
+
+  # Reset to old ref:
+  git reset --hard \
+    "$original_head_branch" \
+    &> /dev/null
+
+  # Add a new .gitrepo file:
   update-gitrepo-file
 
+  # Add the subdir content to mainline index:
   git add "$subdir"
 
-  git commit -m "$(action-message)" &> /dev/null
-
-  # Add the subdir/.gitrepo file:
-  update-gitrepo-file
+  # Commit this subrepo clone:
+  git commit -m "$(action-message)" \
+    &> /dev/null
 
   # Successful command output:
   say "git subrepo '$subdir' cloned from '$subrepo_remote' ($subrepo_branch)"
