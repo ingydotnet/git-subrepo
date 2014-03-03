@@ -6,12 +6,6 @@
 
 - Resolve outstanding github issues
 
-- Wrap external commands
-  - Show them on verbose
-  - Always check return status
-    - die with output on failure
-- Implement verbose output
-
 - Write `git subrepo fetch`
 
 - Write more tests:
@@ -86,3 +80,10 @@ x Add more meta info to .gitrepo file:
 x Change former/parent to before
 x Add comments before each config field
 x Apply the transplant_prefix branch (use xxd)
+
++ Wrap external commands
+  + Show them on verbose
+  + Always check return status
+    + die with output on failure
++ Implement verbose output
+

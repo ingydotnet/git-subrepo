@@ -140,33 +140,27 @@ command:clone() {
   fetch-subrepo
 
   # Make subdir for clone:
-  mkdir -p "$subdir"
+  srun mkdir -p "$subdir"
 
   # Put remote subrepo content in subdir:
-  GIT_WORK_TREE="$subdir" \
-    git reset --hard subrepo/remote/bar \
-    &> /dev/null
+  GIT_WORK_TREE="$subdir" srun git reset --hard subrepo/remote/bar
 
   # Set old head ref:
-  git update-ref \
+  srun git update-ref \
     "refs/heads/$original_head_branch" \
-    "$original_head_commit" \
-    &> /dev/null
+    "$original_head_commit"
 
   # Reset to old ref:
-  git reset --hard \
-    "$original_head_branch" \
-    &> /dev/null
+  srun git reset --hard "$original_head_branch"
 
   # Add a new .gitrepo file:
   update-gitrepo-file
 
   # Add the subdir content to mainline index:
-  git add "$subdir"
+  srun git add "$subdir"
 
   # Commit this subrepo clone:
-  git commit -m "$(action-message)" \
-    &> /dev/null
+  srun git commit -m "$(action-message)"
 
   # Successful command output:
   say "git subrepo '$subdir' cloned from '$subrepo_remote' ($subrepo_branch)"
@@ -186,33 +180,29 @@ command:pull() {
     return
   fi
 
-  # Create the update commit:
-  update_commit="$(
-    action-message |
-    git commit-tree \
-      "$(git log --max-count=1 --format=%T "$upstream_head")" \
-      -p "$subrepo_parent"
-  )"
+  orun git log --max-count=1 --format=%T "$upstream_head"
+  orun git commit-tree "$output" -p "$subrepo_parent" -m "$(action-message)"
+  update_commit="$output"
 
   # TODO:
   # This merge can fail, so we need to checkout/merge/remerge instead.
 
   # Merge the update with the subtree strategy:
-  git merge -s recursive -X subtree="$subdir" "$update_commit" > /dev/null
+  srun git merge -s recursive -X subtree="$subdir" "$update_commit"
 
   # Prune the merge history to keep things looking clean:
-  git filter-branch -f \
+  srun git filter-branch -f \
     --parent-filter "sed 's/ -p $subrepo_parent//'" \
     -- "$update_commit"^..HEAD ^HEAD^ \
-    &> /dev/null
 
   # The update_commit just got rewritten. Need new id:
-  update_commit="$(git rev-parse HEAD^2)"
+  orun git rev-parse HEAD^2
+  update_commit="$output"
 
   # Update the subdir/.gitrepo file:
   update-gitrepo-file
-  git add "$gitrepo"
-  git commit --quiet --amend \
+  srun git add "$gitrepo"
+  srun git commit --quiet --amend \
     --message="Merge subrepo commit '$(git rev-parse --short "$update_commit")'"
 
   # Successful command output:
@@ -251,11 +241,10 @@ command:push() {
   fi
 
   # Checkout starting branch:
-  git checkout "$original_head_branch" \
-    &> /dev/null
+  srun git checkout "$original_head_branch"
+
   # Delete the checkout branch:
-  git branch -D "$checkout_branch" \
-    &> /dev/null
+  srun branch -D "$checkout_branch"
 }
 
 # `git subrepo checkout …` command:
@@ -266,11 +255,8 @@ command:checkout() {
   # Checkout the subrepo to a branch:
   subrepo-checkout
 
-  echo ">>$upstream_head<<"
-
   # Checkout the checkout branch:
-  git checkout "$checkout_branch" \
-    &> /dev/null
+  srun git checkout "$checkout_branch"
 
   say "\
 Subrepo '$subdir' checked out to local branch '$checkout_branch'.
@@ -347,15 +333,13 @@ subrepo-checkout() {
   # TODO Actually only filter commits since last push.
   # TODO Check for all possible failures, and reset.
   # Make history of subdir changes:
-  git filter-branch -f \
+  srun git filter-branch -f \
     --subdirectory-filter "$subdir" \
-    -- HEAD \
-    &> /dev/null
+    -- HEAD
 
   # Remove the .gitrepo file from the history:
-  git filter-branch -f \
-    --tree-filter "rm -f .gitrepo" \
-    &> /dev/null
+  srun git filter-branch -f \
+    --tree-filter "rm -f .gitrepo"
 
   if [ -n "$merge_strategy" ]; then
     merge-upstream
@@ -363,26 +347,24 @@ subrepo-checkout() {
 
   # Create a branch for this checkout:
   checkout_branch="subrepo/$subdir"
-  git branch -f "$checkout_branch"
+  srun git branch -f "$checkout_branch"
 
-  # TODO Figure out if we really need this graft:
-  # Graft the history to the upstream (for rebase's sake):
-  local root="$(git rev-list --max-parents=0 HEAD)"
-  echo "$root $subrepo_commit" >> .git/info/grafts
+  # Graft subrepo branch to upstream (if requested):
+  if $graft_wanted; then
+    orun git rev-list --max-parents=0 HEAD
+    local root="$output"
+    echo "$root $subrepo_commit" >> .git/info/grafts
+  fi
 
-  git reset --hard "$original_head_commit" \
-    &> /dev/null
+  # Reset to where we started:
+  srun git reset --hard "$original_head_commit"
 }
 
 # Clean up branches, remotes and grafts
 subrepo:clean() {
-  git remote rm "subrepo/$subdir" \
-    &> /dev/null || true
-  git branch -D "subrepo/$subdir" \
-    &> /dev/null || true
-  git branch -D "subrepo/remote/$subdir" \
-    &> /dev/null || true
-  :
+  NOFAIL=1 srun git remote rm "subrepo/$subdir"
+  NOFAIL=1 srun git branch -D "subrepo/$subdir"
+  NOFAIL=1 srun git branch -D "subrepo/remote/$subdir"
 }
 
 #------------------------------------------------------------------------------
@@ -477,18 +459,19 @@ command-setup() {
 
 fetch-subrepo() {
   # Fetch all the git objects from the subrepo/branch:
-  git fetch --quiet "$subrepo_remote" "$subrepo_branch" \
-    &> /dev/null ||
-    error "command failed: git fetch $subrepo_remote $subrepo_branch"
+  srun git fetch --quiet "$subrepo_remote" "$subrepo_branch"
 
   # Get the subrepo HEAD commit:
-  upstream_head="$(git rev-parse FETCH_HEAD)"
+  orun git rev-parse FETCH_HEAD
+  upstream_head="$output"
 
   # Update the remote url and the remote branch:
   # TODO Make this smarter:
-  git remote rm "subrepo/$subdir" &> /dev/null || true
-  git remote add "subrepo/$subdir" "$subrepo_remote"
-  git branch --force "subrepo/remote/$subdir" "${upstream_head:-$subrepo_commit}"
+  NOFAIL=1 srun git remote rm "subrepo/$subdir"
+  srun git remote add "subrepo/$subdir" "$subrepo_remote"
+  srun git branch --force \
+    "subrepo/remote/$subdir" \
+    "${upstream_head:-$subrepo_commit}"
 }
 
 # Determine the correct subdir path to use:
@@ -505,7 +488,8 @@ guess-subdir() {
 
 # Determine the upstream's default head branch:
 get-upstream-head-branch() {
-  local remotes="$(git ls-remote $subrepo_remote 2>/dev/null)"
+  orun git ls-remote $subrepo_remote
+  local remotes="$output"
   [ -n "$remotes" ] ||
     error "failed to 'git ls-remote $subrepo_remote'"
   local commit="$(
@@ -538,13 +522,22 @@ read-gitrepo-file() {
   fi
 
   # Read .gitrepo values:
-  [ -z "$subrepo_remote" ] &&
-    subrepo_remote="$(git config --file="$gitrepo" subrepo.remote)"
-  [ -z "$subrepo_branch" ] &&
-    subrepo_branch="$(git config --file="$gitrepo" subrepo.branch)"
-  subrepo_commit="$(git config --file="$gitrepo" subrepo.commit)"
-  subrepo_parent="$(git config --file="$gitrepo" subrepo.parent \
-    || true)" # XXX hack for missing 'former'
+  if [ -z "$subrepo_remote" ]; then
+    orun git config --file="$gitrepo" subrepo.remote
+    subrepo_remote="$output"
+  fi
+
+  if [ -z "$subrepo_branch" ]; then
+    orun git config --file="$gitrepo" subrepo.branch
+    subrepo_branch="$output"
+  fi
+
+  orun git config --file="$gitrepo" subrepo.commit
+  subrepo_commit="$output"
+
+  # XXX NOFAIL is a hack for missing 'former'
+  NOFAIL=1 orun git config --file="$gitrepo" subrepo.parent
+  subrepo_parent="$output"
 }
 
 # Update the subdir/.gitrepo state file:
@@ -565,16 +558,16 @@ update-gitrepo-file() {
 
   # TODO: only update remote and branch if supplied and $update_wanted
   if $newfile || [ $update_wanted -a -n "$override_remote" ]; then
-    git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
+    srun git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
   fi
 
   if $newfile || [ $update_wanted -a -n "$override_branch" ]; then
-    git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
+    srun git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
   fi
 
-  git config --file="$gitrepo" subrepo.commit "$upstream_head"
-  git config --file="$gitrepo" subrepo.parent "$original_head_commit"
-  git config --file="$gitrepo" subrepo.cmdver "$VERSION"
+  srun git config --file="$gitrepo" subrepo.commit "$upstream_head"
+  srun git config --file="$gitrepo" subrepo.parent "$original_head_commit"
+  srun git config --file="$gitrepo" subrepo.cmdver "$VERSION"
 }
 
 # Commit msg for an action commit:
@@ -643,7 +636,8 @@ get-command-info() {
             command_remote="$remote"
           fi
         fi
-        commit="$(GIT_DIR="$lib/.git" git rev-parse --short HEAD)"
+        GIT_DIR="$lib/.git" orun git rev-parse --short HEAD
+        commit="$output"
         if [ -n "$commit" ]; then
           command_commit="$commit"
         fi
@@ -655,19 +649,22 @@ get-command-info() {
 # Make sure git repo is ready:
 assert-repo-is-ready() {
   # Get the original branch and commit:
-  original_head_branch="$(git rev-parse --abbrev-ref HEAD)"
-  original_head_commit="$(git rev-parse HEAD)"
+  orun git rev-parse --abbrev-ref HEAD
+  original_head_branch="$output"
+  orun git rev-parse HEAD
+  original_head_commit="$output"
 
   # Make sure we are on a branch:
   [ "$original_head_branch" == HEAD -o -z "$original_head_branch" ] &&
     error "must be on a branch to run this command."
 
   # In a work-tree:
-  [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" == true ] ||
+  orun git rev-parse --is-inside-work-tree
+  [ "$output" == true ] ||
     error "can't 'subrepo $command' outside a working tree."
 
   # HEAD exists:
-  git rev-parse --verify HEAD >/dev/null || die
+  srun git rev-parse --verify HEAD
 
   # Repo is in a clean state:
   if [[ "$command" =~ ^(clone|pull|push|checkout)$ ]]; then
@@ -681,10 +678,9 @@ assert-repo-is-ready() {
   fi
 
   # For now, only support actions from top of repo:
-  [ "$(git rev-parse --git-dir)" == '.git' ] ||
+  if [ "$(git rev-parse --git-dir)" != '.git' ]; then
     error "need to run subrepo command from top level directory of the repo."
-
-  :
+  fi
 }
 
 # If subdir exists, make sure it is empty:
@@ -712,10 +708,32 @@ add-subrepo() {
   subrepos+=("$1")
 }
 
+# Output Runner - run command and save output.
+orun() {
+  vsay $*
+  output="$("$@" 2>/dev/null)"
+  if [ ! $? -a -z "$NOFAIL" ]; then
+    error "command failed: $*"
+  fi
+}
+
+# Silent Runner - run command, but suppress output.
+srun() {
+  vsay $*
+  local output="$("$@" 2>&1)"
+  if [ ! $? -a -z "$NOFAIL" ]; then
+    error "command failed: $*\n\n$output"
+  fi
+}
+
 # Smart output:
 say() {
-  $quiet_wanted && return
-  echo "$@"
+  $quiet_wanted || echo "$@"
+}
+
+vsay() {
+  $verbose_wanted && echo "$@" >&2
+  :
 }
 
 OK() {
