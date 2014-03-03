@@ -730,8 +730,12 @@ add-subrepo() {
 # Output Runner - run command and save output.
 orun() {
   set +e
-  vsay $*
-  output="$("$@" 2>/dev/null)"
+  vsay '>>>' $*
+  if $verbose_wanted; then
+    output="$("$@")"
+  else
+    output="$("$@" 2>/dev/null)"
+  fi
   if [ ! $? -a -z "$NOFAIL" ]; then
     error "command failed: $*"
   fi
@@ -740,8 +744,12 @@ orun() {
 
 # Silent Runner - run command, but suppress output.
 srun() {
-  vsay $*
-  local output="$("$@" 2>&1)"
+  vsay '>>>' $*
+  if $verbose_wanted; then
+    local output="$("$@")"
+  else
+    local output="$("$@" 2>&1)"
+  fi
   if [ ! $? -a -z "$NOFAIL" ]; then
     error "command failed: $*\n\n$output"
   fi
