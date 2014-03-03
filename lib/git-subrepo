@@ -480,15 +480,22 @@ fetch-subrepo() {
   orun git rev-parse FETCH_HEAD
   upstream_head="$output"
 
-  # Update the remote url and the remote branch:
-  # TODO Make this smarter:
-  NOFAIL=1 srun git remote rm "subrepo/$subdir"
-  srun git remote add "subrepo/$subdir" "$subrepo_remote"
-  $say && say "Created remote 'subrepo/$subdir'"
+  local output=$(git config "remote.subrepo/$subdir.url")
+  if [ -z "$output" ]; then
+    srun git remote add "subrepo/$subdir" "$subrepo_remote"
+    $say && say "Created remote 'subrepo/$subdir'"
+  else
+    if [ "$output" != "$subrepo_remote" ]; then
+      git remote set-url "subrepo/$subdir" "$subrepo_remote"
+      $say && say "Changed remote 'subrepo/$subdir'"
+    fi
+  fi
+
   srun git branch --force \
     "subrepo/remote/$subdir" \
     "${upstream_head:-$subrepo_commit}"
   $say && say "Created branch 'subrepo/remote/$subdir'"
+
   :
 }
 
