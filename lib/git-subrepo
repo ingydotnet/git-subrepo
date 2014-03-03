@@ -519,7 +519,8 @@ read-gitrepo-file() {
   [ -z "$subrepo_branch" ] &&
     subrepo_branch="$(git config --file="$gitrepo" subrepo.branch)"
   subrepo_commit="$(git config --file="$gitrepo" subrepo.commit)"
-  subrepo_parent="$(git config --file="$gitrepo" subrepo.parent)"
+  subrepo_parent="$(git config --file="$gitrepo" subrepo.parent
+  || true)" # XXX hack for missing 'former'
 }
 
 # Update the subdir/.gitrepo state file:
