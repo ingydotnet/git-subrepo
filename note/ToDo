@@ -30,6 +30,8 @@
   - git-subrepo.d/remote
   - git-subrepo.d/commit
 
+- Rewrite the Intro doc.
+
 == Promotion
 
 - Git Commands

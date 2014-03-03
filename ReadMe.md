@@ -51,6 +51,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Moving/renaming a subrepo subdir just works.
 * Your git history is kept squeaky clean.
 * Upstream history (clone/pull) is condensed into a single commit.
+* You can see the complete subrepo history by using a subrepo remote branch.
 * Commits pushed back upstream are NOT condensed.
 * Easy to play around with subrepos and then reset back.
 * Does not introduce history that messes up other git commands.
