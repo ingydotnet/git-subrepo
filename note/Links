@@ -5,13 +5,7 @@
 - http://stackoverflow.com/questions/6149520/git-remove-root-commit ***
 - http://fourkitchens.com/blog/2009/01/19/creating-common-branch-ancestry-hard-problem
 - http://stackoverflow.com/questions/1488753/how-to-merge-two-branches-without-a-common-ancestor
-- https://gist.github.com/anonymous/55bcf30acab99308714b
 - http://sahd.lamafam.org/?p=1534
-
-
-# a + b = o
-- https://gist.github.com/anonymous/0544b465c57f01f8c4a6
-- https://gist.github.com/ingydotnet/bf92949734b6a23f2af6
 
 - http://www.claassen.net/geek/blog/2011/02/git-merge-strategytheirs.html
 - sahd.lamafam.org/?p=1534
@@ -26,3 +20,6 @@
   - git pull -s subtree foo master
 
 - http://git-scm.com/2010/03/17/replace.html
+
+- http://git.661346.n2.nabble.com/subtree-merges-lose-prefix-after-rebase-td7332850.html
+- http://ruleant.blogspot.com/2013/06/git-subtree-module-with-gittrees-config.html
