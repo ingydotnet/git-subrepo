@@ -2,6 +2,8 @@
 
 - The status command should be aware of being checked out into subrepo branch
 
+- Change fetch to update
+
 - Implement pull with a --reclone default
 
 - Add version commit id to cmdver in .gitrepo.
@@ -98,4 +100,6 @@ x Apply the transplant_prefix branch (use xxd)
   + clean
   + status
   + checkout
+
++ The status command should work with 0-n arguments
 

@@ -285,63 +285,78 @@ To simply return to your original branch, run this command:
 # `git subrepo status …` command:
 # TODO just print subdir name if --quiet
 command:status() {
-  if [ -z "$1" ]; then
-    err "This command requires a subdirectory or '--all'"
-    exit 1
-  elif [ ! -d "$1" ]; then
-    err "'$1' is not a subdirectory"
-    exit 1
+  if [ $# -eq 0 ]; then
+    if [[ "$original_head_branch" =~ ^subrepo/ ]]; then
+      subrepo:branch-status
+      return
+    fi
+    get-all-subrepos
+    local count=${#subrepos[@]}
+    if [ $count -eq 0 ]; then
+      echo "This git repo has no subrepos."
+      exit 1
+    else
+      echo "This git repo has $count subrepos:"
+      echo
+    fi
+  else
+    subrepos=("$@")
   fi
 
-  subdir="${1#./}"
-  subdir="${subdir%/}"
+  for subdir in "${subrepos[@]}"; do
+    subdir="${subdir#./}"
+    subdir="${subdir%/}"
 
-  read-gitrepo-file
+    if [ ! -f "$subdir/.gitrepo" ]; then
+      echo "'$subdir' is not a subrepo"
+      echo
+      continue
+    fi
 
-  if $quiet_wanted; then
-    echo "$subdir"
-    return
-  fi
+    read-gitrepo-file
 
-  [ ! -f "$subdir/.gitrepo" ] &&
-    error "'$subdir' is not a subrepo"
+    if $quiet_wanted; then
+      echo "$subdir"
+      return
+    fi
 
-  # Remote Name:
-  local remote="subrepo/$subdir"
-  OUT=true RUN git config "remote.$remote.url"
-  remote="$output"
+    # Remote Name:
+    local remote="subrepo/$subdir"
+    OUT=true RUN git config "remote.$remote.url"
+    remote="$output"
 
-  # Remote Ref:
-  local ref="refs/subrepo/remote/$subdir"
-  OUT=true RUN git for-each-ref "$ref"
-  local ref_ok="$output"
+    # Remote Ref:
+    local ref="refs/subrepo/remote/$subdir"
+    OUT=true RUN git for-each-ref "$ref"
+    local ref_ok="$output"
 
-  # SubRepo Branch:
-  local branch="subrepo/$subdir"
-  OUT=true RUN git for-each-ref "refs/heads/$branch"
-  local branch_ok="$output"
+    # SubRepo Branch:
+    local branch="subrepo/$subdir"
+    OUT=true RUN git for-each-ref "refs/heads/$branch"
+    local branch_ok="$output"
 
-  cat <<...
+    cat <<...
 Git subrepo '$subdir':
 ...
-  [ -n "$branch_ok" ] && cat <<...
+    [ -n "$branch_ok" ] && cat <<...
   SubRepo Branch:  $branch
 ...
-  [ -n "$remote" ] && cat <<...
+    [ -n "$remote" ] && cat <<...
   Remote Name:     subrepo/$subdir
 ...
-  cat <<...
+    cat <<...
   Remote URL:      $subrepo_remote
 ...
-  [ -n "$ref_ok" ] && cat <<...
+    [ -n "$ref_ok" ] && cat <<...
   Remote Ref:      $ref
 ...
-  cat <<...
+    cat <<...
   Tracking Branch: $subrepo_branch
   Pulled Commit:   $(git rev-parse --short $subrepo_parent)
   Previous Pull:   $(git rev-parse --short $subrepo_commit)
 
 ...
+  done
 }
 
 # `git subrepo fetch …` command
@@ -439,6 +454,11 @@ subrepo:clean() {
     RUN git update-ref -d "$ref"
     say "Removed branch '${ref#refs/heads/}'"
   fi
+}
+
+# TODO finish this
+subrepo:branch-status() {
+  echo "You are on a subrepo branch"
 }
 
 #------------------------------------------------------------------------------
@@ -699,6 +719,8 @@ assert-environment-ok() {
   if [[ "$git_version" < "git version 1.7" ]]; then
     error "requires git version 1.7 or higher; you have '$git_version'"
   fi
+  git rev-parse --git-dir &> /dev/null ||
+    error "not inside a git repository"
 }
 
 get-command-info() {
@@ -854,3 +876,5 @@ error() {
 [ "$BASH_SOURCE" == "$0" ] && main "$@"
 
 true
+
+# vim: set lisp:
