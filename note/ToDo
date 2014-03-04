@@ -1,8 +1,13 @@
 == Development
 
+- The status command should be aware of being checked out into subrepo branch
+
 - Implement pull with a --reclone default
 
 - Add version commit id to cmdver in .gitrepo.
+  - Update Makefile to install:
+    - git-subrepo.d/remote
+    - git-subrepo.d/commit
 
 + Add remote-url and remote-branch on fetch
   - unless config.subrepo.auto-remote-add == false
@@ -25,10 +30,6 @@
 
 - When .gitrepo is stable:
   - Delete and re-clone all subrepos in all repos using them
-
-- Update Makefile to install:
-  - git-subrepo.d/remote
-  - git-subrepo.d/commit
 
 - Rewrite the Intro doc.
 
@@ -91,4 +92,10 @@ x Apply the transplant_prefix branch (use xxd)
 + Write `git subrepo fetch`
 
 + Implement --quiet for status
+
++ Finish ref/remote/branch stuff
+  + fetch
+  + clean
+  + status
+  + checkout
 

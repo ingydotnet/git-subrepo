@@ -94,7 +94,7 @@ main() {
   local override_remote       # Remote specified with -r
   local override_branch       # Remote specified with -b
 
-  local OK=0                  # Flag that commands have succeeded
+  local OK=true               # Flag that commands have succeeded
   local FAIL=true             # Flag for RUN: fail on error
   local OUT=false             # Flag for RUN: put output in $output
   local SAY=true              # Flag for RUN: print command for verbose
@@ -229,17 +229,15 @@ command:push() {
   subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
-  git rebase "$upstream_head" "$checkout_branch" \
-    &> /dev/null \
-    || OK=1
+  FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
 
-  if OK; then
-    git push "$subrepo_remote" "+$checkout_branch:$subrepo_branch" \
-      &> /dev/null \
-      || OK=1
+  if $OK; then
+    FAIL=false RUN git push \
+      "$subrepo_remote" \
+      "+$checkout_branch:$subrepo_branch"
   fi
 
-  if OK; then
+  if $OK; then
     say "git subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
   else
     say "The subrepo push command failed to rebase to upstream."
@@ -265,14 +263,21 @@ command:checkout() {
   # Checkout the checkout branch:
   RUN git checkout "$checkout_branch"
 
-  say "\
-Subrepo '$subdir' checked out to local branch '$checkout_branch'.
-Your remote tracking branch 'subrepo/remote/$subdir' is up to date.
+  say "
+You are now on a local branch: '$checkout_branch'
+
+The upstream remote content has been fetched.
+The local upstream tracking ref is: 'refs/subrepo/remote/$subdir'
 
 You can now merge/rebase your local changes with the upstream.
-When you have finishing merging, pull the subrepo in the main repo with:
+When you have finishing merging, your can complete a pull with:
 
-  git subrepo pull $subdir
+  git checkout $original_head_branch
+  git subrepo pull $subdir --continue
+
+To simply return to your original branch, run this command:
+
+  git checkout $original_head_branch
 
 "
 }
@@ -294,12 +299,40 @@ command:status() {
   [ ! -f "$subdir/.gitrepo" ] &&
     error "'$subdir' is not a subrepo"
 
+  # Remote Name:
+  local remote="subrepo/$subdir"
+  OUT=true RUN git config "remote.$remote.url"
+  remote="$output"
+
+  # Remote Ref:
+  local ref="refs/subrepo/remote/$subdir"
+  OUT=true RUN git for-each-ref "$ref"
+  local ref_ok="$output"
+
+  # SubRepo Branch:
+  local branch="subrepo/$subdir"
+  OUT=true RUN git for-each-ref "refs/heads/$branch"
+  local branch_ok="$output"
+
   cat <<...
 Git subrepo '$subdir':
-  remote name:     subrepo/$subdir
-  remote url:      $subrepo_remote
-  remote branch:   subrepo/remote/$subdir
-  tracking branch: $subrepo_branch
+...
+  [ -n "$branch_ok" ] && cat <<...
+  SubRepo Branch:  $branch
+...
+  [ -n "$remote" ] && cat <<...
+  Remote Name:     subrepo/$subdir
+...
+  cat <<...
+  Remote URL:      $subrepo_remote
+...
+  [ -n "$ref_ok" ] && cat <<...
+  Remote Ref:      $ref
+...
+  cat <<...
+  Tracking Branch: $subrepo_branch
+  Pulled Commit:   $(git rev-parse --short $subrepo_parent)
+  Previous Pull:   $(git rev-parse --short $subrepo_commit)
 
 ...
 }
@@ -376,11 +409,29 @@ subrepo-checkout() {
   RUN git reset --hard "$original_head_commit"
 }
 
-# Clean up branches, remotes and grafts
+# Clean up refs, branches, remotes and grafts
 subrepo:clean() {
-  FAIL=false RUN git remote rm "subrepo/$subdir"
-  FAIL=false RUN git branch -D "subrepo/$subdir"
-  FAIL=false RUN git branch -D "subrepo/remote/$subdir"
+  # Remove remote if exists:
+  local remote="subrepo/$subdir"
+  OUT=true RUN git config "remote.$remote.url"
+  if [ -n "$output" ]; then
+    RUN git remote rm "$remote"
+    say "Removed remote '$remote'"
+  fi
+
+  # Remove remote ref if exists:
+  local ref="refs/subrepo/remote/$subdir"
+  if [ -e ".git/$ref" ]; then
+    RUN git update-ref -d "$ref"
+    say "Removed ref '$ref'"
+  fi
+
+  # Remove subrepo branch if exists:
+  local ref="refs/heads/subrepo/$subdir"
+  if [ -e ".git/$ref" ]; then
+    RUN git update-ref -d "$ref"
+    say "Removed branch '${ref#refs/heads/}'"
+  fi
 }
 
 #------------------------------------------------------------------------------
@@ -495,12 +546,21 @@ fetch-subrepo() {
     fi
   fi
 
-  RUN git branch --force \
-    "subrepo/remote/$subdir" \
-    "${upstream_head:-$subrepo_commit}"
-  $say && say "Created branch 'subrepo/remote/$subdir'"
+  local ref="refs/subrepo/remote/$subdir"
+  OUT=true RUN git for-each-ref "$ref"
+  if [ -z "$output" ]; then
+    RUN git update-ref "$ref" "$upstream_head"
+    $say && say "Created ref '$ref'"
+  else
+    local commit="$(echo $output | cut -d' ' -f1)"
+    if [ "$commit" != "$upstream_head" ]; then
+      RUN git update-ref -d "$ref"
+      RUN git update-ref "$ref" "$upstream_head"
+      $say && say "Changed ref '$ref'"
+    fi
+  fi
 
-  :
+  true
 }
 
 # Determine the correct subdir path to use:
@@ -742,6 +802,7 @@ add-subrepo() {
 RUN() {
   $verbose_wanted && $SAY && say '>>>' $*
 
+  OK=true
   set +e
   if $verbose_wanted; then
     local out="$("$@")"
@@ -755,8 +816,9 @@ RUN() {
   local rc=$?
   set -e
 
-  if [ ! "$rc" ] && $FAIL; then
-    error "command failed: $*"
+  if [ ! "$rc" ]; then
+    OK=false
+    $FAIL && error "command failed: $*"
   fi
   if $OUT; then
     output="$out"
@@ -774,7 +836,7 @@ vsay() {
 }
 
 OK() {
-  [ $OK ]
+  $OK
 }
 
 # Nicely report common error messages:
