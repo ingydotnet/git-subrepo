@@ -141,7 +141,7 @@ command:help() {
 # `git subrepo clone …` command:
 command:clone() {
   subrepo_remote="${1:?"remote-url is required first argument"}"
-  subdir="${2:-"`guess-subdir "$subrepo_remote"`"}"
+  subdir="${2:-"`guess-subdir`"}"
 
   command-setup
   fetch-subrepo
@@ -231,13 +231,13 @@ command:push() {
   # Attempt to rebase changes onto upstream:
   FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
 
-  if $OK; then
+  if OK; then
     FAIL=false RUN git push \
       "$subrepo_remote" \
       "+$checkout_branch:$subrepo_branch"
   fi
 
-  if $OK; then
+  if OK; then
     say "git subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
   else
     say "The subrepo push command failed to rebase to upstream."
@@ -285,8 +285,15 @@ To simply return to your original branch, run this command:
 # `git subrepo status …` command:
 # TODO just print subdir name if --quiet
 command:status() {
-  subdir="${1:?"subdir is required first argument"}"
-  subdir="${subdir#./}"
+  if [ -z "$1" ]; then
+    err "This command requires a subdirectory or '--all'"
+    exit 1
+  elif [ ! -d "$1" ]; then
+    err "'$1' is not a subdirectory"
+    exit 1
+  fi
+
+  subdir="${1#./}"
   subdir="${subdir%/}"
 
   read-gitrepo-file
@@ -565,8 +572,7 @@ fetch-subrepo() {
 
 # Determine the correct subdir path to use:
 guess-subdir() {
-  local dir="$1"
-  dir="${dir%/}"
+  local dir="$subrepo_remote"
   dir="${dir%.git}"
   dir="${dir%/}"
   dir="${dir##*/}"
@@ -830,9 +836,8 @@ say() {
   $quiet_wanted || echo "$@"
 }
 
-vsay() {
-  $verbose_wanted && echo "$@" >&2
-  :
+err() {
+  echo "$@" >&2
 }
 
 OK() {
