@@ -1,0 +1,18 @@
+== Pull Dancing
+
+(
+    git sr pull --rebase ext/bar
+)
+
+(
+    git sr checkout ext/bar --rebase
+    make test
+    git sr pull --continue
+)
+
+(
+    git sr checkout ext/bar
+    git rebase subrepo/remote/ext/bar
+    make test
+    git sr pull --continue
+)
