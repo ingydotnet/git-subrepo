@@ -75,31 +75,31 @@ main() {
   local command_remote='???'  # Remote repo for git-subrepo
   local command_commit='???'  # Commit of git-repo being used
 
-  local subdir                # Subdirectory of the subrepo being used
-  local gitrepo               # Path to .gitrepo file
-  local checkout_branch       # Branch name to checkout to (push from)
-  local current_branch        # Branch we were on at start of the command
-  local merge_strategy        # Merge strategy to use
+  local subdir=               # Subdirectory of the subrepo being used
+  local gitrepo=              # Path to .gitrepo file
+  local checkout_branch=      # Branch name to checkout to (push from)
+  local current_branch=       # Branch we were on at start of the command
+  local merge_strategy=       # Merge strategy to use
 
-  local original_head_commit  # HEAD commit id at start of command
-  local original_head_branch  # HEAD ref at start of command
-  local upstream_head         # HEAD commit id from a subrepo fetch
-  local update_commit         # Commit made for clone or pull
+  local original_head_commit= # HEAD commit id at start of command
+  local original_head_branch= # HEAD ref at start of command
+  local upstream_head=        # HEAD commit id from a subrepo fetch
+  local update_commit=        # Commit made for clone or pull
 
-  local subrepo_remote        # Remote url for subrepo's upstream repo
-  local subrepo_branch        # Upstream branch to clone/push/pull
-  local subrepo_commit        # Upstream HEAD from previous clone/pull
-  local subrepo_parent        # Local commit from before previous clone/pull
+  local subrepo_remote=       # Remote url for subrepo's upstream repo
+  local subrepo_branch=       # Upstream branch to clone/push/pull
+  local subrepo_commit=       # Upstream HEAD from previous clone/pull
+  local subrepo_parent=       # Local commit from before previous clone/pull
 
-  local override_remote       # Remote specified with -r
-  local override_branch       # Remote specified with -b
+  local override_remote=      # Remote specified with -r
+  local override_branch=      # Remote specified with -b
 
   local OK=true               # Flag that commands have succeeded
   local FAIL=true             # Flag for RUN: fail on error
   local OUT=false             # Flag for RUN: put output in $output
   local SAY=true              # Flag for RUN: print command for verbose
 
-  local git_version           # Git version in use
+  local git_version=          # Git version in use
 
   # Check environment and parse CLI options:
   assert-environment-ok
@@ -140,10 +140,7 @@ command:help() {
 
 # `git subrepo clone …` command:
 command:clone() {
-  subrepo_remote="${1:?"remote-url is required first argument"}"
-  subdir="${2:-"`guess-subdir`"}"
-
-  command-setup
+  command-setup +subrepo_remote subdir:guess-subdir
   fetch-subrepo
 
   # Make subdir for clone:
@@ -176,9 +173,7 @@ command:clone() {
 # `git subrepo pull …` command:
 # TODO Command needs rewrite:
 command:pull() {
-  subdir="${1:?"subdir is required first argument"}"
-
-  command-setup
+  command-setup +subdir
   fetch-subrepo
 
   # Check if we already are up to date:
@@ -219,9 +214,8 @@ command:pull() {
 # `git subrepo push …` command:
 # TODO Command needs rewrite:
 command:push() {
-  subdir="${1:?"subdir is required first argument"}"
+  command-setup +subdir
 
-  command-setup
   # XXX Probably don't fetch on push.
   fetch-subrepo
 
@@ -254,8 +248,7 @@ command:push() {
 
 # `git subrepo checkout …` command:
 command:checkout() {
-  subdir="${1:?"subdir is required first argument"}"
-  command-setup
+  command-setup +subdir
 
   # Checkout the subrepo to a branch:
   subrepo-checkout
@@ -360,12 +353,11 @@ Git subrepo '$subdir':
 }
 
 # `git subrepo fetch …` command
+# TODO:
+# - Rename to update
+# - Print all messages in here
 command:fetch() {
-  local subdir="${1:?"subdir is required first argument"}"
-  subdir="${subdir#./}"
-  subdir="${subdir%/}"
-
-  read-gitrepo-file
+  command-setup +subdir
 
   fetch-subrepo true
 
@@ -374,10 +366,28 @@ command:fetch() {
 
 # `git subrepo clean …` command
 command:clean() {
-  local subdir="${1:?"subdir is required first argument"}"
-  subdir="${subdir#./}"
-  subdir="${subdir%/}"
-  subrepo:clean
+  command-setup +subdir
+
+  local remote="subrepo/$subdir"
+  OUT=true RUN git config "remote.$remote.url"
+  if [ -n "$output" ]; then
+    RUN git remote rm "$remote"
+    say "Removed remote '$remote'"
+  fi
+
+  # Remove remote ref if exists:
+  local ref="refs/subrepo/remote/$subdir"
+  if [ -e ".git/$ref" ]; then
+    RUN git update-ref -d "$ref"
+    say "Removed ref '$ref'"
+  fi
+
+  # Remove subrepo branch if exists:
+  local ref="refs/heads/subrepo/$subdir"
+  if [ -e ".git/$ref" ]; then
+    RUN git update-ref -d "$ref"
+    say "Removed branch '${ref#refs/heads/}'"
+  fi
 }
 
 # Print version info.
@@ -429,31 +439,6 @@ subrepo-checkout() {
 
   # Reset to where we started:
   RUN git reset --hard "$original_head_commit"
-}
-
-# Clean up refs, branches, remotes and grafts
-subrepo:clean() {
-  # Remove remote if exists:
-  local remote="subrepo/$subdir"
-  OUT=true RUN git config "remote.$remote.url"
-  if [ -n "$output" ]; then
-    RUN git remote rm "$remote"
-    say "Removed remote '$remote'"
-  fi
-
-  # Remove remote ref if exists:
-  local ref="refs/subrepo/remote/$subdir"
-  if [ -e ".git/$ref" ]; then
-    RUN git update-ref -d "$ref"
-    say "Removed ref '$ref'"
-  fi
-
-  # Remove subrepo branch if exists:
-  local ref="refs/heads/subrepo/$subdir"
-  if [ -e ".git/$ref" ]; then
-    RUN git update-ref -d "$ref"
-    say "Removed branch '${ref#refs/heads/}'"
-  fi
 }
 
 # TODO finish this
@@ -531,12 +516,16 @@ get-command-options() {
   :
 }
 
+# Do the setup steps needed by most of the subrepo subcommands:
 command-setup() {
+  get-params "$@"
+
   # Sanity check subdir:
   [ -n "$subdir" ] ||
     die "subdir not set"
   [[ "$subdir" =~ ^/ ]] &&
     error "subdir '$dir' should not be absolute path"
+  subdir="${subdir#./}"
   subdir="${subdir%/}"
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
@@ -551,6 +540,39 @@ command-setup() {
   :
 }
 
+# Parse command line args according to a simple dsl spec:
+get-params() {
+  local i=0
+  local num=${#command_arguments[@]}
+  for arg in $@; do
+    if [[ "$arg" =~ ^\+ ]]; then
+      if [ $i -ge $num ]; then
+        error "command '$command' requires arg '${arg#+}'"
+      fi
+      printf -v ${arg#+} "${command_arguments[i]}"
+    elif [[ "$arg" =~ : ]]; then
+      if [ $i -lt $num ]; then
+        printf -v ${arg%:*} "${command_arguments[i]}"
+      else
+        "${arg#*:}"
+      fi
+    fi
+    let i=$((i+1))
+  done
+}
+
+# Determine the correct subdir path to use:
+guess-subdir() {
+  local dir="$subrepo_remote"
+  dir="${dir%.git}"
+  dir="${dir%/}"
+  dir="${dir##*/}"
+  [[ "$dir" =~ ^[-a-zA-Z0-9]+$ ]] ||
+    error "can't determine subdir from '$subrepo_remote'"
+  subdir="$dir"
+}
+
+# Fetch the subrepo's remote branch content:
 fetch-subrepo() {
   local say="${1:-false}"
   # Fetch all the git objects from the subrepo/branch:
@@ -588,17 +610,6 @@ fetch-subrepo() {
   fi
 
   true
-}
-
-# Determine the correct subdir path to use:
-guess-subdir() {
-  local dir="$subrepo_remote"
-  dir="${dir%.git}"
-  dir="${dir%/}"
-  dir="${dir##*/}"
-  [[ "$dir" =~ ^[-a-zA-Z0-9]+$ ]] ||
-    error "can't determine subdir from '$subrepo_remote'"
-  echo "$dir"
 }
 
 # Determine the upstream's default head branch:
@@ -639,20 +650,20 @@ read-gitrepo-file() {
 
   # Read .gitrepo values:
   if [ -z "$subrepo_remote" ]; then
-    OUT=true RUN git config --file="$gitrepo" subrepo.remote
+    SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.remote
     subrepo_remote="$output"
   fi
 
   if [ -z "$subrepo_branch" ]; then
-    OUT=true RUN git config --file="$gitrepo" subrepo.branch
+    SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.branch
     subrepo_branch="$output"
   fi
 
-  OUT=true RUN git config --file="$gitrepo" subrepo.commit
+  SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.commit
   subrepo_commit="$output"
 
   # XXX FAIL=false is a hack for missing 'former'
-  FAIL=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
+  SAY=false FAIL=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
   subrepo_parent="$output"
 }
 
@@ -719,8 +730,6 @@ assert-environment-ok() {
   if [[ "$git_version" < "git version 1.7" ]]; then
     error "requires git version 1.7 or higher; you have '$git_version'"
   fi
-  git rev-parse --git-dir &> /dev/null ||
-    error "not inside a git repository"
 }
 
 get-command-info() {
@@ -766,10 +775,14 @@ get-command-info() {
 
 # Make sure git repo is ready:
 assert-repo-is-ready() {
+  # We must be inside a git repo:
+  git rev-parse --git-dir &> /dev/null ||
+    error "not inside a git repository"
+
   # Get the original branch and commit:
-  OUT=true RUN git rev-parse --abbrev-ref HEAD
+  SAY=false OUT=true RUN git rev-parse --abbrev-ref HEAD
   original_head_branch="$output"
-  OUT=true RUN git rev-parse HEAD
+  SAY=false OUT=true RUN git rev-parse HEAD
   original_head_commit="$output"
 
   # Make sure we are on a branch:
@@ -777,7 +790,7 @@ assert-repo-is-ready() {
     error "must be on a branch to run this command."
 
   # In a work-tree:
-  OUT=true RUN git rev-parse --is-inside-work-tree
+  SAY=false OUT=true RUN git rev-parse --is-inside-work-tree
   [ "$output" == true ] ||
     error "can't 'subrepo $command' outside a working tree."
 
@@ -853,15 +866,17 @@ RUN() {
   fi
 }
 
-# Smart output:
+# Print unless quiet mode:
 say() {
   $quiet_wanted || echo "$@"
 }
 
+# Print to stderr:
 err() {
   echo "$@" >&2
 }
 
+# Check if OK:
 OK() {
   $OK
 }
@@ -873,6 +888,7 @@ error() {
   die "$msg"
 }
 
+# Start at the end:
 [ "$BASH_SOURCE" == "$0" ] && main "$@"
 
 true
