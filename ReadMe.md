@@ -8,8 +8,9 @@ git-subrepo(1) - Git Submodule Alternative
     git subrepo help
 
     git subrepo clone <remote-url>
-    git subrepo pull <subdir> --rebase
+    git subrepo pull <subdir>
     git subrepo push <subdir>
+    git subrepo branch <subdir>
     git subrepo checkout <subdir>
 
     git subrepo status <subdir>
@@ -20,14 +21,14 @@ git-subrepo(1) - Git Submodule Alternative
 
 ## Description
 
-This git command "clones" an external git repo and merges it into a
-subdirectory of your repo. Later on, upstream changes can be pulled in, and
-local changes can be pushed back. Simple.
+This git command "clones" an external git repo into a subdirectory of your
+repo. Later on, upstream changes can be pulled in, and local changes can be
+pushed back. Simple.
 
 ## Benefits
 
-This command is an improvement on `git-submodule` and `git-subtree`; two other
-git commands with similar goals, but various problems.
+This command is an improvement from `git-submodule` and `git-subtree`; two
+other git commands with similar goals, but various problems.
 
 It assumes there are 3 main roles of people interacting with a repo, and
 attempts to serve them all well:

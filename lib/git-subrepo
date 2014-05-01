@@ -13,7 +13,7 @@ bash+:import :std can
 
 VERSION=0.1.0
 
-# `git rev-parse` turns this into a getopt parser and a command usage:
+# `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
 git subrepo <command> <arguments> <options>
 
@@ -116,11 +116,13 @@ main() {
 
   # Run the command:
   if $all_wanted; then
+    local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
       subrepo_remote=
       subrepo_branch=
-      "command:$command" "$subdir" "${command_arguments[@]}"
+      command_arguments=( "$subdir" "${args[@]}" )
+      "command:$command"
     done
   else
     "command:$command" "${command_arguments[@]}"
