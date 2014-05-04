@@ -270,8 +270,9 @@ When you have finishing merging, your can complete a pull with:
   git checkout $original_head_branch
   git subrepo pull $subdir --continue
 
-To simply return to your original branch, run this command:
+To return to your original branch, run these commands:
 
+  git reset --hard $original_head_branch
   git checkout $original_head_branch
 
 "
