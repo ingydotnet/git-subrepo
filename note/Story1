@@ -1,0 +1,57 @@
+== git subrepo clone git@genius --branch=bob ext/genius
+
+- create orphan branch repo/genius
+- fetch git@genius --branch=bob
+- create local branch repo/genius
+- checkout repo/genius into ext/genius
+- SYNC-DANCE:
+  - add ext/genius/.gitrepo
+  - commit the add and prune the commit
+  - merge the pruned commit into mianline
+
+== git subrepo pull ext/genius
+
+- checkout ext/genius
+- fetch git@genius --branch=bob
+- merge/rebase FETCH_HEAD
+- commit if merge successful
+- checkout original branch
+- SYNC-DANCE
+
+== git subrepo branch ext/genius
+- filter-branch subdir ext/genius
+- filter-branch 'rm .gitrepo'
+- add parent of original
+- name the commit subrepo/ext/genius
+
+== git subrepo checkout ext/genius
+- subrepo branch ext/genius
+- checkout subrepo/ext/genius
+
+== git subrepo push ext/genius
+- subrepo branch ext/genius
+- checkout repo/genius
+- merge/rebase subrepo/ext/genius
+- push repo/genius git@genius/bob
+- checkout original
+
+
+= Commands =
+
+git subrepo clone git@github.com:ingydotnet/bashplus.git
+git subrepo clone git@github.com:ingydotnet/bashplus.git ext/bashplus
+git subrepo clone git@github.com:ingydotnet/bashplus.git --branch=devel
+git subrepo clone git@github.com:ingydotnet/bashplus.git --reclone
+
+
+git subrepo pull git@github.com:ingydotnet/bashplus.git
+git subrepo pull git@github.com:ingydotnet/bashplus.git --branch=master
+git subrepo pull git@github.com:ingydotnet/bashplus.git --rebase
+
+git subrepo branch ext/bashplus         # create refs/heads/subrepo/ext/bashplus
+
+git subrepo checkout ext/bashplus
+
+git subrepo push ext/bashplus
+
+
