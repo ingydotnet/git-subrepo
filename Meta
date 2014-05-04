@@ -1,0 +1,31 @@
+=meta: 0.0.1
+
+name: git-subrepo
+version: 0.1.0
+abstract: Git Submodule Alternative
+homepage: http://bpan.org/package/git-subrepo/
+
+license: MIT
+copyright: 2013, 2014
+author:
+  name: Ingy döt Net
+  email: ingy@ingy.net
+  github: ingydotnet
+  twitter: ingydotnet
+  freenode: ingy
+  homepage: http://ingy.net
+
+requires:
+  bash: 3.2.0
+  git: 1.7.0
+  bashplus: 0.0.1
+test:
+  cmd: make test
+  requires:
+    test-more: 0.0.1
+install: make bpan-install
+
+devel:
+  git: git@github.org:ingydotnet/git-subrepo.git
+  irc: irc.freenode.net/git-commands
+  bug: https://github.com/ingydotnet/git-subrepo/issues/
