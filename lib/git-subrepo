@@ -541,7 +541,8 @@ command-setup() {
   gitrepo="$subdir/.gitrepo"
   if [ "$command" == "clone" ]; then
     assert-subdir-empty
-    subrepo_branch="${subrepo_branch:-$(get-upstream-head-branch)}"
+    get-upstream-head-branch
+    subrepo_branch="${subrepo_branch:-$output}"
   else
     read-gitrepo-file
   fi
@@ -641,7 +642,7 @@ get-upstream-head-branch() {
   )"
   [[ "$branch" =~ refs/heads/ ]] ||
     error "problem finding remote default head branch"
-  echo "${branch#refs/heads/}"
+  output="${branch#refs/heads/}"
 }
 
 # Attempt a merge of the upstream history, according to merge_strategy
