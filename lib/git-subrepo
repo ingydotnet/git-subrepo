@@ -85,6 +85,7 @@ main() {
   local original_head_branch= # HEAD ref at start of command
   local upstream_head=        # HEAD commit id from a subrepo fetch
   local update_commit=        # Commit made for clone or pull
+  local subrepo_tree=         # Tree id of subrepo
 
   local subrepo_remote=       # Remote url for subrepo's upstream repo
   local subrepo_branch=       # Upstream branch to clone/push/pull
@@ -168,6 +169,10 @@ command:clone() {
 
     # Commit this subrepo clone:
     RUN git commit -m "$(action-message)"
+    if OK; then
+      OUT=true RUN git rev-parse HEAD
+      RUN git config --local "subrepo.lastpushcommitid$subdir" "$output"
+    fi
 
     # Successful command output:
     say "git subrepo '$subdir' cloned from '$subrepo_remote' ($subrepo_branch)"
@@ -189,14 +194,20 @@ command:pull() {
   fi
 
   OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
-  OUT=true RUN git commit-tree "$output" -p "$subrepo_parent" -m "$(action-message)"
+  subrepo_tree="$output"
+
+  OUT=true RUN git config --local --get "subrepo.lastpushcommitid$subdir"
+  if [ -n "$output" ]; then
+    subrepo_parent="$output"
+  fi
+  OUT=true RUN git commit-tree "$subrepo_tree" -p "$subrepo_parent" -m "$(action-message)"
   update_commit="$output"
 
   # TODO:
   # This merge can fail, so we need to checkout/merge/remerge instead.
 
   # Merge the update with the subtree strategy:
-  RUN git merge -s recursive -X subtree="$subdir" "$update_commit"
+  RUN git merge --no-ff -s recursive -X subtree="$subdir" -X patience "$update_commit"
 
   if OK; then
     # Prune the merge history to keep things looking clean:
@@ -205,7 +216,7 @@ command:pull() {
 			-- "$update_commit"^..HEAD ^HEAD^
 
     # The update_commit just got rewritten. Need new id:
-    OUT=true RUN git rev-parse HEAD^2
+    FAIL=false OUT=true RUN git rev-parse HEAD^2
     update_commit="$output"
 
     # Update the subdir/.gitrepo file:
@@ -213,6 +224,11 @@ command:pull() {
     RUN git add "$gitrepo"
     RUN git commit --quiet --amend \
       --message="Merge subrepo commit '$(git rev-parse --short "$update_commit")'"
+
+    if OK; then
+      OUT=true RUN git rev-parse HEAD
+      RUN git config --local "subrepo.lastpushcommitid$subdir" "$output"
+    fi
 
     # Successful command output:
     say "git subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
@@ -233,7 +249,7 @@ command:push() {
   subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
-  FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
+  #FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
 
   if OK; then
     FAIL=false RUN git push \
@@ -246,9 +262,12 @@ command:push() {
 
     # Checkout starting branch:
     RUN git checkout "$original_head_branch"
-
-	  # Delete the checkout branch:
-	  #RUN git branch -D "$checkout_branch"
+    if OK; then
+      OUT=true RUN git rev-parse HEAD
+      RUN git config --local "subrepo.lastpushcommitid$subdir" "$output"
+      # Delete the checkout branch:
+      #RUN git branch -D "$checkout_branch"
+    fi
   else
     say "The subrepo push command failed to rebase to upstream."
     say "Try 'git subrepo checkout', and then merge by hand."
