@@ -855,19 +855,21 @@ RUN() {
 
   OK=true
   set +e
+  local rc=
+  local out=
   if $verbose_wanted; then
-    local out="$("$@")"
+    out="$("$@")"
   else
     if $OUT; then
-      local out="$("$@" 2>/dev/null)"
+      out="$("$@" 2>/dev/null)"
     else
-      local out="$("$@" 2>&1)"
+      out="$("$@" 2>&1)"
     fi
   fi
-  local rc=$?
+  rc=$?
   set -e
 
-  if [ ! "$rc" ]; then
+  if [ "$rc" -ne "0" ]; then
     OK=false
     $FAIL && error "command failed: $*"
   fi
