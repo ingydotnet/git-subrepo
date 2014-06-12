@@ -171,7 +171,7 @@ command:clone() {
     RUN git commit -m "$(action-message)"
     if OK; then
       OUT=true RUN git rev-parse HEAD
-      RUN git config --local --add "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$output"
+      RUN git config --local "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$output"
     fi
 
     # Successful command output:
@@ -231,7 +231,7 @@ command:pull() {
 
     if OK; then
       OUT=true RUN git rev-parse HEAD
-      RUN git config --local --add "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$output"
+      RUN git config --local "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$output"
     fi
 
     # Successful command output:
@@ -268,7 +268,7 @@ command:push() {
     RUN git checkout "$original_head_branch"
     if OK; then
       OUT=true RUN git rev-parse HEAD
-      RUN git config --local --add "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$output"
+      RUN git config --local "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$output"
       # Delete the checkout branch:
       #RUN git branch -D "$checkout_branch"
     fi
@@ -890,14 +890,16 @@ RUN() {
   local out=
   if $verbose_wanted; then
     out="$("$@")"
+    rc=$?
+    say $out
   else
     if $OUT; then
       out="$("$@" 2>/dev/null)"
     else
       out="$("$@" 2>&1)"
     fi
+    rc=$?
   fi
-  rc=$?
   set -e
 
   if [ "$rc" -ne "0" ]; then
