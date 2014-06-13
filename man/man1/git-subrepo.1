@@ -157,23 +157,36 @@ Fixes known rebase failures with \f(CW\*(C`git\-subtree\*(C'\fR.
 Get the source code from GitHub:
 .PP
 .Vb 1
-\&    git clone git@github.com:git\-commands/git\-subrepo
+\&    git clone git@github.com:ingydotnet/git\-subrepo
 .Ve
 .PP
-Then run:
+Then simply add the \f(CW\*(C`lib\*(C'\fR and \f(CW\*(C`man\*(C'\fR directories to your \s-1PATH\s0 and \s-1MANPATH:\s0
 .PP
 .Vb 2
-\&    make test
-\&    make install        # Possibly with \*(Aqsudo\*(Aq
+\&    export PATH=/path/to/git\-hub/lib:$PATH
+\&    export MANPATH=/path/to/git\-hub/man:$MANPATH
 .Ve
 .PP
-This will install the \f(CW\*(C`git\-subrepo\*(C'\fR command next to your other Git
-subcommands. It will also install the manpage (for \f(CW\*(C`git help subrepo\*(C'\fR).
-.PP
-To use git-subrepo \s-1WITHOUT\s0 installing:
+To do a proper system install, which puts \f(CW\*(C`git\-hub\*(C'\fR next to your other git
+commands, do this instead:
 .PP
 .Vb 1
-\&    export GIT_EXEC_PATH="/path/to/git\-subrepo/lib:$(git \-\-exec\-path)"
+\&    make install        # Possibly with \*(Aqsudo\*(Aq
+.Ve
+.SH "Upgrading"
+.IX Header "Upgrading"
+Just pull the latest \f(CW\*(C`git\-subrepo\*(C'\fR code:
+.PP
+.Vb 1
+\&    (cd /path/to/git\-subrepo; git pull)
+.Ve
+.PP
+If you used \f(CW\*(C`make install\*(C'\fR method, then:
+.PP
+.Vb 3
+\&    cd /path/to/git\-hub
+\&    git pull
+\&    make install
 .Ve
 .SH "Command Options"
 .IX Header "Command Options"

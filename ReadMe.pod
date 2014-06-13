@@ -99,19 +99,29 @@ The C<git-subrepo> command benefits these roles in the following ways:
 
 Get the source code from GitHub:
 
-    git clone git@github.com:git-commands/git-subrepo
+    git clone git@github.com:ingydotnet/git-subrepo
 
-Then run:
+Then simply add the C<lib> and C<man> directories to your PATH and MANPATH:
 
-    make test
+    export PATH=/path/to/git-hub/lib:$PATH
+    export MANPATH=/path/to/git-hub/man:$MANPATH
+
+To do a proper system install, which puts C<git-hub> next to your other git
+commands, do this instead:
+
     make install        # Possibly with 'sudo'
 
-This will install the C<git-subrepo> command next to your other Git
-subcommands. It will also install the manpage (for C<git help subrepo>).
+=head1 Upgrading
 
-To use git-subrepo WITHOUT installing:
+Just pull the latest C<git-subrepo> code:
 
-    export GIT_EXEC_PATH="/path/to/git-subrepo/lib:$(git --exec-path)"
+    (cd /path/to/git-subrepo; git pull)
+
+If you used C<make install> method, then:
+
+    cd /path/to/git-hub
+    git pull
+    make install
 
 =head1 Command Options
 
