@@ -217,7 +217,6 @@ command:pull() {
   RUN git merge --no-ff -s recursive -X subtree="$subdir" -X patience "$update_commit"
 
   if OK; then
-    
     # Now, if our subrepo pull has the same parent as the merge commit (i.e. HEAD^ equals HEAD^2^) then we don't need to clean
     OUT=true RUN git rev-parse HEAD^
     local headparent="$output"
