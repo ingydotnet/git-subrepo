@@ -106,6 +106,8 @@ Then simply add the C<lib> and C<man> directories to your PATH and MANPATH:
     export PATH=/path/to/git-hub/lib:$PATH
     export MANPATH=/path/to/git-hub/man:$MANPATH
 
+If you run C<make env>, it will print the lines you need to add.
+
 To do a proper system install, which puts C<git-hub> next to your other git
 commands, do this instead:
 
