@@ -910,4 +910,4 @@ error() {
 
 true
 
-# vim: set lisp:
+# vim: set ft=sh sw=2 lisp:
