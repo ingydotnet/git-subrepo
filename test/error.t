@@ -40,7 +40,7 @@ catch() { error="$("$@" 2>&1 || true)"; }
     echo "$error"
   )"
   is "$error" \
-    "Error: command failed: git ls-remote dummy-repo" \
+    "Error: failed to 'git ls-remote dummy-repo'" \
     "test error for cloning non-repo"
 }
 
