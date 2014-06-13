@@ -8,6 +8,8 @@ endif
 CMD := git-subrepo
 
 LOCAL_LIB := $(shell pwd)/lib/$(CMD)
+LOCAL_MAN := $(shell pwd)/man
+LOCAL_MAN1 := $(LOCAL_MAN)/man1
 LOCAL_EXT = $(LOCAL_LIB).d
 LOCAL_EXTS = $(shell find $(LOCAL_EXT) -type f) \
 	    $(shell find $(LOCAL_EXT) -type l)
@@ -67,14 +69,19 @@ uninstall-doc:
 	rm -f $(INSTALL_MAN)/$(CMD).1
 
 
-
-# Build manpage from markdown:
+##
+# Build rules:
 .PHONY: doc
-doc: doc/$(CMD).1
+doc: $(LOCAL_MAN1)/$(CMD).1
 
-%.1: %.md
-	ronn --roff < $< > $@
+$(LOCAL_MAN1)/$(CMD).1: $(CMD).1
+	mv $< $@
 
+%.1: ReadMe.pod
+	pod2man --utf8 $< > $@
+
+ReadMe.pod: doc/$(CMD).kwim
+	kwim --to=pod --wrap=1 --complete=1 $< > $@
 
 
 # Development installation:
