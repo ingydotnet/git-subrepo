@@ -200,7 +200,7 @@ command:pull() {
   if ! OK; then
     #Looks like the user had just cloned the main repo, and does not have a cache of this particalar subrepo.
     git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
-    if [ -z "$output" ];
+    if [ -z "$output" ]; then
       git log --grep="git subrepo clone $subdir" -n 1 --pretty="format:%H"
     fi
   fi
@@ -266,7 +266,7 @@ command:push() {
   subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
-  FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
+  FAIL=false RUN git rebase "$upstream_head" "$checkout_branch" -v
 
   if OK; then
     FAIL=false RUN git push \
