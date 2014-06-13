@@ -328,7 +328,7 @@ command:status() {
 
     # Remote Name:
     local remote="subrepo/$subdir"
-    OUT=true RUN git config "remote.$remote.url"
+    FAIL=false OUT=true RUN git config "remote.$remote.url"
     remote="$output"
 
     # Remote Ref:
@@ -877,7 +877,7 @@ RUN() {
   rc=$?
   set -e
 
-  if [ "$rc" -ne "0" ]; then
+  if [ "$rc" -ne 0 ]; then
     OK=false
     $FAIL && error "command failed: $*"
   fi
