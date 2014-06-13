@@ -38,7 +38,7 @@ h           Show the command summary
 help        Show the complete documentation
 version     Print the git-subrepo version number
 
-all         Perform command on all current subrepos
+a,all       Perform command on all current subrepos
 b,branch=   Specify an upstream branch
 r,remote=   Specify an upstream remote
 u,update    Add the --branch and/or --remote overrides to .gitrepo
@@ -485,6 +485,7 @@ get-command-options() {
     local option="$1"; shift
     case "$option" in
       --) break ;;
+      -a) all_wanted=true ;;
       -b) subrepo_branch="$1"
           override_branch="$1"
           shift ;;
@@ -495,7 +496,6 @@ get-command-options() {
       -q) quiet_wanted=true ;;
       -v) verbose_wanted=true ;;
       -x) set -x ;;
-      --all)      all_wanted=true ;;
       --fetch)    fetch_wanted=true ;;
       --graft)    graft_wanted=true ;;
       --continue) continue_wanted=true ;;
