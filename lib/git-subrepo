@@ -199,9 +199,9 @@ command:pull() {
   FAIL=false OUT=true RUN git config --local --get "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)"
   if ! OK; then
     #Looks like the user had just cloned the main repo, and does not have a cache of this particalar subrepo.
-    git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
+    FAIL=false OUT=true RUN git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
     if [ -z "$output" ]; then
-      git log --grep="git subrepo clone $subdir" -n 1 --pretty="format:%H"
+      FAIL=false OUT=true RUN git log --grep="git subrepo clone $subdir" -n 1 --pretty="format:%H"
     fi
   fi
   if [ -n "$output" ]; then
@@ -266,7 +266,15 @@ command:push() {
   subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
-  FAIL=false RUN git rebase "$upstream_head" "$checkout_branch" -v
+  FAIL=false RUN git rebase -v "$upstream_head" "$checkout_branch"
+
+  if ! OK; then
+    #Attempt to do a fancier merge.
+    RUN git rebase --abort
+    #Get last subrepo merge commit to the local branch
+    FAIL=false OUT=true RUN git log --grep="Merge subrepo commit" -n 1 --pretty="format:%H"
+    FAIL=false RUN git rebase -v --onto "$upstream_head" "$output" "$checkout_branch" 
+  fi
 
   if OK; then
     FAIL=false RUN git push \
