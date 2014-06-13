@@ -196,7 +196,14 @@ command:pull() {
   OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
   subrepo_tree="$output"
 
-  OUT=true RUN git config --local --get "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)"
+  FAIL=false OUT=true RUN git config --local --get "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)"
+  if ! OK; then
+    #Looks like the user had just cloned the main repo, and does not have a cache of this particalar subrepo.
+    git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
+    if [ -z "$output" ];
+      git log --grep="git subrepo clone $subdir" -n 1 --pretty="format:%H"
+    fi
+  fi
   if [ -n "$output" ]; then
     subrepo_parent="$output"
   fi
@@ -259,7 +266,7 @@ command:push() {
   subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
-  #FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
+  FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
 
   if OK; then
     FAIL=false RUN git push \
