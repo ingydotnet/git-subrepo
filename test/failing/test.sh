@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
-set -ex
+set -e
 
+if [ "$1" == 'ReRun' ]; then
+  set -x
+else
+  $0 ReRun 2>&1 | tee log
+  exit 0
+fi
+
+home="$(dirname $0)"
+home="${home:-.}"
+cd "$home"
 rm -fr p1 p2 lib lib.git
 
 (
