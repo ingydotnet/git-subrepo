@@ -163,14 +163,14 @@ Get the source code from GitHub:
 Then simply add the \f(CW\*(C`lib\*(C'\fR and \f(CW\*(C`man\*(C'\fR directories to your \s-1PATH\s0 and \s-1MANPATH:\s0
 .PP
 .Vb 2
-\&    export PATH=/path/to/git\-hub/lib:$PATH
-\&    export MANPATH=/path/to/git\-hub/man:$MANPATH
+\&    export PATH=/path/to/git\-subrepo/lib:$PATH
+\&    export MANPATH=/path/to/git\-subrepo/man:$MANPATH
 .Ve
 .PP
 If you run \f(CW\*(C`make env\*(C'\fR, it will print the lines you need to add.
 .PP
-To do a proper system install, which puts \f(CW\*(C`git\-hub\*(C'\fR next to your other git
-commands, do this instead:
+To do a proper system install, which puts \f(CW\*(C`git\-subrepo\*(C'\fR next to your other
+git commands, do this instead:
 .PP
 .Vb 1
 \&    make install        # Possibly with \*(Aqsudo\*(Aq
@@ -183,12 +183,10 @@ Just pull the latest \f(CW\*(C`git\-subrepo\*(C'\fR code:
 \&    (cd /path/to/git\-subrepo; git pull)
 .Ve
 .PP
-If you used \f(CW\*(C`make install\*(C'\fR method, then:
+If you used \f(CW\*(C`make install\*(C'\fR method, then do:
 .PP
-.Vb 3
-\&    cd /path/to/git\-hub
-\&    git pull
-\&    make install
+.Vb 1
+\&    (cd /path/to/git\-subrepo; git pull; make install)
 .Ve
 .SH "Command Options"
 .IX Header "Command Options"

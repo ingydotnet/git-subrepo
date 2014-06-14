@@ -103,13 +103,13 @@ Get the source code from GitHub:
 
 Then simply add the C<lib> and C<man> directories to your PATH and MANPATH:
 
-    export PATH=/path/to/git-hub/lib:$PATH
-    export MANPATH=/path/to/git-hub/man:$MANPATH
+    export PATH=/path/to/git-subrepo/lib:$PATH
+    export MANPATH=/path/to/git-subrepo/man:$MANPATH
 
 If you run C<make env>, it will print the lines you need to add.
 
-To do a proper system install, which puts C<git-hub> next to your other git
-commands, do this instead:
+To do a proper system install, which puts C<git-subrepo> next to your other
+git commands, do this instead:
 
     make install        # Possibly with 'sudo'
 
@@ -119,11 +119,9 @@ Just pull the latest C<git-subrepo> code:
 
     (cd /path/to/git-subrepo; git pull)
 
-If you used C<make install> method, then:
+If you used C<make install> method, then do:
 
-    cd /path/to/git-hub
-    git pull
-    make install
+    (cd /path/to/git-subrepo; git pull; make install)
 
 =head1 Command Options
 

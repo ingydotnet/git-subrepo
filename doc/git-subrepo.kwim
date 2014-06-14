@@ -68,12 +68,12 @@ Get the source code from GitHub:
 
 Then simply add the `lib` and `man` directories to your PATH and MANPATH:
 
-  export PATH=/path/to/git-hub/lib:$PATH
-  export MANPATH=/path/to/git-hub/man:$MANPATH
+  export PATH=/path/to/git-subrepo/lib:$PATH
+  export MANPATH=/path/to/git-subrepo/man:$MANPATH
 
 If you run `make env`, it will print the lines you need to add.
 
-To do a proper system install, which puts `git-hub` next to your other git
+To do a proper system install, which puts `git-subrepo` next to your other git
 commands, do this instead:
 
   make install        # Possibly with 'sudo'
@@ -84,11 +84,9 @@ Just pull the latest `git-subrepo` code:
 
   (cd /path/to/git-subrepo; git pull)
 
-If you used `make install` method, then:
+If you used `make install` method, then do:
 
-  cd /path/to/git-hub
-  git pull
-  make install
+  (cd /path/to/git-subrepo; git pull; make install)
 
 = Command Options
 

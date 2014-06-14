@@ -45,11 +45,8 @@ endif
 
 # Install support:
 env:
-	@echo '# Enter 2 lines like these in your shell startup file:'
-	@echo ''
-	@echo "  export PATH=\"$$PWD/lib:\$$PATH\""
-	@echo "  export MANPATH=\"$$PWD/man:\$$MANPATH\""
-	@echo ''
+	@echo "export PATH=\"$$PWD/lib:\$$PATH\""
+	@echo "export MANPATH=\"$$PWD/man:\$$MANPATH\""
 
 .PHONY: install install-lib install-doc
 install: install-lib install-doc
