@@ -268,11 +268,21 @@ command:push() {
   FAIL=false RUN git rebase -v "$upstream_head" "$checkout_branch"
 
   if ! OK; then
-    #Attempt to do a fancier merge.
+    # Attempt to do a fancier merge.
     RUN git rebase --abort
-    #Get last subrepo merge commit to the local branch
+    # Get last subrepo merge commit to the local branch for $subdir
+    # TODO: This would match subrepos in $subdir as well! Need to resolve.
     FAIL=false OUT=true RUN git log --grep="Merge subrepo commit" -n 1 --pretty="format:%H"
-    FAIL=false RUN git rebase -v --onto "$upstream_head" "$output" "$checkout_branch" 
+    if [ -z "$output" ]; then
+      # The user hadn't pushed/pulled $subdir before, so they must have only cloned.
+      FAIL=false OUT=true RUN git log --grep="git subrepo clone.*$subdir" -n 1 --pretty="format:%H"
+    fi
+    if [ -n "$output" ]; then
+      FAIL=false RUN git rebase -v --onto "$upstream_head" "$output" "$checkout_branch" 
+    else
+      say "Unable to do a fancier merge as the initial clone of $subdir wasn't found in the log."
+      OK=false
+    fi
   fi
 
   if OK; then
