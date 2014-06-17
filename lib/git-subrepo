@@ -220,18 +220,19 @@ command:pull() {
   local headparent="$output"
   OUT=true RUN git rev-parse HEAD^2^
   if [ "$headparent" != "$output" ]; then
-  # Prune the merge history to keep things looking clean:
-  RUN git filter-branch -f \
+    # Prune the merge history to keep things looking clean:
+    RUN git filter-branch -f \
       --parent-filter "sed 's/ -p $subrepo_parent//'" \
       -- "$update_commit"^..HEAD ^HEAD^
 
-  # The update_commit just got rewritten. Need new id:
-  FAIL=false OUT=true RUN git rev-parse HEAD^2
-  if ! OK; then
-    # I think this bit helps...
-    FAIL=false OUT=true RUN git rev-parse HEAD
+    # The update_commit just got rewritten. Need new id:
+    FAIL=false OUT=true RUN git rev-parse HEAD^2
+    if ! OK; then
+      # I think this bit helps...
+      FAIL=false OUT=true RUN git rev-parse HEAD
+    fi
+    update_commit="$output"
   fi
-  update_commit="$output"
 
   # Update the subdir/.gitrepo file:
   update-gitrepo-file
