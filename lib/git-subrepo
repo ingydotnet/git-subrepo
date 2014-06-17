@@ -85,7 +85,6 @@ main() {
   local original_head_branch= # HEAD ref at start of command
   local upstream_head=        # HEAD commit id from a subrepo fetch
   local update_commit=        # Commit made for clone or pull
-  local subrepo_tree=         # Tree id of subrepo
 
   local subrepo_remote=       # Remote url for subrepo's upstream repo
   local subrepo_branch=       # Upstream branch to clone/push/pull
@@ -192,7 +191,7 @@ command:pull() {
   fi
 
   OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
-  subrepo_tree="$output"
+  local subrepo_tree="$output"
 
   FAIL=false OUT=true RUN git config --local --get "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)"
   if ! OK; then
