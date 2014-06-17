@@ -273,7 +273,7 @@ command:push() {
       FAIL=false OUT=true RUN git log --grep="git subrepo clone.*$subdir" -n 1 --pretty="format:%H"
     fi
     if [ -n "$output" ]; then
-      FAIL=false RUN git rebase -v --onto "$upstream_head" "$output" "$checkout_branch" 
+      FAIL=false RUN git rebase -v --onto "$upstream_head" "$output" "$checkout_branch"
     else
       say "Unable to do a fancier merge as the initial clone of $subdir wasn't found in the log."
       OK=false
