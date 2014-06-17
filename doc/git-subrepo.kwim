@@ -64,19 +64,29 @@ The `git-subrepo` command benefits these roles in the following ways:
 
 Get the source code from GitHub:
 
-  git clone git@github.com:git-commands/git-subrepo
+  git clone git@github.com:ingydotnet/git-subrepo
 
-Then run:
+Then simply add the `lib` and `man` directories to your PATH and MANPATH:
 
-  make test
+  export PATH=/path/to/git-subrepo/lib:$PATH
+  export MANPATH=/path/to/git-subrepo/man:$MANPATH
+
+If you run `make env`, it will print the lines you need to add.
+
+To do a proper system install, which puts `git-subrepo` next to your other git
+commands, do this instead:
+
   make install        # Possibly with 'sudo'
 
-This will install the `git-subrepo` command next to your other Git
-subcommands.  It will also install the manpage (for `git help subrepo`).
+= Upgrading
 
-To use git-subrepo WITHOUT installing:
+Just pull the latest `git-subrepo` code:
 
-  export GIT_EXEC_PATH="/path/to/git-subrepo/lib:$(git --exec-path)"
+  (cd /path/to/git-subrepo; git pull)
+
+If you used `make install` method, then do:
+
+  (cd /path/to/git-subrepo; git pull; make install)
 
 = Command Options
 

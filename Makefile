@@ -32,6 +32,7 @@ help:
 	@echo 'test       Run all tests'
 	@echo 'install    Install $(CMD)'
 	@echo 'uninstall  Uninstall $(CMD)'
+	@echo 'env        Show environment variables to set'
 
 test:
 ifeq ($(shell which prove),)
@@ -43,6 +44,10 @@ endif
 
 
 # Install support:
+env:
+	@echo "export PATH=\"$$PWD/lib:\$$PATH\""
+	@echo "export MANPATH=\"$$PWD/man:\$$MANPATH\""
+
 .PHONY: install install-lib install-doc
 install: install-lib install-doc
 
@@ -70,7 +75,7 @@ uninstall-doc:
 
 
 ##
-# Build rules:
+# Doc rules:
 .PHONY: doc
 doc: $(LOCAL_MAN1)/$(CMD).1
 
@@ -83,12 +88,6 @@ $(LOCAL_MAN1)/$(CMD).1: $(CMD).1
 ReadMe.pod: doc/$(CMD).kwim
 	kwim --to=pod --wrap=1 --complete=1 $< > $@
 
-
-# Development installation:
-.PHONY: dev-install
-dev-install:
-	ln -fs $(LOCAL_LIB) $(INSTALL_CMD)
-	ln -fs $(LOCAL_EXTS) $(INSTALL_EXT)
 
 clean purge:
 	rm -fr tmp
