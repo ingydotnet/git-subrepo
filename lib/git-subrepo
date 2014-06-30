@@ -169,10 +169,6 @@ command:clone() {
 
   # Commit this subrepo clone:
   RUN git commit -m "$(action-message)"
-  if OK; then
-    OUT=true RUN git rev-parse HEAD
-    RUN git config --local "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$output"
-  fi
 
   # Successful command output:
   say "git subrepo '$subdir' cloned from '$subrepo_remote' ($subrepo_branch)"
@@ -193,13 +189,10 @@ command:pull() {
   OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
   local subrepo_tree="$output"
 
-  FAIL=false OUT=true RUN git config --local --get "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)"
-  if ! OK; then
-    #Looks like the user had just cloned the main repo, and does not have a cache of this particalar subrepo.
-    FAIL=false OUT=true RUN git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
-    if [ -z "$output" ]; then
-      FAIL=false OUT=true RUN git log --grep="subrepo clone.* $subdir" -n 1 --pretty="format:%H"
-    fi
+  # Let's get the nodo to merge.
+  FAIL=false OUT=true RUN git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
+  if [ -z "$output" ]; then
+    FAIL=false OUT=true RUN git log --grep="subrepo clone.* $subdir" -n 1 --pretty="format:%H"
   fi
   if [ -n "$output" ]; then
     subrepo_parent="$output"
@@ -238,10 +231,6 @@ command:pull() {
   RUN git add "$gitrepo"
   RUN git commit --quiet --amend \
     --message="Merge subrepo commit '$(git rev-parse --short "$update_commit")'"
-
-  if OK; then
-    RUN git config --local "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$update_commit"
-  fi
 
   # Successful command output:
   say "git subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
@@ -295,8 +284,6 @@ command:push() {
   # Checkout starting branch:
   RUN git checkout "$original_head_branch"
   if OK; then
-    OUT=true RUN git rev-parse HEAD
-    RUN git config --local "subrepo.lastcommitid$(echo -n $subdir | tr -c [:alnum:] -)" "$output"
     # Delete the checkout branch:
     #RUN git branch -D "$checkout_branch"
   fi
@@ -914,14 +901,16 @@ RUN() {
   local out=
   if $verbose_wanted; then
     out="$("$@")"
+    rc=$?
+    say "$out"
   else
     if $OUT; then
       out="$("$@" 2>/dev/null)"
     else
       out="$("$@" 2>&1)"
     fi
+    rc=$?
   fi
-  rc=$?
   set -e
 
   if [ "$rc" -ne 0 ]; then
