@@ -283,10 +283,10 @@ command:push() {
 
   # Checkout starting branch:
   RUN git checkout "$original_head_branch"
-  if OK; then
+  #if OK; then
     # Delete the checkout branch:
     #RUN git branch -D "$checkout_branch"
-  fi
+  #fi
   say "git subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
