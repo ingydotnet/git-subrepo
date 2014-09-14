@@ -62,31 +62,90 @@ The `git-subrepo` command benefits these roles in the following ways:
 
 = Installation
 
-Get the source code from GitHub:
+There are currently 3 ways to install `git-subrepo`. For all of them you need
+to get the source code from GitHub:
 
-  git clone git@github.com:ingydotnet/git-subrepo
+  git clone https://github.com/ingydotnet/git-subrepo /path/to/git-subrepo
 
-Then simply add the `lib` and `man` directories to your PATH and MANPATH:
+The first installation method is preferred: `source` the `init` file. Just add
+a line like this one to your shell startup script:
 
-  export PATH=/path/to/git-subrepo/lib:$PATH
-  export MANPATH=/path/to/git-subrepo/man:$MANPATH
+  source /path/to/git-subrepo/init
 
-If you run `make env`, it will print the lines you need to add.
+That will modify your `PATH` and `MANPATH`, and also enable command completion.
 
-To do a proper system install, which puts `git-subrepo` next to your other git
-commands, do this instead:
+The second method is to do these things by hand. This might afford you more
+control of your shell environment.  Simply add the `lib` and `man` directories
+to your `PATH` and `MANPATH`:
+
+  export PATH="/path/to/git-subrepo/lib:$PATH"
+  export MANPATH="/path/to/git-subrepo/man:$MANPATH"
+
+See below for info on how to turn on Command Completion.
+
+The third method is a standard system install, which puts `git-subrepo` next
+to your other git commands, do this instead:
 
   make install        # Possibly with 'sudo'
 
+This method does not account for upgrading and command completion yet.
+
 = Upgrading
 
-Just pull the latest `git-subrepo` code:
+If you used the `PATH` method of installation, just run this to upgrade
+`git-subrepo`:
 
-  (cd /path/to/git-subrepo; git pull)
+  git subrepo upgrade
 
-If you used `make install` method, then do:
+Or (same thing):
 
-  (cd /path/to/git-subrepo; git pull; make install)
+  cd /path/to/git-subrepo
+  git pull
+
+If you used `make install` method, then run this again (after `git pull`):
+
+  make install        # Possibly with 'sudo'
+
+= Command Completion
+
+The `git subrepo` command supports `<TAB>`-based command completion. If you
+don’t use the `init` script (see Installation, above), you’ll need to enable
+this manually to use it.
+
+== In Bash
+
+If your Bash setup does not already provide command completion for Git, you’ll
+need to enable that first:
+
+  source <Git completion script>
+
+On your system, the Git completion script might be found at any of the
+following locations (or somewhere else that we don’t know about):
+
+* `/etc/bash_completion.d/git`
+* `/usr/share/bash-completion/git`
+* `/usr/share/bash-completion/completions/git`
+* `/opt/local/share/bash-completion/completions/git`
+* `/usr/local/etc/bash_completion.d/git`
+* `~/.homebrew/etc/bash_completion.d/git`
+
+In case you can’t find any of these, this repository contains a copy of the
+Git completion script:
+
+  source /path/to/git-subrepo/share/git-completion.bash
+
+Once Git completion is enabled (whether you needed to do that manually or
+not), you can turn on `git-subrepo` completion with a command like this:
+
+  source /path/to/git-subrepo/share/completion.bash
+
+== In zsh
+
+In the Z shell (zsh), you can manually enable `git-subrepo` completion by
+adding the following line to your `~/.zshrc`, *before* the `compinit` function
+is called:
+
+  fpath=('/path/to/git-subrepo/share/zsh-completion' $fpath)
 
 = Command Options
 
