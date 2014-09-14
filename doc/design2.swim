@@ -1,0 +1,85 @@
+git-subrepo Design
+==================
+
+This document details wow the git-subrepo commands should work.
+
+Glossary:
+
+- `subrepo` :: An external repository integrated as a repo subdirectory
+- `subdir` :: The directory in the work tree where the subrepo lives
+- `upstream` :: The remote repo that the subrepo is tracking
+- `local` :: The local parts of the subrepo
+- `.gitrepo` :: The subrepo state file
+- `remote` :: The subrepo url
+- `branch` :: The remote branch the subrepo is tracking
+- `commit` ::  The upstream commit id that we last synced to
+- `former` :: The local commit that we last synced to
+
+= Commands and usages:
+
+There are 4 main commands:
+
+* git subrepo clone
+* git subrepo pull
+* git subrepo push
+* git subrepo checkout
+
+  # Clone forms:
+  git subrepo clone git@github.com:you/foo.git
+  git subrepo clone git@github.com:you/foo.git ext/subfoo
+  git subrepo clone git@github.com:you/foo.git -b alternate-branch
+
+  # Single command pull:
+  git subrepo pull --rebase ext/foo
+  git subrepo pull --merge  ext/foo -b remote-branch
+  git subrepo pull --ours   ext/foo -B remote-branch  # change .gitrepo
+  git subrepo pull --rebase --all
+
+  # Manual pull:
+  git subrepo checkout ext/foo
+  git rebase subrepo/remote/ext/foo subrepo/ext/foo
+  make test
+  git subrepo pull ext/foo --continue
+
+  # Push forms:
+  git subrepo push ext/foo
+  git subrepo push ext/foo -b remote-branch
+  git subrepo push ext/foo -B remote-branch
+  git subrepo push --all
+
+  # Manual push:
+  git subrepo checkout ext/foo --rebase
+  <maybe rewrite commit info>
+  make test
+  git subrepo push ext/foo --continue
+
+  # Checkout forms:
+  git subrepo checkout ext/foo
+  git subrepo checkout ext/foo --<merge-straegy>
+  git subrepo checkout ext/foo --fetch
+  git subrepo checkout -b create-local-branch-name
+  git subrepo checkout --all
+
+= Command Logic
+
+This section goes over all the things that a command needs to do:
+
+== Setup
+
+There are certain steps that each command must do first:
+
+* Assert that the system commands and git version are correct.
+* Assert that the repository is in a clean state.
+* Assert that the repo is on a branch.
+* Assert that the current dir is top level of repo.
+* Assert the command arguments are valid.
+* Assert the subdir is a valid subrepo dir.
+  * For `clone` make sure subdir does not exist yet.
+* Read the .gitrepo file (not for clone).
+* For `clone`, make sure we know what upstream branch to use.
+* Note the starting point (branch and commit).
+
+== Clone command:
+
+* Fetch upstream content for our tracking branch.
+
