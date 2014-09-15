@@ -1,5 +1,5 @@
 #compdef git-subrepo -P git\ ##subrepo
-#description perform sit-subrepo operations
+#description perform git-subrepo operations
 
 if [[ -z $GIT_SUBREPO_ROOT ]]; then
 	echo 'GIT_SUBREPO_ROOT is null; has `/path/to/git-subrepo/init` been sourced?'
