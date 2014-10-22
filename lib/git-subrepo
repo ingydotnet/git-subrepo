@@ -189,7 +189,7 @@ command:pull() {
   OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
   local subrepo_tree="$output"
 
-  # Let's get the node to merge.
+  # Let's get the common ancestor for use in the merge. First try the log for pull/clone entries.
   FAIL=false OUT=true RUN git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
   if [ -z "$output" ]; then
     FAIL=false OUT=true RUN git log --grep="subrepo clone.* $subdir" -n 1 --pretty="format:%H"
@@ -197,6 +197,36 @@ command:pull() {
   if [ -n "$output" ]; then
     subrepo_parent="$output"
   fi
+
+  # Now look for any pushes to the subrepo since the last pull/clone, by seeing if
+  #  (subrepo/$subdir)^{tree} can be found in master^{tree}...last logged clone/pull with prefix=$subdir
+  # Note: (subrepo/$subdir) is behind upstream (remote/subrepo/$subdir), and (subrepo/$subdir)
+  #  will have a tree SHA-id identifiable in the above iteration
+  OUT=true RUN git log --max-count=1 --format=%T "subrepo/$subdir" #Get tree-id of last pushed/pulled/cloned subrepo.
+  local subrepo_lastlocal_tree
+  if [ -n "$output" ]; then
+    subrepo_lastlocal_tree="$output"
+  else
+    say "Failed to obtain tree id of last subrepo push/clone action"
+  fi
+  #Now search for it:
+  #git rev-parse --abbrev-ref HEAD #Get current branch name.
+  #Quick trick to get tree SHA hash of subrepo tree, by removing .gitrepo and getting tree-id of that subdir:
+  RUN git rm "$subdir"/.gitrepo
+  OUT=true RUN git write-tree --prefix="$subdir"/
+  if [ -z "$output" ]; then
+    say "Failed to obtain tree-id of subrepo in HEAD"
+  fi
+  RUN git reset HEAD "$subdir"/.gitrepo
+  RUN git checkout "$subdir"/.gitrepo
+  #Now compare that tree-id to last pushed tree-id, if same update common-ancestor to HEAD:
+  say "$output - $subrepo_lastlocal_tree"
+  if [ "$output" == "$subrepo_lastlocal_tree" ]; then
+    say "equal"
+	subrepo_parent="HEAD"
+  fi
+
+  #Create a new commit object from the upstream subrepo HEAD^{tree} (subrepo/remote/$subdir):
   OUT=true RUN git commit-tree "$subrepo_tree" -p "$subrepo_parent" -m "$(action-message)"
   update_commit="$output"
 
@@ -205,6 +235,11 @@ command:pull() {
 
   # Merge the update with the subtree strategy:
   RUN git merge --no-ff -s recursive -X subtree="$subdir" -X patience "$update_commit"
+  #OUT=true RUN git read-tree --prefix="$subdir" -u --exclude-per-directory=".subrepo" -m "$subrepo_parent" "HEAD^{tree}" "$subrepo_tree"
+  #OUT=true RUN git write-tree --prefix="$subdir" #index must be in a fully merged state before calling. Creates a tree object.
+  if [ -n "$output" ]; then
+    new_subrepo_tree="$output"
+  fi
 
   OK || { say "git subrepo '$subdir' failed to complete pull"; return; }
 
@@ -220,7 +255,7 @@ command:pull() {
     # The update_commit just got rewritten. Need new id:
     FAIL=false OUT=true RUN git rev-parse HEAD^2
     if ! OK; then
-      # I think this bit helps...
+      # This bit helps when there is no second parent- which occurs in certain workflows.
       FAIL=false OUT=true RUN git rev-parse HEAD
     fi
     update_commit="$output"
