@@ -237,9 +237,9 @@ command:pull() {
   RUN git merge --no-ff -s recursive -X subtree="$subdir" -X patience "$update_commit"
   #OUT=true RUN git read-tree --prefix="$subdir" -u --exclude-per-directory=".subrepo" -m "$subrepo_parent" "HEAD^{tree}" "$subrepo_tree"
   #OUT=true RUN git write-tree --prefix="$subdir" #index must be in a fully merged state before calling. Creates a tree object.
-  if [ -n "$output" ]; then
-    new_subrepo_tree="$output"
-  fi
+  #if [ -n "$output" ]; then
+  #  new_subrepo_tree="$output"
+  #fi
 
   OK || { say "git subrepo '$subdir' failed to complete pull"; return; }
 
