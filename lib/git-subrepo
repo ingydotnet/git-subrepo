@@ -179,6 +179,8 @@ command:clone() {
 command:pull() {
   command-setup +subdir
   fetch-subrepo
+  # Checkout the subrepo to a branch:
+  subrepo-checkout
 
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit" ]; then
@@ -195,23 +197,27 @@ command:pull() {
     FAIL=false OUT=true RUN git log --grep="subrepo clone.* $subdir" -n 1 --pretty="format:%H"
   fi
   if [ -n "$output" ]; then
-    subrepo_parent="$output"
+    subrepo_parent="$output" #AKA common-ancestor for merge to be done soon.
   fi
 
   # Now look for any pushes to the subrepo since the last pull/clone, by seeing if
   #  (subrepo/$subdir)^{tree} can be found in master^{tree}...last logged clone/pull with prefix=$subdir
-  # Note: (subrepo/$subdir) is behind upstream (remote/subrepo/$subdir), and (subrepo/$subdir)
-  #  will have a tree SHA-id identifiable in the above iteration
-  OUT=true RUN git log --max-count=1 --format=%T "subrepo/$subdir" #Get tree-id of last pushed/pulled/cloned subrepo.
+  # Note: (subrepo/$subdir) is behind upstream (remote/subrepo/$subdir), and
+  #  (subrepo/$subdir) will have a tree SHA-id identifiable in the above iteration.
+  # Get tree-id of last pushed/pulled/cloned subrepo:
+  OUT=true RUN git log --max-count=1 --format=%T "subrepo/$subdir"
   local subrepo_lastlocal_tree
   if [ -n "$output" ]; then
     subrepo_lastlocal_tree="$output"
-  else
-    say "Failed to obtain tree id of last subrepo push/clone action"
+  #else
+    #say "Failed to obtain tree id of last subrepo push/clone action"
   fi
-  #Now search for it:
-  #git rev-parse --abbrev-ref HEAD #Get current branch name.
-  #Quick trick to get tree SHA hash of subrepo tree, by removing .gitrepo and getting tree-id of that subdir:
+
+  # Now that we have last pushed/cloned tree SHA-id from the subrepo branch,
+  # search for it in current branch (i.e. see if better common ancestor exists):
+  OUT=true RUN git rev-parse --abbrev-ref HEAD #Get current branch name.
+  # Quick trick to get tree SHA-id of subrepo tree of current branch
+  #  by removing .gitrepo and getting tree-id of that subdir:
   RUN git rm "$subdir"/.gitrepo
   OUT=true RUN git write-tree --prefix="$subdir"/
   if [ -z "$output" ]; then
@@ -219,14 +225,12 @@ command:pull() {
   fi
   RUN git reset HEAD "$subdir"/.gitrepo
   RUN git checkout "$subdir"/.gitrepo
-  #Now compare that tree-id to last pushed tree-id, if same update common-ancestor to HEAD:
-  say "$output - $subrepo_lastlocal_tree"
+  # Now compare that tree-id to last pushed tree-id, if same update common-ancestor to HEAD:
   if [ "$output" == "$subrepo_lastlocal_tree" ]; then
-    say "equal"
-	subrepo_parent="HEAD"
+    subrepo_parent="HEAD"
   fi
 
-  #Create a new commit object from the upstream subrepo HEAD^{tree} (subrepo/remote/$subdir):
+  # Create a new commit object from the upstream subrepo HEAD^{tree} (subrepo/remote/$subdir):
   OUT=true RUN git commit-tree "$subrepo_tree" -p "$subrepo_parent" -m "$(action-message)"
   update_commit="$output"
 
