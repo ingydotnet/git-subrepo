@@ -11,22 +11,21 @@ fi
 home="$(dirname $0)"
 home="${home:-.}"
 cd "$home"
-rm -fr p1 p2 lib lib.git
+rm -fr p1 p2 lib
 
 (
   mkdir lib p1 p2
-  git init --bare lib
+  git init lib
   git init p1
   git init p2
 )
 
 (
-  git clone lib lib.git
-  cd lib.git
+  cd lib
   touch readme
   git add readme
   git commit -m "Initial lib"
-  git push
+  git checkout -b temp #To push to lib later we must not have working copy on master branch.
 )
 
 (
@@ -55,7 +54,7 @@ rm -fr p1 p2 lib lib.git
 
 (
   cd p2
-  git subrepo pull lib -v
+  git subrepo pull lib
   echo "p2 initial add to subrepo" >> lib/readme
   git add lib/readme
   git commit -m "p2 initial add to subrepo"
@@ -64,5 +63,5 @@ rm -fr p1 p2 lib lib.git
 
 (
   cd p1
-  git subrepo pull --all -v
+  git subrepo pull --all
 )
