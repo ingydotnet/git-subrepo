@@ -179,6 +179,8 @@ command:clone() {
 command:pull() {
   command-setup +subdir
   fetch-subrepo
+  # Checkout the subrepo to a branch:
+  subrepo-checkout
 
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit" ]; then
@@ -189,14 +191,11 @@ command:pull() {
   OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
   local subrepo_tree="$output"
 
-  # Let's get the nodo to merge.
-  FAIL=false OUT=true RUN git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
-  if [ -z "$output" ]; then
-    FAIL=false OUT=true RUN git log --grep="subrepo clone.* $subdir" -n 1 --pretty="format:%H"
-  fi
-  if [ -n "$output" ]; then
-    subrepo_parent="$output"
-  fi
+  #Writes best common-ancestor to $subrepo_parent
+  get-best-common-ancestor-for-merge
+
+  # Create a new commit object from the upstream subrepo HEAD^{tree} with a parent
+  #  being the best common-ancestor just found:
   OUT=true RUN git commit-tree "$subrepo_tree" -p "$subrepo_parent" -m "$(action-message)"
   update_commit="$output"
 
@@ -205,6 +204,11 @@ command:pull() {
 
   # Merge the update with the subtree strategy:
   RUN git merge --no-ff -s recursive -X subtree="$subdir" -X patience "$update_commit"
+  #OUT=true RUN git read-tree --prefix="$subdir" -u --exclude-per-directory=".subrepo" -m "$subrepo_parent" "HEAD^{tree}" "$subrepo_tree"
+  #OUT=true RUN git write-tree --prefix="$subdir" #index must be in a fully merged state before calling. Creates a tree object.
+  #if [ -n "$output" ]; then
+  #  new_subrepo_tree="$output"
+  #fi
 
   OK || { say "git subrepo '$subdir' failed to complete pull"; return; }
 
@@ -220,7 +224,7 @@ command:pull() {
     # The update_commit just got rewritten. Need new id:
     FAIL=false OUT=true RUN git rev-parse HEAD^2
     if ! OK; then
-      # I think this bit helps...
+      # This bit helps when there is no second parent- which occurs in certain workflows.
       FAIL=false OUT=true RUN git rev-parse HEAD
     fi
     update_commit="$output"
@@ -251,19 +255,14 @@ command:push() {
   FAIL=false RUN git rebase -v "$upstream_head" "$checkout_branch"
 
   if ! OK; then
-    # Attempt to do a fancier merge.
-    RUN git rebase --abort
-    # Get last subrepo merge commit to the local branch for $subdir
-    # TODO: This would match subrepos in $subdir as well! Need to resolve.
-    FAIL=false OUT=true RUN git log --grep="Merge subrepo commit" -n 1 --pretty="format:%H"
-    if [ -z "$output" ]; then
-      # The user hadn't pushed/pulled $subdir before, so they must have only cloned.
-      FAIL=false OUT=true RUN git log --grep="git subrepo clone.*$subdir" -n 1 --pretty="format:%H"
-    fi
+    # Let's rebase a bit more intelligently by using the log to see when the last clone/merge was.
+    # Attempt to rebase A..$checkout_branch onto $upstream_head where A is last clone/merge log entry.
+    RUN git rebase --abort #Abort prior failed rebase.
+    get-last-subrepo-merge-log-entry
     if [ -n "$output" ]; then
       FAIL=false RUN git rebase -v --onto "$upstream_head" "$output" "$checkout_branch"
     else
-      say "Unable to do a fancier merge as the initial clone of $subdir wasn't found in the log."
+      say "Unable to rebase changes from local branch onto subrepo origin as git log entry of last $subdir clone/merge wasn't found."
       OK=false
     fi
   fi
@@ -889,6 +888,104 @@ add-subrepo() {
     [[ "$1" =~ ^$path ]] && return
   done
   subrepos+=("$1")
+}
+
+# Writes best common-ancestor to $subrepo_parent
+get-best-common-ancestor-for-merge() {
+  # Writes to $subrepo_parent if relevant clone/pull subrepo log entry found; writes latest match.
+  get-last-original-head-branch-subrepo-log-hash #Note log doesn't contain last subrepo push.
+
+  # Now, if there were no commits since the above we know we have the best common-ancestor:
+  OUT=true RUN git rev-parse "$original_head_branch"
+  if [ "$output" = "$subrepo_parent" ]; then
+    return
+  fi
+
+  # Need to know when to terminate outer loop, must get tree object of above relevant clone/pull commit
+  #  object for the subrepo directory without the .gitrepo file included:
+  local outer_loop_term_tree=""
+  #RUN doesn't support piping completely, must do this process substition to get output of mktree
+  OUT=true RUN git mktree < <(git ls-tree "$subrepo_parent:$subdir" | sed -r '/^.*\.gitrepo.*$/d')
+  if [ -z $output ]; then
+    say "Failed to obtain tree-id of $subdir in relevant clone/pull commit object without .gitrepo file"
+    return
+  fi
+  outer_loop_term_tree="$output"
+
+  # Outer loop we search subrepo/$suddir branch A..HEAD^{tree} where A was found above ($outer_loop_term_tree).
+  # Start at subrepo/$subdir branch and traverse to A as long as match (subrepo push) is not found.
+  for ((o_counter=0; ; ++o_counter))
+  do
+    get-subrepo-branch-HEAD-parent-tree $o_counter
+    local subrepo_iter_ptr_tree="$output" #Will point to $subrepo_parent^{tree} if search found no pushes.
+
+    if [ "$subrepo_iter_ptr_tree" = "$outer_loop_term_tree" ]; then
+       break #No need to continue, now we know $subrepo_parent is best common-ancestor.
+    fi
+
+    # Inner loop we search $original_head_branch branch B..HEAD where B is $subrepo_parent found earlier.
+    # TODO: Cache elements to speed up algorithm.
+    for ((i_counter=0; ; ++i_counter))
+    do
+      OUT=true RUN git rev-parse "$original_head_branch~$i_counter"
+      local original_branch_ptr="$output"
+      if [ "$original_branch_ptr" = "$subrepo_parent" ]; then
+        break #Inner loop done
+      fi
+      OUT=true RUN git mktree < <(git ls-tree "$original_head_branch~$i_counter:$subdir" | sed -r '/^.*\.gitrepo.*$/d')
+      if [ -z "$output" ]; then
+        say "Failed to obtain tree-id of $subdir in $original_head_branch~$i_counter without .gitrepo file"
+        continue
+      fi
+      if [ "$output" = "$subrepo_iter_ptr_tree" ]; then
+        # We have discovered that the subrepo had been pushed to from $original_head_branch since the last clone/pull.
+        #  We know that $original_branch_ptr is the best common ancestor!
+        subrepo_parent="$original_branch_ptr"
+        return
+      fi
+    done
+  done
+}
+
+# Writes to $subrepo_parent if relevant subrepo log entry found; writes latest match.
+get-last-original-head-branch-subrepo-log-hash() {
+  # First try the log for pull/clone entries.  Note no push entries are possible in
+  #  the log, so we must search for that later as it would be the best
+  #  common-ancestor candidate as git won't automatically select it during the merge.
+  FAIL=false OUT=true RUN git log --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
+  if [ -z "$output" ]; then
+    # TODO: "subrepo clone.*$subdir" should better match what is written by action-message()"
+    FAIL=false OUT=true RUN git log --grep="subrepo clone.*$subdir" -n 1 --pretty="format:%H"
+  fi
+  if [ -n "$output" ]; then
+    subrepo_parent="$output" #AKA common-ancestor for merge to be done soon.
+  else
+    say "Failed to obtain last subrepo log entry."
+  fi
+}
+
+get-subrepo-branch-HEAD-parent-tree() {
+  # Get (subrepo/$subdir) HEAD^{tree} parent $o_counter times (e.g. HEAD^^^{tree} for o_counter=2):
+  get-params "$@"
+  # Sanity check o_counter:
+  [ -n "$o_counter" ] ||
+    die "o_counter not set"
+
+  OUT=true RUN git log --max-count=1 --format=%T "subrepo/$subdir"~$o_counter
+  if [ -z "$output" ]; then
+    error "Failed to obtain tree id of subrepo/$subdir branch HEAD."
+  fi
+}
+
+get-last-subrepo-merge-log-entry() {
+  # Get last subrepo merge commit to the local branch for $subdir
+  # TODO: This would match subrepos in $subdir as well! Need to resolve.
+  FAIL=false OUT=true RUN git log --grep="Merge subrepo commit" -n 1 --pretty="format:%H"
+  if [ -z "$output" ]; then
+    # The user hadn't pushed/pulled $subdir before, so they must have only cloned.
+    # TODO: "subrepo clone.*$subdir" should better match what is written by action-message()"
+    FAIL=false OUT=true RUN git log --grep="subrepo clone.*$subdir" -n 1 --pretty="format:%H"
+  fi
 }
 
 # Smart command runner

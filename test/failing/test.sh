@@ -55,7 +55,7 @@ rm -fr p1 p2 lib lib.git
 
 (
   cd p2
-  git subrepo pull --rebase lib -v
+  git subrepo pull lib -v
   echo "p2 initial add to subrepo" >> lib/readme
   git add lib/readme
   git commit -m "p2 initial add to subrepo"
