@@ -277,7 +277,7 @@ command:push() {
 
   # Checkout starting branch:
   RUN git checkout "$original_head_branch"
-  
+
   # Delete the checkout branch:
   #RUN git branch -D "$checkout_branch"
 
