@@ -5,21 +5,21 @@ endif
 
 
 # Set variables:
-CMD := git-subrepo
-
-LOCAL_LIB := $(shell pwd)/lib/$(CMD)
-LOCAL_MAN := $(shell pwd)/man
-LOCAL_MAN1 := $(LOCAL_MAN)/man1
-LOCAL_EXT = $(LOCAL_LIB).d
-LOCAL_EXTS = $(shell find $(LOCAL_EXT) -type f) \
-	    $(shell find $(LOCAL_EXT) -type l)
+NAME := git-subrepo
+LIB := $(shell pwd)/lib/$(NAME)
+DOC = doc/$(NAME).swim
+MAN := $(shell pwd)/man
+MAN1 := $(MAN)/man1
+EXT = $(LIB).d
+EXTS = $(shell find $(EXT) -type f) \
+	    $(shell find $(EXT) -type l)
+SHARE = share
 
 PREFIX ?= /usr/local
 INSTALL_LIB ?= $(shell git --exec-path)
-INSTALL_CMD ?= $(INSTALL_LIB)/$(CMD)
-INSTALL_EXT ?= $(INSTALL_LIB)/$(CMD).d
+INSTALL_CMD ?= $(INSTALL_LIB)/$(NAME)
+INSTALL_EXT ?= $(INSTALL_LIB)/$(NAME).d
 INSTALL_MAN ?= $(PREFIX)/share/man/man1
-
 
 
 # Basic targets:
@@ -30,8 +30,8 @@ help:
 	@echo 'Makefile rules:'
 	@echo ''
 	@echo 'test       Run all tests'
-	@echo 'install    Install $(CMD)'
-	@echo 'uninstall  Uninstall $(CMD)'
+	@echo 'install    Install $(NAME)'
+	@echo 'uninstall  Uninstall $(NAME)'
 	@echo 'env        Show environment variables to set'
 
 test:
@@ -52,13 +52,13 @@ env:
 install: install-lib install-doc
 
 install-lib:
-	install -C -m 0755 $(LOCAL_LIB) $(INSTALL_LIB)/
+	install -C -m 0755 $(LIB) $(INSTALL_LIB)/
 	install -C -d -m 0755 $(INSTALL_EXT)/
-	install -C -m 0755 $(LOCAL_EXTS) $(INSTALL_EXT)/
+	install -C -m 0755 $(EXTS) $(INSTALL_EXT)/
 
 install-doc:
 	install -C -d -m 0755 $(INSTALL_MAN)
-	install -C -m 0644 doc/$(CMD).1 $(INSTALL_MAN)
+	install -C -m 0644 doc/$(NAME).1 $(INSTALL_MAN)
 
 
 
@@ -71,22 +71,28 @@ uninstall-lib:
 	rm -fr $(INSTALL_EXT)
 
 uninstall-doc:
-	rm -f $(INSTALL_MAN)/$(CMD).1
+	rm -f $(INSTALL_MAN)/$(NAME).1
 
 
 ##
 # Doc rules:
 .PHONY: doc
-doc: $(LOCAL_MAN1)/$(CMD).1
+update: doc compgen
 
-$(LOCAL_MAN1)/$(CMD).1: $(CMD).1
+doc: $(MAN1)/$(NAME).1
+
+compgen:
+	perl tool/generate-completion.pl $(DOC) > \
+	    $(SHARE)/completion.bash
+
+$(MAN1)/$(NAME).1: $(NAME).1
 	mv $< $@
 
 %.1: ReadMe.pod
 	pod2man --utf8 $< > $@
 
-ReadMe.pod: doc/$(CMD).kwim
-	kwim --to=pod --wrap=1 --complete=1 $< > $@
+ReadMe.pod: $(DOC)
+	swim --to=pod --wrap=1 --complete=1 $< > $@
 
 
 clean purge:
