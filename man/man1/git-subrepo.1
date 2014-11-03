@@ -71,7 +71,7 @@
 .\" ========================================================================
 .\"
 .IX Title "README 1"
-.TH README 1 "2014-06-13" "perl v5.18.1" "User Contributed Perl Documentation"
+.TH README 1 "2014-09-14" "perl v5.18.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -154,39 +154,113 @@ Does not introduce history that messes up other git commands.
 Fixes known rebase failures with \f(CW\*(C`git\-subtree\*(C'\fR.
 .SH "Installation"
 .IX Header "Installation"
-Get the source code from GitHub:
+There are currently 3 ways to install \f(CW\*(C`git\-subrepo\*(C'\fR. For all of them you need
+to get the source code from GitHub:
 .PP
 .Vb 1
-\&    git clone git@github.com:ingydotnet/git\-subrepo
+\&    git clone https://github.com/ingydotnet/git\-subrepo /path/to/git\-subrepo
 .Ve
 .PP
-Then simply add the \f(CW\*(C`lib\*(C'\fR and \f(CW\*(C`man\*(C'\fR directories to your \s-1PATH\s0 and \s-1MANPATH:\s0
+The first installation method is preferred: \f(CW\*(C`source\*(C'\fR the \f(CW\*(C`init\*(C'\fR file. Just
+add a line like this one to your shell startup script:
+.PP
+.Vb 1
+\&    source /path/to/git\-subrepo/init
+.Ve
+.PP
+That will modify your \f(CW\*(C`PATH\*(C'\fR and \f(CW\*(C`MANPATH\*(C'\fR, and also enable command
+completion.
+.PP
+The second method is to do these things by hand. This might afford you more
+control of your shell environment. Simply add the \f(CW\*(C`lib\*(C'\fR and \f(CW\*(C`man\*(C'\fR
+directories to your \f(CW\*(C`PATH\*(C'\fR and \f(CW\*(C`MANPATH\*(C'\fR:
 .PP
 .Vb 2
-\&    export PATH=/path/to/git\-subrepo/lib:$PATH
-\&    export MANPATH=/path/to/git\-subrepo/man:$MANPATH
+\&    export PATH="/path/to/git\-subrepo/lib:$PATH"
+\&    export MANPATH="/path/to/git\-subrepo/man:$MANPATH"
 .Ve
 .PP
-If you run \f(CW\*(C`make env\*(C'\fR, it will print the lines you need to add.
+See below for info on how to turn on Command Completion.
 .PP
-To do a proper system install, which puts \f(CW\*(C`git\-subrepo\*(C'\fR next to your other
-git commands, do this instead:
+The third method is a standard system install, which puts \f(CW\*(C`git\-subrepo\*(C'\fR next
+to your other git commands, do this instead:
 .PP
 .Vb 1
 \&    make install        # Possibly with \*(Aqsudo\*(Aq
 .Ve
+.PP
+This method does not account for upgrading and command completion yet.
 .SH "Upgrading"
 .IX Header "Upgrading"
-Just pull the latest \f(CW\*(C`git\-subrepo\*(C'\fR code:
+If you used the \f(CW\*(C`PATH\*(C'\fR method of installation, just run this to upgrade
+\&\f(CW\*(C`git\-subrepo\*(C'\fR:
 .PP
 .Vb 1
-\&    (cd /path/to/git\-subrepo; git pull)
+\&    git subrepo upgrade
 .Ve
 .PP
-If you used \f(CW\*(C`make install\*(C'\fR method, then do:
+Or (same thing):
+.PP
+.Vb 2
+\&    cd /path/to/git\-subrepo
+\&    git pull
+.Ve
+.PP
+If you used \f(CW\*(C`make install\*(C'\fR method, then run this again (after \f(CW\*(C`git pull\*(C'\fR):
 .PP
 .Vb 1
-\&    (cd /path/to/git\-subrepo; git pull; make install)
+\&    make install        # Possibly with \*(Aqsudo\*(Aq
+.Ve
+.SH "Command Completion"
+.IX Header "Command Completion"
+The \f(CW\*(C`git subrepo\*(C'\fR command supports \f(CW\*(C`<TAB>\*(C'\fR\-based command completion. If
+you don’t use the \f(CW\*(C`init\*(C'\fR script (see Installation, above), you’ll need to
+enable this manually to use it.
+.SS "In Bash"
+.IX Subsection "In Bash"
+If your Bash setup does not already provide command completion for Git, you’ll
+need to enable that first:
+.PP
+.Vb 1
+\&    source <Git completion script>
+.Ve
+.PP
+On your system, the Git completion script might be found at any of the
+following locations (or somewhere else that we don’t know about):
+.IP "\(bu" 4
+\&\f(CW\*(C`/etc/bash_completion.d/git\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`/usr/share/bash\-completion/git\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`/usr/share/bash\-completion/completions/git\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`/opt/local/share/bash\-completion/completions/git\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`/usr/local/etc/bash_completion.d/git\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`~/.homebrew/etc/bash_completion.d/git\*(C'\fR
+.PP
+In case you can’t find any of these, this repository contains a copy of the
+Git completion script:
+.PP
+.Vb 1
+\&    source /path/to/git\-subrepo/share/git\-completion.bash
+.Ve
+.PP
+Once Git completion is enabled (whether you needed to do that manually or
+not), you can turn on \f(CW\*(C`git\-subrepo\*(C'\fR completion with a command like this:
+.PP
+.Vb 1
+\&    source /path/to/git\-subrepo/share/completion.bash
+.Ve
+.SS "In zsh"
+.IX Subsection "In zsh"
+In the Z shell (zsh), you can manually enable \f(CW\*(C`git\-subrepo\*(C'\fR completion by
+adding the following line to your \f(CW\*(C`~/.zshrc\*(C'\fR, \fBbefore\fR the \f(CW\*(C`compinit\*(C'\fR
+function is called:
+.PP
+.Vb 1
+\&    fpath=(\*(Aq/path/to/git\-subrepo/share/zsh\-completion\*(Aq $fpath)
 .Ve
 .SH "Command Options"
 .IX Header "Command Options"
