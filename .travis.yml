@@ -2,6 +2,7 @@
 language: c
 
 script:
+- git checkout $TRAVIS_BRANCH
 - GIT_COMMITTER_NAME=Bob
   GIT_COMMITTER_EMAIL=bob@blob.net
   GIT_AUTHOR_NAME='Bob Blob'
