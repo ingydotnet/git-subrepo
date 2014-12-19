@@ -244,7 +244,7 @@ command:push() {
   subrepo-checkout
 
   # Attempt to rebase changes onto upstream:
-  FAIL=false RUN git rebase -v "$upstream_head" "$checkout_branch"
+  FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
 
   if ! OK; then
     # Let's rebase a bit more intelligently by using the log to see when the last clone/merge was.
@@ -252,7 +252,7 @@ command:push() {
     RUN git rebase --abort #Abort prior failed rebase.
     get-last-subrepo-merge-log-entry
     if [ -n "$output" ]; then
-      FAIL=false RUN git rebase -v --onto "$upstream_head" "$output" "$checkout_branch"
+      FAIL=false RUN git rebase --onto "$upstream_head" "$output" "$checkout_branch"
     else
       say "Unable to rebase changes from local branch onto subrepo origin as git log entry of last $subdir clone/merge wasn't found."
       OK=false
@@ -905,7 +905,7 @@ get-best-common-ancestor-for-merge() {
   outer_loop_term_tree="$output"
 
   # These are the outer loop elements, the tree of each commit in the subrepo branch:
-  OUT=true RUN sed '/commit/d' < <(git rev-list subrepo/$subdir --format="format:%T")
+  OUT=true RUN sed '/commit/d' < <(git rev-list subrepo/remote/$subdir --format="format:%T")
   local outer_loop_elems="$output"
 
   # These are the inner loop elements, cached here so they're only looked up once.
