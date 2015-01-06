@@ -82,7 +82,7 @@ update: doc compgen
 doc: $(MAN1)/$(NAME).1
 
 compgen:
-	perl tool/generate-completion.pl $(DOC) > \
+	perl pkg/bin/generate-completion.pl $(DOC) > \
 	    $(SHARE)/completion.bash
 
 $(MAN1)/$(NAME).1: $(NAME).1
