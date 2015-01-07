@@ -141,7 +141,7 @@ command:help() {
 # `git subrepo clone …` command:
 command:clone() {
   command-setup +subrepo_remote subdir:guess-subdir
-  fetch-subrepo
+  subrepo:fetch
 
   OK || { say "git subrepo failed"; return; }
 
@@ -176,7 +176,7 @@ command:clone() {
 # TODO Command needs rewrite:
 command:pull() {
   command-setup +subdir
-  fetch-subrepo
+  subrepo:fetch
 
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit" ]; then
@@ -236,7 +236,7 @@ command:push() {
   command-setup +subdir
 
   # XXX Probably don't fetch on push.
-  fetch-subrepo
+  subrepo:fetch
 
   # Checkout the subrepo to a branch:
   subrepo:checkout
@@ -399,7 +399,7 @@ Git subrepo '$subdir':
 command:fetch() {
   command-setup +subdir
 
-  fetch-subrepo true
+  subrepo:fetch true
 
   say ""
 }
@@ -448,6 +448,46 @@ Git Version: $git_version
 #------------------------------------------------------------------------------
 # Subrepo command guts functions:
 #------------------------------------------------------------------------------
+
+# Fetch the subrepo's remote branch content:
+subrepo:fetch() {
+  local say="${1:-false}"
+  # Fetch all the git objects from the subrepo/branch:
+  RUN git fetch --quiet "$subrepo_remote" "$subrepo_branch"
+
+  $say && say "Fetched '$subrepo_remote' ($subrepo_branch)"
+
+  # Get the subrepo HEAD commit:
+  OUT=true RUN git rev-parse FETCH_HEAD
+  upstream_head="$output"
+
+  local output=$(git config "remote.subrepo/$subdir.url")
+  if [ -z "$output" ]; then
+    RUN git remote add "subrepo/$subdir" "$subrepo_remote"
+    $say && say "Created remote 'subrepo/$subdir'"
+  else
+    if [ "$output" != "$subrepo_remote" ]; then
+      git remote set-url "subrepo/$subdir" "$subrepo_remote"
+      $say && say "Changed remote 'subrepo/$subdir'"
+    fi
+  fi
+
+  local ref="refs/subrepo/remote/$subdir"
+  OUT=true RUN git for-each-ref "$ref"
+  if [ -z "$output" ]; then
+    RUN git update-ref "$ref" "$upstream_head"
+    $say && say "Created ref '$ref'"
+  else
+    local commit="$(echo $output | cut -d' ' -f1)"
+    if [ "$commit" != "$upstream_head" ]; then
+      RUN git update-ref -d "$ref"
+      RUN git update-ref "$ref" "$upstream_head"
+      $say && say "Changed ref '$ref'"
+    fi
+  fi
+
+  true
+}
 
 # Checkout the subrepo changes since last push:
 subrepo:checkout() {
@@ -611,46 +651,6 @@ guess-subdir() {
   [[ "$dir" =~ ^[-a-zA-Z0-9]+$ ]] ||
     error "can't determine subdir from '$subrepo_remote'"
   subdir="$dir"
-}
-
-# Fetch the subrepo's remote branch content:
-fetch-subrepo() {
-  local say="${1:-false}"
-  # Fetch all the git objects from the subrepo/branch:
-  RUN git fetch --quiet "$subrepo_remote" "$subrepo_branch"
-
-  $say && say "Fetched '$subrepo_remote' ($subrepo_branch)"
-
-  # Get the subrepo HEAD commit:
-  OUT=true RUN git rev-parse FETCH_HEAD
-  upstream_head="$output"
-
-  local output=$(git config "remote.subrepo/$subdir.url")
-  if [ -z "$output" ]; then
-    RUN git remote add "subrepo/$subdir" "$subrepo_remote"
-    $say && say "Created remote 'subrepo/$subdir'"
-  else
-    if [ "$output" != "$subrepo_remote" ]; then
-      git remote set-url "subrepo/$subdir" "$subrepo_remote"
-      $say && say "Changed remote 'subrepo/$subdir'"
-    fi
-  fi
-
-  local ref="refs/subrepo/remote/$subdir"
-  OUT=true RUN git for-each-ref "$ref"
-  if [ -z "$output" ]; then
-    RUN git update-ref "$ref" "$upstream_head"
-    $say && say "Created ref '$ref'"
-  else
-    local commit="$(echo $output | cut -d' ' -f1)"
-    if [ "$commit" != "$upstream_head" ]; then
-      RUN git update-ref -d "$ref"
-      RUN git update-ref "$ref" "$upstream_head"
-      $say && say "Changed ref '$ref'"
-    fi
-  fi
-
-  true
 }
 
 # Determine the upstream's default head branch:
