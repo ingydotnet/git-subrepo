@@ -143,7 +143,7 @@ subdirectory of your repo.
 
 Adding a subtree was the easy part. All that needed to be done after that was
 to figure out a way to pull upstream changes and push local ones back
-upstream.  And that's what the `git-subtree` command does.
+upstream. And that's what the `git-subtree` command does.
 
 So what's the problem with git-subtree then?
 
@@ -204,7 +204,7 @@ command, but first let me explain how it came about.
 As you may have surmised by now, I am the author of git-subrepo. I'd used
 submodules on and off for years, and when I became aware of subtree I gave it
 a try, but I quickly realized its problems. I decided maybe it could be
-improved.  I decided to write down my expected commandline usage and my ideals
+improved. I decided to write down my expected commandline usage and my ideals
 of what it would and would not do. Then I set off to implement it. It's been a
 long road, but what I ended up with was even better than what I wanted from
 the start.
@@ -238,7 +238,7 @@ correct, because that's harder to fix down the road.
 OK. So how does it all work?
 
 There are 3 main commands: clone/pull/push. Let's start with the clone
-command.  This is the easiest part. You give it a remote url, possibly a new
+command. This is the easiest part. You give it a remote url, possibly a new
 subdir to put it, and possibly a remote branch to use. I say possibly, because
 the command can guess the subdir name (just like the git-clone command does),
 and the branch can be the upstream default branch.

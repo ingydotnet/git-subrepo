@@ -75,7 +75,7 @@ a line like this one to your shell startup script:
 That will modify your `PATH` and `MANPATH`, and also enable command completion.
 
 The second method is to do these things by hand. This might afford you more
-control of your shell environment.  Simply add the `lib` and `man` directories
+control of your shell environment. Simply add the `lib` and `man` directories
 to your `PATH` and `MANPATH`:
 
   export PATH="/path/to/git-subrepo/lib:$PATH"
@@ -234,7 +234,7 @@ can specify a 'merge strategy' to be tried:
   and merged into the subdir. The subrepo history is not added to your repo
   history, but a commit is added that contains the reference information.
   This information is also stored in a special file called
-  `<subdir>/.gitrepo`.  The presence of this file indicates that the directory
+  `<subdir>/.gitrepo`. The presence of this file indicates that the directory
   is a subrepo.
 
 - `git subrepo pull <subdir>|--all [--<strategy> | --continue] [-r <remote>] [-b <branch>] [-u]`
@@ -269,7 +269,7 @@ can specify a 'merge strategy' to be tried:
 - `git subrepo status <subdir>|--all [--quiet]`
 
   Get the status of a subrepo. If `--all` provided, get the status of all
-  subrepos.  If the `--quiet` flag is used, print less info, and on 1 line per
+  subrepos. If the `--quiet` flag is used, print less info, and on 1 line per
   subrepo.
 
 - `git subrepo fetch <subdir>|--all`
