@@ -1017,8 +1017,6 @@ error() {
 }
 
 # Start at the end:
-[ "$BASH_SOURCE" == "$0" ] && main "$@"
-
-true
+[ "$BASH_SOURCE" != "$0" ] || main "$@"
 
 # vim: set ft=sh sw=2 lisp:
