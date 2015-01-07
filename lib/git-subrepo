@@ -138,8 +138,6 @@ command:help() {
   exec git help subrepo
 }
 
-# TODO Run commands with a 'run' function
-
 # `git subrepo clone …` command:
 command:clone() {
   command-setup +subrepo_remote subdir:guess-subdir
