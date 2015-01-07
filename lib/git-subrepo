@@ -239,7 +239,7 @@ command:push() {
   fetch-subrepo
 
   # Checkout the subrepo to a branch:
-  subrepo-checkout
+  subrepo:checkout
 
   # Attempt to rebase changes onto upstream:
   FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
@@ -284,7 +284,7 @@ command:checkout() {
   command-setup +subdir
 
   # Checkout the subrepo to a branch:
-  subrepo-checkout
+  subrepo:checkout
 
   # Checkout the checkout branch:
   RUN git checkout "$checkout_branch"
@@ -450,7 +450,7 @@ Git Version: $git_version
 #------------------------------------------------------------------------------
 
 # Checkout the subrepo changes since last push:
-subrepo-checkout() {
+subrepo:checkout() {
   # TODO Actually only filter commits since last push.
   # TODO Check for all possible failures, and reset.
   # Make history of subdir changes:
