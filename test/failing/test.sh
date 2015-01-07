@@ -50,6 +50,7 @@ rm -fr p1 p2 lib
   git add lib/readme
   git commit -m "p1 initial add to subrepo"
   git subrepo push --all
+  git branch -D subrepo/lib
 )
 
 (
