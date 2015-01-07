@@ -503,7 +503,7 @@ subrepo:checkout() {
     --tree-filter "rm -f .gitrepo"
 
   if [ -n "$merge_strategy" ]; then
-    merge-upstream
+    die 'merge logic not yet implemented'
   fi
 
   # Create a branch for this checkout:
@@ -674,11 +674,6 @@ get-upstream-head-branch() {
   [[ "$branch" =~ refs/heads/ ]] ||
     error "problem finding remote default head branch"
   output="${branch#refs/heads/}"
-}
-
-# Attempt a merge of the upstream history, according to merge_strategy
-merge-upstream() {
-  die 'merge logic not yet implemented'
 }
 
 # Set subdir and gitrepo vars:
