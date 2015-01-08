@@ -1,0 +1,39 @@
+= `git-hub` Design Specification
+
+== Main Commands
+
+- `clone`
+
+  git subrepo clone <git-url> <subdir> [<options>]
+
+- `pull`
+
+- `push`
+
+== Worker Commands
+
+- `fetch`
+
+    git subrepo fetch <subdir>
+
+- `checkout`
+
+- `merge`
+
+- `commit`
+
+- `reset`
+
+== Info Commands
+
+- `status`
+
+- `log`
+
+== Other Commands
+
+- `clean`
+
+- `help`
+
+- `version`
