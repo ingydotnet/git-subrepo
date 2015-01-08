@@ -3,10 +3,10 @@
 name: git-subrepo
 version: 0.1.0
 abstract: Git Submodule Alternative
-homepage: http://bpan.org/package/git-subrepo/
-
+homepage: https://github.com/ingydotnet/git-subrepo#readme
 license: MIT
-copyright: 2013, 2014
+copyright: 2013-2015
+
 author:
   name: Ingy döt Net
   email: ingy@ingy.net

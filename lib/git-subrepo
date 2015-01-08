@@ -436,7 +436,7 @@ command:clean() {
 command:version() {
   cat <<...
 git-subrepo Version: $VERSION
-Copyright 2013, 2014 Ingy döt Net
+Copyright 2013-2015 Ingy döt Net
 https://github.com/git-commands/git-subrepo
 $BASH_SOURCE
 Git Version: $git_version
