@@ -109,18 +109,18 @@ If you used `make install` method, then run this again (after `git pull`):
 = Command Completion
 
 The `git subrepo` command supports `<TAB>`-based command completion. If you
-don’t use the `init` script (see Installation, above), you’ll need to enable
+don't use the `init` script (see Installation, above), you'll need to enable
 this manually to use it.
 
 == In Bash
 
-If your Bash setup does not already provide command completion for Git, you’ll
+If your Bash setup does not already provide command completion for Git, you'll
 need to enable that first:
 
   source <Git completion script>
 
 On your system, the Git completion script might be found at any of the
-following locations (or somewhere else that we don’t know about):
+following locations (or somewhere else that we don't know about):
 
 * `/etc/bash_completion.d/git`
 * `/usr/share/bash-completion/git`
@@ -129,7 +129,7 @@ following locations (or somewhere else that we don’t know about):
 * `/usr/local/etc/bash_completion.d/git`
 * `~/.homebrew/etc/bash_completion.d/git`
 
-In case you can’t find any of these, this repository contains a copy of the
+In case you can't find any of these, this repository contains a copy of the
 Git completion script:
 
   source /path/to/git-subrepo/share/git-completion.bash
