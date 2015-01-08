@@ -108,7 +108,7 @@ main() {
 
   # Make sure command exists:
   can "command:$command" ||
-    error "unknown 'git subrepo' command: '$command'"
+    error "'$command' is not a git-subrepo command. See 'git subrepo help'."
 
   # Make sure repo is in the proper state:
   [[ "$command" =~ ^(help|version)$ ]] ||
