@@ -92,7 +92,7 @@ $(MAN1)/$(NAME).1: $(NAME).1
 	pod2man --utf8 $< > $@
 
 ReadMe.pod: $(DOC)
-	swim --to=pod --wrap=1 --complete=1 $< > $@
+	swim --to=pod --wrap --complete $< > $@
 
 
 clean purge:
