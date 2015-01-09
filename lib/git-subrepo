@@ -21,13 +21,18 @@ Commands:
   clone     Clone a remote repository into a local sub-directory
   pull      Pull upstream changes to the subrepo
   push      Push local subrepo changes upstream
-  checkout  Create/checkout a local branch containing just the subrepo
+
+  branch    Create a branch containing the local subrepo commits
+  checkout  Checkout a subrepo branch (creating if necessary)
+  fetch     Fetch a subrepo remote branch (and create a ref for it)
+  commit    Commit a merged subrepo branch into the mainline
+  reset     Reset to the branch before a subrepo checkout
 
   status    Get status of a subrepo (or all of them)
-  fetch     Fetch subrepo remote and update remote branch
+  log       Show log of a subrepo's upstream history
   clean     Remove branches, remotes and grafts for a subrepo
 
-  help      Read the (full) git-subrepo documentation
+  help      Documentation for git-subrepo (or specfic command)
   version   Display git-subrepo version info
 
 See 'git help subrepo' for complete documentation and usage of each command.
@@ -42,15 +47,6 @@ a,all       Perform command on all current subrepos
 b,branch=   Specify an upstream branch
 r,remote=   Specify an upstream remote
 u,update    Add the --branch and/or --remote overrides to .gitrepo
-continue    Finish the (pull|push) operation after checkout/hand-merge
-
-reclone     Replace current content with upstream content
-rebase      Rebase upstream changes
-merge       Merge (recursive) upstream changes
-ours        Merge (recursive/ours) upstream changes
-theirs      Merge (recursive/theirs) upstream changes
-graft       Create a graft (needed for some hand merges)
-fetch       Fetch the remote content (usually on by default)
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
@@ -108,7 +104,7 @@ main() {
 
   # Make sure command exists:
   can "command:$command" ||
-    error "'$command' is not a git-subrepo command. See 'git subrepo help'."
+    error "'$command' is not a command. See 'git subrepo help'."
 
   # Make sure repo is in the proper state:
   [[ "$command" =~ ^(help|version)$ ]] ||
@@ -279,6 +275,14 @@ command:push() {
   say "git subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
+# `git subrepo branch …` command:
+command:branch() {
+  command-setup +subdir
+
+  # Create the subrepo branch:
+  subrepo:branch
+}
+
 # `git subrepo checkout …` command:
 command:checkout() {
   command-setup +subdir
@@ -286,7 +290,6 @@ command:checkout() {
   # Checkout the subrepo to a branch:
   subrepo:checkout
 
-  # Checkout the checkout branch:
   RUN git checkout "$checkout_branch"
 
   say "
@@ -489,6 +492,38 @@ subrepo:fetch() {
   true
 }
 
+# Create a subrepo branch of changes since last push:
+subrepo:branch() {
+  local branch="subrepo/$subdir"
+  if git:branch-exists "$branch"; then
+    error "A branch named '$branch' already exists."
+  fi
+
+  # TODO Actually only filter commits since last push.
+  # TODO Check for all possible failures, and reset.
+  # Make history of subdir changes:
+  RUN git filter-branch -f \
+    --subdirectory-filter "$subdir" \
+    -- HEAD
+
+  # Remove the .gitrepo file from the history:
+  RUN git filter-branch -f \
+    --tree-filter "rm -f .gitrepo"
+
+  # Create a branch for this checkout:
+  RUN git branch "$branch"
+
+  # Graft subrepo branch to upstream (if requested):
+  if $graft_wanted; then
+    OUT=true RUN git rev-list --max-parents=0 HEAD
+    local root="$output"
+    echo "$root $subrepo_commit" >> .git/info/grafts
+  fi
+
+  # Reset to the branch where we started:
+  RUN git reset --hard "$original_head_commit"
+}
+
 # Checkout the subrepo changes since last push:
 subrepo:checkout() {
   # TODO Actually only filter commits since last push.
@@ -524,6 +559,14 @@ subrepo:checkout() {
 # TODO finish this
 subrepo:branch-status() {
   echo "You are on a subrepo branch"
+}
+
+#------------------------------------------------------------------------------
+# Git command wrappers:
+#------------------------------------------------------------------------------
+
+git:branch-exists() {
+  git show-ref --verify --quiet "refs/heads/$1"
 }
 
 #------------------------------------------------------------------------------
@@ -1007,7 +1050,7 @@ OK() {
 # Nicely report common error messages:
 error() {
   local msg=
-  printf -v msg "Error: %s\n" "$1"
+  printf -v msg "git-subrepo: %s\n" "$1"
   die "$msg"
 }
 
