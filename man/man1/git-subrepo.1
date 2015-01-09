@@ -71,7 +71,7 @@
 .\" ========================================================================
 .\"
 .IX Title "README 1"
-.TH README 1 "2015-01-07" "perl v5.18.1" "User Contributed Perl Documentation"
+.TH README 1 "2015-01-08" "perl v5.18.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -82,18 +82,23 @@
 .SH "Synopsis"
 .IX Header "Synopsis"
 .Vb 1
-\&    git subrepo help
+\&    git subrepo \-h    # Short usage help
 \&
-\&    git subrepo clone <remote\-url>
+\&    git subrepo clone <remote\-url> [<subdir>]
 \&    git subrepo pull <subdir>
 \&    git subrepo push <subdir>
+\&
 \&    git subrepo branch <subdir>
 \&    git subrepo checkout <subdir>
+\&    git subrepo fetch <subdir>
+\&    git subrepo commit <subdir>
+\&    git subrepo reset [<branch>]
 \&
-\&    git subrepo status <subdir>
-\&    git subrepo fetch \-\-all
-\&    git subrepo clean \-a
+\&    git subrepo status [<subdir>]
+\&    git subrepo log <subdir>
+\&    git subrepo clean <subdir>
 \&
+\&    git subrepo help [<command>]
 \&    git subrepo version
 .Ve
 .SH "Description"
@@ -133,27 +138,272 @@ Owners do not deal with the complications of keeping submodules in sync.
 .IP "\(bu" 4
 Subrepos can contain other subrepos.
 .IP "\(bu" 4
-Branching with subrepos just works.
+Branching with subrepos JustWorks™.
 .IP "\(bu" 4
 Different branches can have different subrepos in different states, etc.
 .IP "\(bu" 4
-Moving/renaming a subrepo subdir just works.
+Moving/renaming a subrepo subdir JustWorks™.
 .IP "\(bu" 4
 Your git history is kept squeaky clean.
 .IP "\(bu" 4
 Upstream history (clone/pull) is condensed into a single commit.
 .IP "\(bu" 4
-You can see the complete subrepo history by using a subrepo remote branch.
+You can see the complete subrepo history by using \f(CW\*(C`git subrepo log\*(C'\fR.
 .IP "\(bu" 4
-Commits pushed back upstream are \s-1NOT\s0 condensed.
+Commits pushed back upstream are \fBnot\fR condensed.
 .IP "\(bu" 4
 Easy to play around with subrepos and then reset back.
+.IP "\(bu" 4
+No configuration required.
 .IP "\(bu" 4
 Does not introduce history that messes up other git commands.
 .IP "\(bu" 4
 Fixes known rebase failures with \f(CW\*(C`git\-subtree\*(C'\fR.
 .SH "Installation"
 .IX Header "Installation"
+The best short answer is:
+.PP
+.Vb 2
+\&    git clone https://github.com/ingydotnet/git\-subrepo /path/to/git\-subrepo
+\&    echo \*(Aqsource /path/to/git\-subrepo/init\*(Aq >> ~/.bashrc
+.Ve
+.PP
+The complete \*(L"Installation Instructions\*(R" can be found below.
+.SH "Commands"
+.IX Header "Commands"
+All the \fBsubrepo\fR commands use names of actual Git commands and try to do
+similar operations to their Git counterparts. They also attempt to give
+similar output in an attempt to make the subrepo usage intuitive to
+experienced Git users.
+.PP
+Please note that the commands are \fInot\fR exact equivalents, and do not take
+all the same arguments. Keep reading…
+.ie n .IP """git subrepo clone <repository> [<subdir>] [\-b <upstream\-branch>]""" 4
+.el .IP "\f(CWgit subrepo clone <repository> [<subdir>] [\-b <upstream\-branch>]\fR" 4
+.IX Item "git subrepo clone <repository> [<subdir>] [-b <upstream-branch>]"
+Add a repository as a subrepo in a subdir of your repository.
+.Sp
+This is similar in feel to \f(CW\*(C`git clone\*(C'\fR. You just specify the remote repo url,
+and optionally a sub-directory and/or branch name. The repo will be fetched
+and merged into the subdir.
+.Sp
+The subrepo history is \fIsquashed\fR into a single commit that contains the
+reference information. This information is also stored in a special file
+called \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR. The presence of this file indicates that the
+directory is a subrepo.
+.Sp
+All subsequent commands refer to the subrepo by the name of the
+\&\fIsubdir\fR. From the subdir, all the current information about the subrepo
+can be obtained.
+.ie n .IP """git subrepo pull <subdir>|\-\-all [\-\-<strategy>] [\-b <branch>] [\-r <remote>] [\-u]""" 4
+.el .IP "\f(CWgit subrepo pull <subdir>|\-\-all [\-\-<strategy>] [\-b <branch>] [\-r <remote>] [\-u]\fR" 4
+.IX Item "git subrepo pull <subdir>|--all [--<strategy>] [-b <branch>] [-r <remote>] [-u]"
+Update the subrepo subdir with the latest remote changes.
+.Sp
+The \f(CW\*(C`pull\*(C'\fR command will attempt to do the following commands in one go:
+.RS 4
+.IP "\(bu" 4
+\&\f(CW\*(C`git subrepo fetch <subdir>\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git subrepo branch <subdir>\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git checkout subrepo/<subdir>\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git merge \-s <strategy> refs/subrepo/remote/<subdir>\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git subrepo reset\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git subrepo commit <subdir>\*(C'\fR
+.RE
+.RS 4
+.Sp
+In other words, you could do all the above commands yourself, for the same
+effect. If any of the commands fail, subrepo will reset, and tell you to do
+this by hand. Generally a failure would be in the merge, where conflicts can
+happen. Since Git has lots of ways to resolve conflicts to your personal
+tastes, the subrepo command defers to letting you do this by hand.
+.Sp
+Like the \f(CW\*(C`clone\*(C'\fR command, \f(CW\*(C`pull\*(C'\fR will squash all the changes (since the
+last pull or clone) into one commit. This keeps your mainline history nice
+and clean. You can easily see the subrepo's history with the subrepo
+\&\f(CW\*(C`log\*(C'\fR command.
+.Sp
+The above commands are described in detail below. Also see the section on
+\&\*(L"Merge Strategy Options\*(R".
+.RE
+.ie n .IP """git subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]""" 4
+.el .IP "\f(CWgit subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]\fR" 4
+.IX Item "git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]"
+Merge local changes on top of the upstream branch, and push upstream.
+.Sp
+We fetch the upstream remote, rebase or merge on top of that head, and push
+back to the remote. Effectively we do these commands:
+.RS 4
+.IP "\(bu" 4
+\&\f(CW\*(C`git subrepo fetch <subdir>\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git subrepo branch <subdir>\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git rebase refs/subrepo/remote/<subdir> subrepo/<subrepo>\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git push <remote> subrepo/<subrepo>\*(C'\fR
+.RE
+.RS 4
+.Sp
+Like with the \f(CW\*(C`pull\*(C'\fR command, if this fails, you can do these steps by hand.
+.RE
+.ie n .IP """git subrepo branch <subdir>|\-\-all""" 4
+.el .IP "\f(CWgit subrepo branch <subdir>|\-\-all\fR" 4
+.IX Item "git subrepo branch <subdir>|--all"
+Create a branch \f(CW\*(C`subrepo/<subdir>\*(C'\fR with all the subrepo commits.
+.Sp
+Scan the history of the mainline for all the commits that affect the \f(CW\*(C`subdir\*(C'\fR
+(since the last subrepo pull or clone) and create a new branch from them.
+.Sp
+This is useful for doing \f(CW\*(C`pull\*(C'\fR and \f(CW\*(C`push\*(C'\fR commands by hand. The \f(CW\*(C`checkout\*(C'\fR
+command uses this command if the branch doesn't already exist (and then does a
+\&\f(CW\*(C`git checkout\*(C'\fR on it).
+.ie n .IP """git subrepo checkout <subdir>""" 4
+.el .IP "\f(CWgit subrepo checkout <subdir>\fR" 4
+.IX Item "git subrepo checkout <subdir>"
+Shorthand for the following 2 commands:
+.Sp
+.Vb 2
+\&    git subrepo branch <subdir>
+\&    git checkout subrepo/<subdir>
+.Ve
+.ie n .IP """git subrepo fetch <subdir>|\-\-all""" 4
+.el .IP "\f(CWgit subrepo fetch <subdir>|\-\-all\fR" 4
+.IX Item "git subrepo fetch <subdir>|--all"
+Fetch the remote/upstream content for a subrepo.
+.Sp
+It will create a Git reference called \f(CW\*(C`subrepo/remote/<subdir>\*(C'\fR that
+points at the same commit as \f(CW\*(C`FETCH_HEAD\*(C'\fR. It will also create a remote
+called \f(CW\*(C`subrepo/<subdir>\*(C'\fR. These are temporary and you can remove them
+easily with the subrepo \f(CW\*(C`clean\*(C'\fR command.
+.ie n .IP """git subrepo commit <subdir>""" 4
+.el .IP "\f(CWgit subrepo commit <subdir>\fR" 4
+.IX Item "git subrepo commit <subdir>"
+Take a properly merged subrepo branch and add it as a single commit.
+.Sp
+This command is generally used after a hand-merge. You have done a \f(CW\*(C`subrepo
+checkout\*(C'\fR and merged it with the upstream. This command takes the \s-1HEAD\s0 of that
+branch and add it on top of your mainline history.
+.ie n .IP """git subrepo reset [<branch>]""" 4
+.el .IP "\f(CWgit subrepo reset [<branch>]\fR" 4
+.IX Item "git subrepo reset [<branch>]"
+Checkout and reset to the mainline branch.
+.Sp
+When you do a \f(CW\*(C`subrepo checkout\*(C'\fR from a non-subrepo branch, that branch and
+its \s-1HEAD\s0 are saved. This command will reset to those values. This just saves
+you the trouble of remembering where you started when you are done with a
+subrepo branch.
+.Sp
+This is the same as:
+.Sp
+.Vb 2
+\&    git reset \-\-hard <branch>
+\&    git checkout <branch>
+.Ve
+.ie n .IP """git subrepo status [<subdir>] [\-\-quiet]""" 4
+.el .IP "\f(CWgit subrepo status [<subdir>] [\-\-quiet]\fR" 4
+.IX Item "git subrepo status [<subdir>] [--quiet]"
+Get the status of a subrepo. Show the status of all subrepos by default. If
+the \f(CW\*(C`\-\-quiet\*(C'\fR flag is used, print less info, and on 1 line per subrepo.
+.Sp
+If you have a subrepo branch checked out, show the status of that subrepo.
+.ie n .IP """git subrepo log <subdir> [<git\-log\-options>]""" 4
+.el .IP "\f(CWgit subrepo log <subdir> [<git\-log\-options>]\fR" 4
+.IX Item "git subrepo log <subdir> [<git-log-options>]"
+Show log of the subrepo's upstream commits. Same as:
+.Sp
+.Vb 2
+\&    git subrepo fetch <subdir>
+\&    git log subrepo/remote/<subdir>
+.Ve
+.ie n .IP """git subrepo clean <subdir>|\-\-all""" 4
+.el .IP "\f(CWgit subrepo clean <subdir>|\-\-all\fR" 4
+.IX Item "git subrepo clean <subdir>|--all"
+Remove artifacts created by \f(CW\*(C`fetch\*(C'\fR and \f(CW\*(C`branch\*(C'\fR commands.
+.Sp
+The \f(CW\*(C`fetch\*(C'\fR and \f(CW\*(C`branch\*(C'\fR operations (and other commands that call them)
+create temporary things like refs, branches, remotes and grafts. This command
+removes all those things.
+.ie n .IP """git subrepo help""" 4
+.el .IP "\f(CWgit subrepo help\fR" 4
+.IX Item "git subrepo help"
+Same as \f(CW\*(C`git help subrepo\*(C'\fR. Will launch the manpage. For the shorter usage,
+use \f(CW\*(C`git subrepo \-h\*(C'\fR.
+.ie n .IP """git subrepo version [\-\-verbose] [\-\-quiet]""" 4
+.el .IP "\f(CWgit subrepo version [\-\-verbose] [\-\-quiet]\fR" 4
+.IX Item "git subrepo version [--verbose] [--quiet]"
+This command will display version information about git-subrepo and its
+environment. For just the version number, use \f(CW\*(C`git subrepo \-\-version\*(C'\fR. Use
+\&\f(CW\*(C`\-\-verbose\*(C'\fR for more version info, and \f(CW\*(C`\-\-quiet\*(C'\fR for less.
+.SH "Command Options"
+.IX Header "Command Options"
+.ie n .IP """\-h""" 4
+.el .IP "\f(CW\-h\fR" 4
+.IX Item "-h"
+Short help.
+.ie n .IP """\-\-help""" 4
+.el .IP "\f(CW\-\-help\fR" 4
+.IX Item "--help"
+Long help.
+.ie n .IP """\-a"", ""\-\-all""" 4
+.el .IP "\f(CW\-a\fR, \f(CW\-\-all\fR" 4
+.IX Item "-a, --all"
+If you have multiple subrepos, issue the command to all of them (if
+applicable).
+.ie n .IP """\-\-branch=<branch\-name>"" (""\-b <branch\-name>"")" 4
+.el .IP "\f(CW\-\-branch=<branch\-name>\fR (\f(CW\-b <branch\-name>\fR)" 4
+.IX Item "--branch=<branch-name> (-b <branch-name>)"
+Use a different branch-name than the remote \s-1HEAD\s0 or the one saved in
+\&\f(CW\*(C`.gitrepo\*(C'\fR locally.
+.ie n .IP """\-\-remote=<remote\-url>"" (""\-r <remote\-url>"")" 4
+.el .IP "\f(CW\-\-remote=<remote\-url>\fR (\f(CW\-r <remote\-url>\fR)" 4
+.IX Item "--remote=<remote-url> (-r <remote-url>)"
+Use a different remote-url than the one saved in \f(CW\*(C`.gitrepo\*(C'\fR locally.
+.ie n .IP """\-\-update"" (""\-u"")" 4
+.el .IP "\f(CW\-\-update\fR (\f(CW\-u\fR)" 4
+.IX Item "--update (-u)"
+If \f(CW\*(C`\-b\*(C'\fR or \f(CW\*(C`\-r\*(C'\fR are used, and the command updates the \f(CW\*(C`.gitrepo\*(C'\fR file,
+include these values to the update.
+.SS "Merge Strategy Options"
+.IX Subsection "Merge Strategy Options"
+When doing a \f(CW\*(C`pull\*(C'\fR command you can specify a 'merge strategy' to be tried:
+.ie n .IP """\-\-reclone""" 4
+.el .IP "\f(CW\-\-reclone\fR" 4
+.IX Item "--reclone"
+Use this option when you have no local changes to the subrepo, and you simply
+want to replace the old content with the new upstream content. If you use \f(CW\*(C`\-\-
+branch\*(C'\fR or \f(CW\*(C`\-\-remote\*(C'\fR options with this option, the \f(CW\*(C`\-\-update\*(C'\fR option is
+turned on automatically (ie the new remote and branch are stored in .gitrepo
+file). This strategy should never fail.
+.ie n .IP """\-\-rebase""" 4
+.el .IP "\f(CW\-\-rebase\fR" 4
+.IX Item "--rebase"
+Attempt a rebase on top off the remote head.
+.ie n .IP """\-\-merge""" 4
+.el .IP "\f(CW\-\-merge\fR" 4
+.IX Item "--merge"
+Use the default (recursive) merge strategy.
+.ie n .IP """\-\-ours""" 4
+.el .IP "\f(CW\-\-ours\fR" 4
+.IX Item "--ours"
+Use recursive + \f(CW\*(C`\-X ours\*(C'\fR option.
+.ie n .IP """\-\-theirs""" 4
+.el .IP "\f(CW\-\-theirs\fR" 4
+.IX Item "--theirs"
+Use recursive + \f(CW\*(C`\-X theirs\*(C'\fR option.
+.ie n .IP """\-\-graft""" 4
+.el .IP "\f(CW\-\-graft\fR" 4
+.IX Item "--graft"
+This option creates a graft between your local detached subrepo branch and the
+fetched upstream branch, so that you can try a hand merge. Some commands like
+\&\f(CW\*(C`git rebase\*(C'\fR seem to need this.
+.SH "Installation Instructions"
+.IX Header "Installation Instructions"
 There are currently 3 ways to install \f(CW\*(C`git\-subrepo\*(C'\fR. For all of them you need
 to get the source code from GitHub:
 .PP
@@ -183,7 +433,7 @@ directories to your \f(CW\*(C`PATH\*(C'\fR and \f(CW\*(C`MANPATH\*(C'\fR:
 See below for info on how to turn on Command Completion.
 .PP
 The third method is a standard system install, which puts \f(CW\*(C`git\-subrepo\*(C'\fR next
-to your other git commands, do this instead:
+to your other git commands:
 .PP
 .Vb 1
 \&    make install        # Possibly with \*(Aqsudo\*(Aq
@@ -262,152 +512,11 @@ function is called:
 .Vb 1
 \&    fpath=(\*(Aq/path/to/git\-subrepo/share/zsh\-completion\*(Aq $fpath)
 .Ve
-.SH "Command Options"
-.IX Header "Command Options"
-.ie n .IP """\-h""" 4
-.el .IP "\f(CW\-h\fR" 4
-.IX Item "-h"
-Short help.
-.ie n .IP """\-\-help""" 4
-.el .IP "\f(CW\-\-help\fR" 4
-.IX Item "--help"
-Long help.
-.ie n .IP """\-a"", ""\-\-all""" 4
-.el .IP "\f(CW\-a\fR, \f(CW\-\-all\fR" 4
-.IX Item "-a, --all"
-If you have multiple subrepos, issue the command to all of them (if
-applicable).
-.ie n .IP """\-\-branch=<branch\-name>"" (""\-b <branch\-name>"")" 4
-.el .IP "\f(CW\-\-branch=<branch\-name>\fR (\f(CW\-b <branch\-name>\fR)" 4
-.IX Item "--branch=<branch-name> (-b <branch-name>)"
-Use a different branch-name than the remote \s-1HEAD\s0 or the one saved in
-\&\f(CW\*(C`.gitrepo\*(C'\fR locally.
-.ie n .IP """\-\-remote=<remote\-url>"" (""\-r <remote\-url>"")" 4
-.el .IP "\f(CW\-\-remote=<remote\-url>\fR (\f(CW\-r <remote\-url>\fR)" 4
-.IX Item "--remote=<remote-url> (-r <remote-url>)"
-Use a different remote-url than the one saved in \f(CW\*(C`.gitrepo\*(C'\fR locally.
-.ie n .IP """\-\-update"" (""\-u"")" 4
-.el .IP "\f(CW\-\-update\fR (\f(CW\-u\fR)" 4
-.IX Item "--update (-u)"
-If \f(CW\*(C`\-b\*(C'\fR or \f(CW\*(C`\-r\*(C'\fR are used, and the command updates the \f(CW\*(C`.gitrepo\*(C'\fR file,
-include these values to the update.
-.ie n .IP """\-\-continue""" 4
-.el .IP "\f(CW\-\-continue\fR" 4
-.IX Item "--continue"
-On a pull or push, you often want to do things by hand. This involves a
-\&\f(CW\*(C`subrepo checkout\*(C'\fR, merging and testing, etc. When the subrepo branch is
-ready to be integrated (pulled) or pushed back upstream, use this flag on the
-relevant pull or push command.
-.SS "Merge Options"
-.IX Subsection "Merge Options"
-When doing a \f(CW\*(C`pull\*(C'\fR command (or doing a \f(CW\*(C`checkout\*(C'\fR for manual merge/pull)
-you can specify a 'merge strategy' to be tried:
-.ie n .IP """\-\-reclone""" 4
-.el .IP "\f(CW\-\-reclone\fR" 4
-.IX Item "--reclone"
-Use this option when you have no local changes to the subrepo, and you simply
-want to replace the old content with the new upstream content. If you use \f(CW\*(C`\-\-
-branch\*(C'\fR or \f(CW\*(C`\-\-remote\*(C'\fR options with this option, the \f(CW\*(C`\-\-update\*(C'\fR option is
-turned on automatically. (new remote and branch are stored in .gitrepo file)
-.ie n .IP """\-\-rebase""" 4
-.el .IP "\f(CW\-\-rebase\fR" 4
-.IX Item "--rebase"
-Attempt a rebase on top off the remote head.
-.ie n .IP """\-\-merge""" 4
-.el .IP "\f(CW\-\-merge\fR" 4
-.IX Item "--merge"
-Use the default (recursive) merge strategy.
-.ie n .IP """\-\-ours""" 4
-.el .IP "\f(CW\-\-ours\fR" 4
-.IX Item "--ours"
-Use recursive + \f(CW\*(C`\-X ours\*(C'\fR option.
-.ie n .IP """\-\-theirs""" 4
-.el .IP "\f(CW\-\-theirs\fR" 4
-.IX Item "--theirs"
-Use recursive + \f(CW\*(C`\-X theirs\*(C'\fR option.
-.ie n .IP """\-\-graft""" 4
-.el .IP "\f(CW\-\-graft\fR" 4
-.IX Item "--graft"
-This option creates a graft between your local detached subrepo branch and the
-fetched upstream branch, so that you can try a hand merge. Some commands like
-\&\f(CW\*(C`git rebase\*(C'\fR seem to need this.
-.IP "\-\-fetch" 4
-.IX Item "--fetch"
-When you specify a merge strategy, the command will do a remote fetch
-automatically. If no merge strategy option is supplied for a checkout command,
-the fetch is not done. This flag says to fetch anyway.
-.SH "Commands"
-.IX Header "Commands"
-.ie n .IP """git subrepo clone <repository> [<subdir>] [\-b <upstream\-branch>]""" 4
-.el .IP "\f(CWgit subrepo clone <repository> [<subdir>] [\-b <upstream\-branch>]\fR" 4
-.IX Item "git subrepo clone <repository> [<subdir>] [-b <upstream-branch>]"
-This command adds a repository as a subrepo in a subdir of your repository. It
-is similar in feel to \f(CW\*(C`git clone\*(C'\fR. You just specify the remote repo url, and
-optionally a sub-directory and/or branch name. The repo will be fetched and
-merged into the subdir. The subrepo history is not added to your repo history,
-but a commit is added that contains the reference information. This
-information is also stored in a special file called \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR.
-The presence of this file indicates that the directory is a subrepo.
-.ie n .IP """git subrepo pull <subdir>|\-\-all [\-\-<strategy> | \-\-continue] [\-r <remote>] [\-b <branch>] [\-u]""" 4
-.el .IP "\f(CWgit subrepo pull <subdir>|\-\-all [\-\-<strategy> | \-\-continue] [\-r <remote>] [\-b <branch>] [\-u]\fR" 4
-.IX Item "git subrepo pull <subdir>|--all [--<strategy> | --continue] [-r <remote>] [-b <branch>] [-u]"
-Update the subdir with the latest remote changes. The subdir must be a subrepo
-(must contain a .gitrepo file). If you specify a merge-strategy like \f(CW\*(C`\-\-
-rebase\*(C'\fR or \f(CW\*(C`\-\-ours\*(C'\fR, the command will attempt to fetch, merge and integrate
-all in one step. If you want to merge yourself, run a \f(CW\*(C`git subrepo checkout\*(C'\fR
-first, merge yourself, then run \f(CW\*(C`git subrepo pull <subdir> \-\-continue\*(C'\fR
-and your branch will be integrated (pulled) into the mainline repo.
-.ie n .IP """git subrepo push <subdir>|\-\-all [\-\-continue] [\-r <remote>] [\-b <branch>]""" 4
-.el .IP "\f(CWgit subrepo push <subdir>|\-\-all [\-\-continue] [\-r <remote>] [\-b <branch>]\fR" 4
-.IX Item "git subrepo push <subdir>|--all [--continue] [-r <remote>] [-b <branch>]"
-This command will make sure that you have already pulled (merged) the upstream
-head. Then it will create a branch of the local history involving the subrepo,
-and push that back to the remote.
-.ie n .IP """git subrepo checkout <subdir>|\-\-all [\-\-<strategy> [\-r <remote>] [\-b <branch>]]""" 4
-.el .IP "\f(CWgit subrepo checkout <subdir>|\-\-all [\-\-<strategy> [\-r <remote>] [\-b <branch>]]\fR" 4
-.IX Item "git subrepo checkout <subdir>|--all [--<strategy> [-r <remote>] [-b <branch>]]"
-This command creates a local branch called subrepo/, that contains all the
-subdir commits since the last pull. This is useful when a subrepo pull has
-failed. You can merge things by hand, then run a 'git subrepo push' command.
-If you specify a merge-strategy, then it will be applied using the remote head
-(which is automatically fetched) and this new branch. With no merge-strategy,
-just make the branch. After all this, the \f(CW\*(C`checkout\*(C'\fR command will actually
-checkout the new branch. This command is normally used for hand merging, but
-can also be used to see what the local subrepo changes look like, by
-themselves. Note: the \f(CW\*(C`.gitrepo\*(C'\fR file will be deleted in this subrepo branch.
-.ie n .IP """git subrepo status <subdir>|\-\-all [\-\-quiet]""" 4
-.el .IP "\f(CWgit subrepo status <subdir>|\-\-all [\-\-quiet]\fR" 4
-.IX Item "git subrepo status <subdir>|--all [--quiet]"
-Get the status of a subrepo. If \f(CW\*(C`\-\-all\*(C'\fR provided, get the status of all
-subrepos. If the \f(CW\*(C`\-\-quiet\*(C'\fR flag is used, print less info, and on 1 line
-per subrepo.
-.ie n .IP """git subrepo fetch <subdir>|\-\-all""" 4
-.el .IP "\f(CWgit subrepo fetch <subdir>|\-\-all\fR" 4
-.IX Item "git subrepo fetch <subdir>|--all"
-This command will fetch the remote content for a subrepo. It will create a
-branch pointing at the \s-1FETCH_HEAD\s0 called \f(CW\*(C`subrepo/remote/<subdir>\*(C'\fR and a
-remote called \f(CW\*(C`subrepo/<subdir>\*(C'\fR.
-.ie n .IP """git subrepo clean <subdir>|\-\-all""" 4
-.el .IP "\f(CWgit subrepo clean <subdir>|\-\-all\fR" 4
-.IX Item "git subrepo clean <subdir>|--all"
-When you run a subrepo command that does a remote fetch, extra branches,
-remotes and grafts are created for you. This command will remove them.
-.ie n .IP """git subrepo help""" 4
-.el .IP "\f(CWgit subrepo help\fR" 4
-.IX Item "git subrepo help"
-Same as \f(CW\*(C`git help subrepo\*(C'\fR. Will launch the manpage. For the shorter usage,
-use \f(CW\*(C`git subrepo \-h\*(C'\fR.
-.ie n .IP """git subrepo version [\-\-verbose] [\-\-quiet]""" 4
-.el .IP "\f(CWgit subrepo version [\-\-verbose] [\-\-quiet]\fR" 4
-.IX Item "git subrepo version [--verbose] [--quiet]"
-This command will display version information about git-subrepo and its
-environment. For just the version number, use \f(CW\*(C`git subrepo \-\-version\*(C'\fR. Use
-\&\f(CW\*(C`\-\-verbose\*(C'\fR for more version info, and \f(CW\*(C`\-\-quiet\*(C'\fR for less.
 .SH "Status"
 .IX Header "Status"
 The git-subrepo command is coming together nicely, but some details are still
 being ironed out. I would not use it for important things yet, but playing
-around with it is cheap (this is not \f(CW\*(C`git submodule\*(C'\fR) , and not permanent (if
+around with it is cheap (this is not \f(CW\*(C`git submodule\*(C'\fR), and not permanent (if
 you do not push to public remotes). ie You can always play around and reset
 back to the beginning without pain.
 .PP
