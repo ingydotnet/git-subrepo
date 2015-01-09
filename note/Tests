@@ -1,3 +1,30 @@
+== Tests
+
+- E - gsr status not/subrepo
+
+- O - gsr clone subrepo $url
+- E - gsr clone subrepo .git            # can't guess name
+- O - gsr clone subrepo $url named-dir
+- E - gsr clone $url existing-dir
+
+- Create a branch with default name
+
+
+
+== Cards
+- Rename variables for /more/ clarity
+- Make status work inside subrepo branch
+
+
+
+
+== Bugs
+$ gsr clean ext/swim-pgx/
+git-subrepo: command failed: git config remote.subrepo/ext/swim-pgx.url
+
+
+
+
 == Pull strategy
 
 1) clone .git into tmp dir .git/subrepo
