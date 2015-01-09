@@ -108,7 +108,7 @@ main() {
 
   # Make sure command exists:
   can "command:$command" ||
-    error "'$command' is not a git-subrepo command. See 'git subrepo help'."
+    error "'$command' is not a command. See 'git subrepo help'."
 
   # Make sure repo is in the proper state:
   [[ "$command" =~ ^(help|version)$ ]] ||
@@ -1007,7 +1007,7 @@ OK() {
 # Nicely report common error messages:
 error() {
   local msg=
-  printf -v msg "Error: %s\n" "$1"
+  printf -v msg "git-subrepo: %s\n" "$1"
   die "$msg"
 }
 
