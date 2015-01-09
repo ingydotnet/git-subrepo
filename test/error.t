@@ -18,7 +18,7 @@ catch() { error="$("$@" 2>&1 || true)"; }
 {
   catch git subrepo main 1 2 3
   is "$error" \
-    "Error: unknown 'git subrepo' command: 'main'" \
+    "git-subrepo: 'main' is not a command. See 'git subrepo help'." \
     "test error for unknown command"
 }
 
@@ -29,7 +29,7 @@ catch() { error="$("$@" 2>&1 || true)"; }
     echo "$error"
   )"
   is "$error" \
-    "Error: subdir 'bard' exists and is not empty" \
+    "git-subrepo: subdir 'bard' exists and is not empty" \
     "test error non-empty subdir target"
 }
 
@@ -40,7 +40,7 @@ catch() { error="$("$@" 2>&1 || true)"; }
     echo "$error"
   )"
   is "$error" \
-    "Error: command failed: git ls-remote dummy-repo" \
+    "git-subrepo: command failed: git ls-remote dummy-repo" \
     "test error for cloning non-repo"
 }
 
