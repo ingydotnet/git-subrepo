@@ -129,12 +129,7 @@ main() {
 # API command functions:
 #------------------------------------------------------------------------------
 
-# Launch the manpage viewer:
-command:help() {
-  exec git help subrepo
-}
-
-# `git subrepo clone …` command:
+# `git subrepo clone <url> [<subdir>]` command:
 command:clone() {
   command-setup +subrepo_remote subdir:guess-subdir
   subrepo:fetch
@@ -168,7 +163,7 @@ command:clone() {
   say "git subrepo '$subdir' cloned from '$subrepo_remote' ($subrepo_branch)"
 }
 
-# `git subrepo pull …` command:
+# `git subrepo pull <subdir>` command:
 # TODO Command needs rewrite:
 command:pull() {
   command-setup +subdir
@@ -230,7 +225,7 @@ command:pull() {
   say "git subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
 }
 
-# `git subrepo push …` command:
+# `git subrepo push <subdir>` command:
 # TODO Command needs rewrite:
 command:push() {
   command-setup +subdir
@@ -281,7 +276,7 @@ command:push() {
   say "git subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
-# `git subrepo branch …` command:
+# `git subrepo branch <subdir>` command:
 command:branch() {
   command-setup +subdir
 
@@ -289,7 +284,7 @@ command:branch() {
   subrepo:branch
 }
 
-# `git subrepo checkout …` command:
+# `git subrepo checkout <subdir>` command:
 command:checkout() {
   command-setup +subdir
 
@@ -318,12 +313,29 @@ To return to your original branch, run these commands:
 "
 }
 
-# `git subrepo status …` command:
+# `git subrepo fetch <subdir>` command
+command:fetch() {
+  command-setup +subdir
+
+  subrepo:fetch true
+}
+
+# `git subrepo commit <subdir>` command
+command:commit() {
+  error "'commit' command not yet implemented"
+}
+
+# `git subrepo reset [<branch>]` command
+command:reset() {
+  error "'reset' command not yet implemented"
+}
+
+# `git subrepo status [<subdir>]` command:
 # TODO just print subdir name if --quiet
 command:status() {
   if [ $# -eq 0 ]; then
     if [[ "$original_head_branch" =~ ^subrepo/ ]]; then
-      subrepo:branch-status
+      echo "You are on a subrepo branch"
       return
     fi
     get-all-subrepos
@@ -401,19 +413,12 @@ Git subrepo '$subdir':
   done
 }
 
-# `git subrepo fetch …` command
-# TODO:
-# - Rename to update
-# - Print all messages in here
-command:fetch() {
-  command-setup +subdir
-
-  subrepo:fetch true
-
-  say ""
+# `git subrepo log <subdir>` command
+command:log() {
+  error "'log' command not yet implemented"
 }
 
-# `git subrepo clean …` command
+# `git subrepo clean <subdir>` command
 command:clean() {
   command-setup +subdir
 
@@ -437,6 +442,11 @@ command:clean() {
     RUN git update-ref -d "$ref"
     say "Removed branch '${ref#refs/heads/}'"
   fi
+}
+
+# Launch the manpage viewer:
+command:help() {
+  exec git help subrepo
 }
 
 # Print version info.
@@ -560,11 +570,6 @@ subrepo:checkout() {
 
   # Reset to where we started:
   RUN git reset --hard "$original_head_commit"
-}
-
-# TODO finish this
-subrepo:branch-status() {
-  echo "You are on a subrepo branch"
 }
 
 #------------------------------------------------------------------------------
