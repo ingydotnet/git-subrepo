@@ -21,3 +21,5 @@ like "$output" "Git subrepo 'ext/test-more-bash':" \
   'test-more-bash is in status'
 
 done_testing
+
+source test/teardown
