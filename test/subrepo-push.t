@@ -41,7 +41,7 @@ save-original-state "$OWNER/foo" "bar"
 
   # Test the output:
   is "$message" \
-    "git subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)" \
+    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)" \
     'push message is correct'
 }
 

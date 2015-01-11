@@ -47,6 +47,7 @@ a,all       Perform command on all current subrepos
 b,branch=   Specify an upstream branch
 r,remote=   Specify an upstream remote
 u,update    Add the --branch and/or --remote overrides to .gitrepo
+F,fetch     Fetch the upstream content first
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
@@ -67,13 +68,11 @@ main() {
   local graft_wanted=false    # Checkout a branch grafted to remote branch
   local fetch_wanted=false    # Fetch requested for checkout
   local update_wanted=false   # Update .gitrepo with --branch and/or --remote
-  local continue_wanted=false # Continue/finish a pull or push
   local command_remote='???'  # Remote repo for git-subrepo
   local command_commit='???'  # Commit of git-repo being used
 
   local subdir=               # Subdirectory of the subrepo being used
   local gitrepo=              # Path to .gitrepo file
-  local checkout_branch=      # Branch name to checkout to (push from)
   local current_branch=       # Branch we were on at start of the command
   local merge_strategy=       # Merge strategy to use
 
@@ -94,6 +93,7 @@ main() {
   local FAIL=true             # Flag for RUN: fail on error
   local OUT=false             # Flag for RUN: put output in $output
   local SAY=true              # Flag for RUN: print command for verbose
+  local EXEC=false            # Flag for RUN: don't run subprocess
 
   local git_version=          # Git version in use
 
@@ -121,7 +121,7 @@ main() {
       "command:$command"
     done
   else
-    "command:$command" "${command_arguments[@]}"
+    "command:$command"
   fi
 }
 
@@ -133,8 +133,6 @@ main() {
 command:clone() {
   command-setup +subrepo_remote subdir:guess-subdir
   subrepo:fetch
-
-  OK || { say "git subrepo failed"; return; }
 
   # Make subdir for clone:
   RUN mkdir -p "$subdir"
@@ -160,7 +158,7 @@ command:clone() {
   RUN git commit -m "$(action-message)"
 
   # Successful command output:
-  say "git subrepo '$subdir' cloned from '$subrepo_remote' ($subrepo_branch)"
+  say "Subrepo '$subrepo_remote' ($subrepo_branch) cloned into '$subdir'"
 }
 
 # `git subrepo pull <subdir>` command:
@@ -222,7 +220,7 @@ command:pull() {
     --message="Merge subrepo commit '$(git rev-parse --short "$update_commit")'"
 
   # Successful command output:
-  say "git subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
+  say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
 }
 
 # `git subrepo push <subdir>` command:
@@ -234,7 +232,10 @@ command:push() {
   subrepo:fetch
 
   # Checkout the subrepo to a branch:
-  subrepo:checkout
+  subrepo:branch
+
+  local checkout_branch="subrepo/$subdir"
+  RUN git checkout "$checkout_branch"
 
   # Attempt to rebase changes onto upstream:
   FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
@@ -273,44 +274,31 @@ command:push() {
   # Delete the checkout branch:
   #RUN git branch -D "$checkout_branch"
 
-  say "git subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
+  say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
 # `git subrepo branch <subdir>` command:
 command:branch() {
   command-setup +subdir
+  $fetch_wanted && subrepo:fetch
 
   # Create the subrepo branch:
   subrepo:branch
+
+  say "Created branch 'subrepo/$subdir'"
 }
 
 # `git subrepo checkout <subdir>` command:
 command:checkout() {
   command-setup +subdir
+  $fetch_wanted && subrepo:fetch
 
-  # Checkout the subrepo to a branch:
-  subrepo:checkout
+  git:branch-exists || subrepo:branch
 
-  RUN git checkout "$checkout_branch"
+  local branch="subrepo/$subdir"
+  RUN git checkout "$branch"
 
-  say "
-You are now on a local branch: '$checkout_branch'
-
-The upstream remote content has been fetched.
-The local upstream tracking ref is: 'refs/subrepo/remote/$subdir'
-
-You can now merge/rebase your local changes with the upstream.
-When you have finishing merging, your can complete a pull with:
-
-  git checkout $original_head_branch
-  git subrepo pull $subdir --continue
-
-To return to your original branch, run these commands:
-
-  git reset --hard $original_head_branch
-  git checkout $original_head_branch
-
-"
+  say "Switched to branch '$branch'"
 }
 
 # `git subrepo fetch <subdir>` command
@@ -327,7 +315,10 @@ command:commit() {
 
 # `git subrepo reset [<branch>]` command
 command:reset() {
-  error "'reset' command not yet implemented"
+  get-params +branch
+  RUN git checkout "$branch"
+  RUN git reset --hard "$branch"
+  say "Reset to branch '$branch'"
 }
 
 # `git subrepo status [<subdir>]` command:
@@ -415,7 +406,11 @@ Git subrepo '$subdir':
 
 # `git subrepo log <subdir>` command
 command:log() {
-  error "'log' command not yet implemented"
+  command-setup +subdir
+  $fetch_wanted && subrepo:fetch
+  [ -e ".git/refs/subrepo/remote/$subdir" ] ||
+    error "No ref 'subrepo/remote/$subdir'. Try fetch (or -F)."
+  EXEC=true RUN git log "subrepo/remote/$subdir"
 }
 
 # `git subrepo clean <subdir>` command
@@ -423,7 +418,7 @@ command:clean() {
   command-setup +subdir
 
   local remote="subrepo/$subdir"
-  OUT=true RUN git config "remote.$remote.url"
+  FAIL=false OUT=true RUN git config "remote.$remote.url"
   if [ -n "$output" ]; then
     RUN git remote rm "$remote"
     say "Removed remote '$remote'"
@@ -505,14 +500,14 @@ subrepo:fetch() {
     fi
   fi
 
-  true
+  true    # This is actually needed.
 }
 
 # Create a subrepo branch of changes since last push:
 subrepo:branch() {
   local branch="subrepo/$subdir"
   if git:branch-exists "$branch"; then
-    error "A branch named '$branch' already exists."
+    error "Branch '$branch' already exists."
   fi
 
   # TODO Actually only filter commits since last push.
@@ -537,38 +532,6 @@ subrepo:branch() {
   fi
 
   # Reset to the branch where we started:
-  RUN git reset --hard "$original_head_commit"
-}
-
-# Checkout the subrepo changes since last push:
-subrepo:checkout() {
-  # TODO Actually only filter commits since last push.
-  # TODO Check for all possible failures, and reset.
-  # Make history of subdir changes:
-  RUN git filter-branch -f \
-    --subdirectory-filter "$subdir" \
-    -- HEAD
-
-  # Remove the .gitrepo file from the history:
-  RUN git filter-branch -f \
-    --tree-filter "rm -f .gitrepo"
-
-  if [ -n "$merge_strategy" ]; then
-    die 'merge logic not yet implemented'
-  fi
-
-  # Create a branch for this checkout:
-  checkout_branch="subrepo/$subdir"
-  RUN git branch -f "$checkout_branch"
-
-  # Graft subrepo branch to upstream (if requested):
-  if $graft_wanted; then
-    OUT=true RUN git rev-list --max-parents=0 HEAD
-    local root="$output"
-    echo "$root $subrepo_commit" >> .git/info/grafts
-  fi
-
-  # Reset to where we started:
   RUN git reset --hard "$original_head_commit"
 }
 
@@ -606,6 +569,7 @@ get-command-options() {
       -b) subrepo_branch="$1"
           override_branch="$1"
           shift ;;
+      -F) fetch_wanted=true ;;
       -r) subrepo_remote="$1"
           override_remote="$1"
           shift ;;
@@ -613,9 +577,7 @@ get-command-options() {
       -q) quiet_wanted=true ;;
       -v) verbose_wanted=true ;;
       -x) set -x ;;
-      --fetch)    fetch_wanted=true ;;
       --graft)    graft_wanted=true ;;
-      --continue) continue_wanted=true ;;
       --reclone)  merge_strategy=reclone ;;
       --rebase)   merge_strategy=rebase ;;
       --merge)    merge_strategy=merge ;;
@@ -634,10 +596,6 @@ get-command-options() {
   if $all_wanted; then
     [[ "$command" =~ ^(pull|push|checkout|status|fetch|clean)$ ]] ||
       error "can't use '--all' with '$command' command"
-  fi
-  if $continue_wanted; then
-    [[ "$command" =~ ^(pull|push)$ ]] ||
-      error "can't use '--continue' with '$command' command"
   fi
   if $update_wanted; then
     [ -n "$subrepo_branch" -o -n "$subrepo_remote" ] ||
@@ -1040,6 +998,10 @@ get-last-subrepo-merge-log-entry() {
 # Smart command runner
 RUN() {
   $verbose_wanted && $SAY && say '>>>' $*
+  if $EXEC; then
+    "$@"
+    return $?
+  fi
 
   OK=true
   set +e
