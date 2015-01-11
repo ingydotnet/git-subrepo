@@ -417,6 +417,13 @@ command:log() {
 command:clean() {
   command-setup +subdir
 
+  # Remove subrepo branch if exists:
+  local ref="refs/heads/subrepo/$subdir"
+  if [ -e ".git/$ref" ]; then
+    RUN git update-ref -d "$ref"
+    say "Removed branch '${ref#refs/heads/}'"
+  fi
+
   local remote="subrepo/$subdir"
   FAIL=false OUT=true RUN git config "remote.$remote.url"
   if [ -n "$output" ]; then
@@ -429,13 +436,6 @@ command:clean() {
   if [ -e ".git/$ref" ]; then
     RUN git update-ref -d "$ref"
     say "Removed ref '$ref'"
-  fi
-
-  # Remove subrepo branch if exists:
-  local ref="refs/heads/subrepo/$subdir"
-  if [ -e ".git/$ref" ]; then
-    RUN git update-ref -d "$ref"
-    say "Removed branch '${ref#refs/heads/}'"
   fi
 }
 
