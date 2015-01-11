@@ -28,7 +28,7 @@ clone-foo-and-bar
 
   # Check output is correct:
   is "$pull_output" \
-    "git subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)" \
+    "Subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)" \
     'subrepo pull command output is correct'
 }
 
