@@ -40,9 +40,9 @@ other git commands with similar goals, but various problems.
 It assumes there are 3 main roles of people interacting with a repo, and
 attempts to serve them all well:
 
-* owner - The person who authors/owns/maintains a repo.
-* users - People who are just using/installing the repo.
-* collaborators - People who commit code to the repo and subrepos.
+* *owner* - The person who authors/owns/maintains a repo.
+* *users* - People who are just using/installing the repo.
+* *collaborators* - People who commit code to the repo and subrepos.
 
 The `git-subrepo` command benefits these roles in the following ways:
 
@@ -102,6 +102,8 @@ the same arguments. Keep reading…
   From the subdir, all the current information about the subrepo can be
   obtained.
 
+  The `clone` command accepts the `--branch=` option.
+
 - `git subrepo pull <subdir>|--all [--<strategy>] [-b <branch>] [-r <remote>] [-u]`
 
   Update the subrepo subdir with the latest remote changes.
@@ -129,6 +131,9 @@ the same arguments. Keep reading…
   The above commands are described in detail below. Also see the section on
   "Merge Strategy Options".
 
+  The `pull` command accepts the `--all`, `--branch=`, `--remote=`,
+  `--strategy=` and `--update` options.
+
 - `git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]`
 
   Merge local changes on top of the upstream branch, and push upstream.
@@ -143,6 +148,9 @@ the same arguments. Keep reading…
 
   Like with the `pull` command, if this fails, you can do these steps by hand.
 
+  The `push` command accepts the `--all`, `--branch=`, `--remote=`,
+  `--strategy=` and `--update` options.
+
 - `git subrepo branch <subdir>|--all`
 
   Create a branch `subrepo/<subdir>` with all the subrepo commits.
@@ -155,12 +163,16 @@ the same arguments. Keep reading…
   command uses this command if the branch doesn't already exist (and then does
   a `git checkout` on it).
 
+  The `branch` command accepts the `--all` option.
+
 - `git subrepo checkout <subdir>`
 
   Shorthand for the following 2 commands:
 
     git subrepo branch <subdir>
     git checkout subrepo/<subdir>
+
+  The `checkout` command accepts the `--fetch` option.
 
 - `git subrepo fetch <subdir>|--all`
 
@@ -171,13 +183,16 @@ the same arguments. Keep reading…
   `subrepo/<subdir>`. These are temporary and you can remove them easily with
   the subrepo `clean` command.
 
+  The `fetch` command accepts the `--all`, `--branch=` and `--remote=`
+  options.
+
 - `git subrepo commit <subdir>`
 
   Take a properly merged subrepo branch and add it as a single commit.
 
   This command is generally used after a hand-merge. You have done a `subrepo
   checkout` and merged it with the upstream. This command takes the HEAD of
-  that branch and add it on top of your mainline history.
+  that branch and adds it to the top of your mainline history.
 
 - `git subrepo reset [<branch>]`
 
@@ -200,12 +215,17 @@ the same arguments. Keep reading…
 
   If you have a subrepo branch checked out, show the status of that subrepo.
 
+  The `status` command takes the `--fetch` option.
+
 - `git subrepo log <subdir> [<git-log-options>]`
 
   Show log of the subrepo's upstream commits. Same as:
 
     git subrepo fetch <subdir>
     git log subrepo/remote/<subdir>
+
+  The `log` command takes the `--branch=`, `--fetch`, and `--remote=`
+  options.
 
 - `git subrepo clean <subdir>|--all`
 
@@ -214,6 +234,8 @@ the same arguments. Keep reading…
   The `fetch` and `branch` operations (and other commands that call them)
   create temporary things like refs, branches, remotes and grafts. This
   command removes all those things.
+
+  The `clean` command takes the `--all` option.
 
 - `git subrepo help`
 
@@ -230,13 +252,18 @@ the same arguments. Keep reading…
 
 - `-h`
 
-  Short help.
+  Show a brief view of the commands and options.
 
 - `--help`
 
-  Long help.
+  Gives an overview of the help options available for the subrepo command.
 
-- `-a`, `--all`
+- `--version`
+
+  Print the git-subrepo version. Just the version number. Try the `version`
+  command for more version info.
+
+- `--all` (`-a`)
 
   If you have multiple subrepos, issue the command to all of them (if
   applicable).
@@ -246,48 +273,68 @@ the same arguments. Keep reading…
   Use a different branch-name than the remote HEAD or the one saved in
   `.gitrepo` locally.
 
+- `--fetch` (`-F`)
+
+  Use this option to fetch the upstream commits, before running the command.
+
 - `--remote=<remote-url>` (`-r <remote-url>`)
 
   Use a different remote-url than the one saved in `.gitrepo` locally.
+
+- `--strategy=<merge-strategy> (-s <merge-strategy>)`
+
+  The `pull` and `push` commands attempt a merge. This lets you specify
+  alternate strategies. If none of the strategies work, you need to do the
+  `pull` or `push` by hand. See "Merge Strategy Options".
 
 - `--update` (`-u`)
 
   If `-b` or `-r` are used, and the command updates the `.gitrepo` file,
   include these values to the update.
 
+= Output Options
+
+- `--quiet` (`-q`)
+
+  Print as little info as possible.
+
+- `--verbose` (`-v`)
+
+  Print information showing what the command is doing under the hood.
+
+- `--debug` (`-x`)
+
+  Use the Bash `set -x` option which prints every command before it is run.
+  VERY noisy, but extremely useful in deep debugging.
+
 == Merge Strategy Options
 
-When doing a `pull` command you can specify a 'merge strategy' to be tried:
+When doing a `pull` or `push` command you can specify a 'merge strategy' to be
+tried, with the `strategy=` option:
 
-- `--reclone`
+- `rebase`
+
+  Attempt a rebase on top off the remote head. This is the default option.
+
+- `reclone`
 
   Use this option when you have no local changes to the subrepo, and you
   simply want to replace the old content with the new upstream content. If you
-  use `--branch` or `--remote` options with this option, the `--update` option
-  is turned on automatically (ie the new remote and branch are stored in
-  .gitrepo file). This strategy should never fail.
+  use `--branch=` or `--remote=` options with this option, the `--update`
+  option is turned on automatically (ie the new remote and branch are stored
+  in .gitrepo file). This strategy should never fail.
 
-- `--rebase`
+- `recursive`
 
-  Attempt a rebase on top off the remote head.
+  Use the recursive merge strategy.
 
-- `--merge`
-
-  Use the default (recursive) merge strategy.
-
-- `--ours`
+- `ours`
 
   Use recursive + `-X ours` option.
 
-- `--theirs`
+- `theirs`
 
   Use recursive + `-X theirs` option.
-
-- `--graft`
-
-  This option creates a graft between your local detached subrepo branch and
-  the fetched upstream branch, so that you can try a hand merge. Some commands
-  like `git rebase` seem to need this.
 
 = Installation Instructions
 

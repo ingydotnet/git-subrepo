@@ -40,14 +40,15 @@ See 'git help subrepo' for complete documentation and usage of each command.
 Options:
 --
 h           Show the command summary
-help        Show the complete documentation
+help        Help overview
 version     Print the git-subrepo version number
 
 a,all       Perform command on all current subrepos
 b,branch=   Specify an upstream branch
-r,remote=   Specify an upstream remote
-u,update    Add the --branch and/or --remote overrides to .gitrepo
 F,fetch     Fetch the upstream content first
+r,remote=   Specify an upstream remote
+s,strategy= Specify a merge strategy
+u,update    Add the --branch and/or --remote overrides to .gitrepo
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
@@ -65,7 +66,6 @@ main() {
   local quiet_wanted=false    # Output should be quiet
   local verbose_wanted=false  # Output should be verbose
   local all_wanted=false      # Apply command to all subrepos
-  local graft_wanted=false    # Checkout a branch grafted to remote branch
   local fetch_wanted=false    # Fetch requested for checkout
   local update_wanted=false   # Update .gitrepo with --branch and/or --remote
   local command_remote='???'  # Remote repo for git-subrepo
@@ -101,10 +101,6 @@ main() {
   assert-environment-ok
   get-command-options "$@"
   get-command-info
-
-  # Make sure command exists:
-  can "command:$command" ||
-    error "'$command' is not a command. See 'git subrepo help'."
 
   # Make sure repo is in the proper state:
   [[ "$command" =~ ^(help|version)$ ]] ||
@@ -163,6 +159,12 @@ command:clone() {
 
 # `git subrepo pull <subdir>` command:
 # TODO Command needs rewrite:
+# * `git subrepo fetch <subdir>`
+# * `git subrepo branch <subdir>`
+# * `git checkout subrepo/<subdir>`
+# * `git merge -s <strategy> refs/subrepo/remote/<subdir>`
+# * `git subrepo reset`
+# * `git subrepo commit <subdir>`
 command:pull() {
   command-setup +subdir
   subrepo:fetch
@@ -173,7 +175,7 @@ command:pull() {
     return
   fi
 
-  #Writes best common-ancestor to $subrepo_parent
+  # Writes best common-ancestor to $subrepo_parent
   get-best-common-ancestor-for-merge
 
   OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
@@ -225,6 +227,10 @@ command:pull() {
 
 # `git subrepo push <subdir>` command:
 # TODO Command needs rewrite:
+# * `git subrepo fetch <subdir>`
+# * `git subrepo branch <subdir>`
+# * `git rebase refs/subrepo/remote/<subdir> subrepo/<subrepo>`
+# * `git push <remote> subrepo/<subrepo>`
 command:push() {
   command-setup +subdir
 
@@ -524,12 +530,10 @@ subrepo:branch() {
   # Create a branch for this checkout:
   RUN git branch "$branch"
 
-  # Graft subrepo branch to upstream (if requested):
-  if $graft_wanted; then
-    OUT=true RUN git rev-list --max-parents=0 HEAD
-    local root="$output"
-    echo "$root $subrepo_commit" >> .git/info/grafts
-  fi
+  # Graft subrepo branch to upstream:
+  OUT=true RUN git rev-list --max-parents=0 HEAD
+  local root="$output"
+  echo "$root $subrepo_commit" >> .git/info/grafts
 
   # Reset to the branch where we started:
   RUN git reset --hard "$original_head_commit"
@@ -573,16 +577,12 @@ get-command-options() {
       -r) subrepo_remote="$1"
           override_remote="$1"
           shift ;;
+      -s) merge_strategy="$1"
+          shift ;;
       -u) update_wanted=true ;;
       -q) quiet_wanted=true ;;
       -v) verbose_wanted=true ;;
       -x) set -x ;;
-      --graft)    graft_wanted=true ;;
-      --reclone)  merge_strategy=reclone ;;
-      --rebase)   merge_strategy=rebase ;;
-      --merge)    merge_strategy=merge ;;
-      --ours)     merge_strategy=ours ;;
-      --theirs)   merge_strategy=theirs ;;
       --version)
         echo "$VERSION"
         exit ;;
@@ -590,22 +590,57 @@ get-command-options() {
     esac
   done
 
+  # Set subrepo command:
   command="$1"; shift
+
+  # Make sure command exists:
+  can "command:$command" ||
+    error "'$command' is not a command. See 'git subrepo help'."
+
   command_arguments=("$@")
 
   if $all_wanted; then
-    [[ "$command" =~ ^(pull|push|checkout|status|fetch|clean)$ ]] ||
-      error "can't use '--all' with '$command' command"
+    check_option all
+  fi
+  if $fetch_wanted; then
+    check_option fetch
+  fi
+  if [ -n "$override_branch" ]; then
+    check_option branch
+  fi
+  if [ -n "$override_remote" ]; then
+    check_option remote
   fi
   if $update_wanted; then
-    [ -n "$subrepo_branch" -o -n "$subrepo_remote" ] ||
-      error "can't use '--update' without '--branch' or '--remote'"
-    [ "$command" == pull ] ||
-      error "can't use '--update' with '$command' command"
+    check_option update
+    if [ -z "$subrepo_branch" -o -z "$subrepo_remote" ]; then
+      error "Can't use '--update' without '--branch' or '--remote'"
+    fi
   fi
-  # TODO validate subrepo_branch
-  # TODO validate subrepo_remote
-  :
+  if [ -n "$merge_strategy" ]; then
+    check_strategy
+  fi
+}
+
+options_clone='branch'
+options_pull='all branch remote strategy update'
+options_push='all branch remote strategy update'
+options_branch='all'
+options_checkout='fetch'
+options_fetch='all branch remote'
+# options_status='fetch'
+options_log='branch fetch remote'
+options_clean='all'
+check_option() {
+  local var="options_$command"
+  [[ ${!var} =~ $1 ]] ||
+    error "Invalid option '--$1' for '$command'"
+}
+
+check_strategy() {
+  check_option strategy
+  [[ $merge_strategy =~ ^(reclone|rebase|recursive|ours|theirs)$ ]] ||
+    error "Invalid merge strategy: '$merge_strategy'"
 }
 
 # Do the setup steps needed by most of the subrepo subcommands:
