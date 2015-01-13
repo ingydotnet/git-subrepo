@@ -63,4 +63,4 @@ assert-original-state "$OWNER/foo" "bar"
 
 done_testing 10
 
-source test/teardown
+teardown

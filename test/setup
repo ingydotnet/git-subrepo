@@ -12,7 +12,7 @@ source bash+ :std
 
 # TODO: Move to test/tmp
 TMP="tmp"
-source test/teardown
+rm -fr $TMP
 
 export GIT_EXEC_PATH="$PWD/lib:$(git --exec-path)"
 export UPSTREAM="$TMP/upstream"
@@ -120,4 +120,13 @@ assert-original-state() {
   is "$current_gitrepo" \
     "$original_gitrepo" \
     "$2/.gitrepo has not changed"
+}
+
+catch() {
+  local error="$("$@" 2>&1 || true)"
+  echo "$error"
+}
+
+teardown() {
+  rm -fr $TMP
 }

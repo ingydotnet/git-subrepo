@@ -54,6 +54,4 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 done_testing 9
 
-# (cd $OWNER/foo;bash);exit
-
-source test/teardown
+teardown
