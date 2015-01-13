@@ -128,17 +128,11 @@ main() {
 command:clone() {
   command-setup +subrepo_remote subdir:guess-subdir
 
+  # Fetch the upstream subrepo content to clone:
+  subrepo:fetch
+
   # "clone" the subrepo into the subdir:
   subrepo:clone
-
-  # Add a new .gitrepo file:
-  update-gitrepo-file
-
-  # Add the subdir content to mainline index:
-  RUN git add "$subdir"
-
-  # Commit this subrepo clone:
-  RUN git commit -m "$(subrepo:commit-message)"
 
   # Successful command output:
   say "Subrepo '$subrepo_remote' ($subrepo_branch) cloned into '$subdir'"
@@ -154,11 +148,19 @@ command:clone() {
 # * `git subrepo commit <subdir>`
 command:pull() {
   command-setup +subdir
+
+  # Fetch remote content:
   subrepo:fetch
 
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit" ]; then
     say "subrepo '$subdir' is up to date"
+    return
+  fi
+
+  if [ "$merge_strategy" == reclone ]; then
+    subrepo:pull-reclone
+    say "Subrepo '$subdir' recloned from '$subrepo_remote' ($subrepo_branch)"
     return
   fi
 
@@ -396,9 +398,6 @@ Git Version: $git_version
 
 # Clone by fetching remote content into our subdir:
 subrepo:clone() {
-  # Fetch the upstream subrepo content to clone:
-  subrepo:fetch
-
   # Make subdir for clone:
   RUN mkdir -p "$subdir"
 
@@ -407,6 +406,23 @@ subrepo:clone() {
 
   # Reset to original commit:
   RUN git reset --hard "$original_head_commit"
+
+  # Add a new .gitrepo file:
+  update-gitrepo-file
+
+  # Add the subdir content to mainline index:
+  RUN git add "$subdir"
+
+  # Commit this subrepo clone:
+  RUN git commit -m "$(subrepo:commit-message)"
+}
+
+subrepo:pull-reclone() {
+  # Remove the old subdir:
+  RUN git rm -r "$subdir"
+
+  # Make the new subdir:
+  subrepo:clone
 }
 
 # Fetch the subrepo's remote branch content:
@@ -476,47 +492,6 @@ subrepo:branch() {
   RUN git reset --hard "$original_head_commit"
 }
 
-subrepo:status-inside-subrepo() {
-  RUN git update-ref \
-    "refs/heads/$original_head_branch" \
-    "$original_head_commit"
-  git:get-mainline-branch-name
-  local mainline="$output"
-  cat <<...
-Subrepo '$in_subrepo_name' branch is currently checked out.
-
-...
-
-  local subdir="$in_subrepo_name"
-  status:remote-name
-  local got="$output"
-  status:remote-ref
-  got="$got$output"
-  [ -z "$got" ] || echo
-
-  cat <<...
-To complete a by-hand "pull" of this subrepo:
-
-  *
-  *
-  *
-
-To complete a by-hand "push" of this subrepo:
-
-  *
-  *
-  *
-
-...
-
-[ -z "$mainline" ] || cat <<...
-To checkout and reset the '$mainline' branch:
-
-  git subrepo reset
-
-...
-}
-
 subrepo:status() {
   if [ ${#command_arguments[@]} -eq 0 ]; then
     get-all-subrepos
@@ -580,6 +555,47 @@ Git subrepo '$subdir':
 
 ...
   done
+}
+
+subrepo:status-inside-subrepo() {
+  RUN git update-ref \
+    "refs/heads/$original_head_branch" \
+    "$original_head_commit"
+  git:get-mainline-branch-name
+  local mainline="$output"
+  cat <<...
+Subrepo '$in_subrepo_name' branch is currently checked out.
+
+...
+
+  local subdir="$in_subrepo_name"
+  status:remote-name
+  local got="$output"
+  status:remote-ref
+  got="$got$output"
+  [ -z "$got" ] || echo
+
+  cat <<...
+To complete a by-hand "pull" of this subrepo:
+
+  *
+  *
+  *
+
+To complete a by-hand "push" of this subrepo:
+
+  *
+  *
+  *
+
+...
+
+[ -z "$mainline" ] || cat <<...
+To checkout and reset the '$mainline' branch:
+
+  git subrepo reset
+
+...
 }
 
 status:remote-name() {
