@@ -71,7 +71,7 @@
 .\" ========================================================================
 .\"
 .IX Title "README 1"
-.TH README 1 "2015-01-08" "perl v5.18.1" "User Contributed Perl Documentation"
+.TH README 1 "2015-01-12" "perl v5.18.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -114,11 +114,11 @@ other git commands with similar goals, but various problems.
 It assumes there are 3 main roles of people interacting with a repo, and
 attempts to serve them all well:
 .IP "\(bu" 4
-owner \- The person who authors\fIowns\fRmaintains a repo.
+\&\fBowner\fR \- The person who authors\fIowns\fRmaintains a repo.
 .IP "\(bu" 4
-users \- People who are just using/installing the repo.
+\&\fBusers\fR \- People who are just using/installing the repo.
 .IP "\(bu" 4
-collaborators \- People who commit code to the repo and subrepos.
+\&\fBcollaborators\fR \- People who commit code to the repo and subrepos.
 .PP
 The \f(CW\*(C`git\-subrepo\*(C'\fR command benefits these roles in the following ways:
 .IP "\(bu" 4
@@ -195,6 +195,8 @@ directory is a subrepo.
 All subsequent commands refer to the subrepo by the name of the
 \&\fIsubdir\fR. From the subdir, all the current information about the subrepo
 can be obtained.
+.Sp
+The \f(CW\*(C`clone\*(C'\fR command accepts the \f(CW\*(C`\-\-branch=\*(C'\fR option.
 .ie n .IP """git subrepo pull <subdir>|\-\-all [\-\-<strategy>] [\-b <branch>] [\-r <remote>] [\-u]""" 4
 .el .IP "\f(CWgit subrepo pull <subdir>|\-\-all [\-\-<strategy>] [\-b <branch>] [\-r <remote>] [\-u]\fR" 4
 .IX Item "git subrepo pull <subdir>|--all [--<strategy>] [-b <branch>] [-r <remote>] [-u]"
@@ -230,6 +232,9 @@ and clean. You can easily see the subrepo's history with the subrepo
 .Sp
 The above commands are described in detail below. Also see the section on
 \&\*(L"Merge Strategy Options\*(R".
+.Sp
+The \f(CW\*(C`pull\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-remote=\*(C'\fR, \f(CW\*(C`\-\-
+strategy=\*(C'\fR and \f(CW\*(C`\-\-update\*(C'\fR options.
 .RE
 .ie n .IP """git subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]""" 4
 .el .IP "\f(CWgit subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]\fR" 4
@@ -251,6 +256,9 @@ back to the remote. Effectively we do these commands:
 .RS 4
 .Sp
 Like with the \f(CW\*(C`pull\*(C'\fR command, if this fails, you can do these steps by hand.
+.Sp
+The \f(CW\*(C`push\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-remote=\*(C'\fR, \f(CW\*(C`\-\-
+strategy=\*(C'\fR and \f(CW\*(C`\-\-update\*(C'\fR options.
 .RE
 .ie n .IP """git subrepo branch <subdir>|\-\-all""" 4
 .el .IP "\f(CWgit subrepo branch <subdir>|\-\-all\fR" 4
@@ -263,6 +271,8 @@ Scan the history of the mainline for all the commits that affect the \f(CW\*(C`s
 This is useful for doing \f(CW\*(C`pull\*(C'\fR and \f(CW\*(C`push\*(C'\fR commands by hand. The \f(CW\*(C`checkout\*(C'\fR
 command uses this command if the branch doesn't already exist (and then does a
 \&\f(CW\*(C`git checkout\*(C'\fR on it).
+.Sp
+The \f(CW\*(C`branch\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR option.
 .ie n .IP """git subrepo checkout <subdir>""" 4
 .el .IP "\f(CWgit subrepo checkout <subdir>\fR" 4
 .IX Item "git subrepo checkout <subdir>"
@@ -272,6 +282,8 @@ Shorthand for the following 2 commands:
 \&    git subrepo branch <subdir>
 \&    git checkout subrepo/<subdir>
 .Ve
+.Sp
+The \f(CW\*(C`checkout\*(C'\fR command accepts the \f(CW\*(C`\-\-fetch\*(C'\fR option.
 .ie n .IP """git subrepo fetch <subdir>|\-\-all""" 4
 .el .IP "\f(CWgit subrepo fetch <subdir>|\-\-all\fR" 4
 .IX Item "git subrepo fetch <subdir>|--all"
@@ -281,6 +293,9 @@ It will create a Git reference called \f(CW\*(C`subrepo/remote/<subdir>\*(C'\fR 
 points at the same commit as \f(CW\*(C`FETCH_HEAD\*(C'\fR. It will also create a remote
 called \f(CW\*(C`subrepo/<subdir>\*(C'\fR. These are temporary and you can remove them
 easily with the subrepo \f(CW\*(C`clean\*(C'\fR command.
+.Sp
+The \f(CW\*(C`fetch\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR and \f(CW\*(C`\-\-
+remote=\*(C'\fR options.
 .ie n .IP """git subrepo commit <subdir>""" 4
 .el .IP "\f(CWgit subrepo commit <subdir>\fR" 4
 .IX Item "git subrepo commit <subdir>"
@@ -288,7 +303,7 @@ Take a properly merged subrepo branch and add it as a single commit.
 .Sp
 This command is generally used after a hand-merge. You have done a \f(CW\*(C`subrepo
 checkout\*(C'\fR and merged it with the upstream. This command takes the \s-1HEAD\s0 of that
-branch and add it on top of your mainline history.
+branch and adds it to the top of your mainline history.
 .ie n .IP """git subrepo reset [<branch>]""" 4
 .el .IP "\f(CWgit subrepo reset [<branch>]\fR" 4
 .IX Item "git subrepo reset [<branch>]"
@@ -312,6 +327,8 @@ Get the status of a subrepo. Show the status of all subrepos by default. If
 the \f(CW\*(C`\-\-quiet\*(C'\fR flag is used, print less info, and on 1 line per subrepo.
 .Sp
 If you have a subrepo branch checked out, show the status of that subrepo.
+.Sp
+The \f(CW\*(C`status\*(C'\fR command takes the \f(CW\*(C`\-\-fetch\*(C'\fR option.
 .ie n .IP """git subrepo log <subdir> [<git\-log\-options>]""" 4
 .el .IP "\f(CWgit subrepo log <subdir> [<git\-log\-options>]\fR" 4
 .IX Item "git subrepo log <subdir> [<git-log-options>]"
@@ -321,6 +338,9 @@ Show log of the subrepo's upstream commits. Same as:
 \&    git subrepo fetch <subdir>
 \&    git log subrepo/remote/<subdir>
 .Ve
+.Sp
+The \f(CW\*(C`log\*(C'\fR command takes the \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-fetch\*(C'\fR, and \f(CW\*(C`\-\-remote=\*(C'\fR
+options.
 .ie n .IP """git subrepo clean <subdir>|\-\-all""" 4
 .el .IP "\f(CWgit subrepo clean <subdir>|\-\-all\fR" 4
 .IX Item "git subrepo clean <subdir>|--all"
@@ -329,6 +349,8 @@ Remove artifacts created by \f(CW\*(C`fetch\*(C'\fR and \f(CW\*(C`branch\*(C'\fR
 The \f(CW\*(C`fetch\*(C'\fR and \f(CW\*(C`branch\*(C'\fR operations (and other commands that call them)
 create temporary things like refs, branches, remotes and grafts. This command
 removes all those things.
+.Sp
+The \f(CW\*(C`clean\*(C'\fR command takes the \f(CW\*(C`\-\-all\*(C'\fR option.
 .ie n .IP """git subrepo help""" 4
 .el .IP "\f(CWgit subrepo help\fR" 4
 .IX Item "git subrepo help"
@@ -345,14 +367,19 @@ environment. For just the version number, use \f(CW\*(C`git subrepo \-\-version\
 .ie n .IP """\-h""" 4
 .el .IP "\f(CW\-h\fR" 4
 .IX Item "-h"
-Short help.
+Show a brief view of the commands and options.
 .ie n .IP """\-\-help""" 4
 .el .IP "\f(CW\-\-help\fR" 4
 .IX Item "--help"
-Long help.
-.ie n .IP """\-a"", ""\-\-all""" 4
-.el .IP "\f(CW\-a\fR, \f(CW\-\-all\fR" 4
-.IX Item "-a, --all"
+Gives an overview of the help options available for the subrepo command.
+.ie n .IP """\-\-version""" 4
+.el .IP "\f(CW\-\-version\fR" 4
+.IX Item "--version"
+Print the git-subrepo version. Just the version number. Try the \f(CW\*(C`version\*(C'\fR
+command for more version info.
+.ie n .IP """\-\-all"" (""\-a"")" 4
+.el .IP "\f(CW\-\-all\fR (\f(CW\-a\fR)" 4
+.IX Item "--all (-a)"
 If you have multiple subrepos, issue the command to all of them (if
 applicable).
 .ie n .IP """\-\-branch=<branch\-name>"" (""\-b <branch\-name>"")" 4
@@ -360,48 +387,68 @@ applicable).
 .IX Item "--branch=<branch-name> (-b <branch-name>)"
 Use a different branch-name than the remote \s-1HEAD\s0 or the one saved in
 \&\f(CW\*(C`.gitrepo\*(C'\fR locally.
+.ie n .IP """\-\-fetch"" (""\-F"")" 4
+.el .IP "\f(CW\-\-fetch\fR (\f(CW\-F\fR)" 4
+.IX Item "--fetch (-F)"
+Use this option to fetch the upstream commits, before running the command.
 .ie n .IP """\-\-remote=<remote\-url>"" (""\-r <remote\-url>"")" 4
 .el .IP "\f(CW\-\-remote=<remote\-url>\fR (\f(CW\-r <remote\-url>\fR)" 4
 .IX Item "--remote=<remote-url> (-r <remote-url>)"
 Use a different remote-url than the one saved in \f(CW\*(C`.gitrepo\*(C'\fR locally.
+.ie n .IP """\-\-strategy=<merge\-strategy> (\-s <merge\-strategy>)""" 4
+.el .IP "\f(CW\-\-strategy=<merge\-strategy> (\-s <merge\-strategy>)\fR" 4
+.IX Item "--strategy=<merge-strategy> (-s <merge-strategy>)"
+The \f(CW\*(C`pull\*(C'\fR and \f(CW\*(C`push\*(C'\fR commands attempt a merge. This lets you specify
+alternate strategies. If none of the strategies work, you need to do the
+\&\f(CW\*(C`pull\*(C'\fR or \f(CW\*(C`push\*(C'\fR by hand. See \*(L"Merge Strategy Options\*(R".
 .ie n .IP """\-\-update"" (""\-u"")" 4
 .el .IP "\f(CW\-\-update\fR (\f(CW\-u\fR)" 4
 .IX Item "--update (-u)"
 If \f(CW\*(C`\-b\*(C'\fR or \f(CW\*(C`\-r\*(C'\fR are used, and the command updates the \f(CW\*(C`.gitrepo\*(C'\fR file,
 include these values to the update.
+.SH "Output Options"
+.IX Header "Output Options"
+.ie n .IP """\-\-quiet"" (""\-q"")" 4
+.el .IP "\f(CW\-\-quiet\fR (\f(CW\-q\fR)" 4
+.IX Item "--quiet (-q)"
+Print as little info as possible.
+.ie n .IP """\-\-verbose"" (""\-v"")" 4
+.el .IP "\f(CW\-\-verbose\fR (\f(CW\-v\fR)" 4
+.IX Item "--verbose (-v)"
+Print information showing what the command is doing under the hood.
+.ie n .IP """\-\-debug"" (""\-x"")" 4
+.el .IP "\f(CW\-\-debug\fR (\f(CW\-x\fR)" 4
+.IX Item "--debug (-x)"
+Use the Bash \f(CW\*(C`set \-x\*(C'\fR option which prints every command before it is run.
+\&\s-1VERY\s0 noisy, but extremely useful in deep debugging.
 .SS "Merge Strategy Options"
 .IX Subsection "Merge Strategy Options"
-When doing a \f(CW\*(C`pull\*(C'\fR command you can specify a 'merge strategy' to be tried:
-.ie n .IP """\-\-reclone""" 4
-.el .IP "\f(CW\-\-reclone\fR" 4
-.IX Item "--reclone"
+When doing a \f(CW\*(C`pull\*(C'\fR or \f(CW\*(C`push\*(C'\fR command you can specify a 'merge strategy' to
+be tried, with the \f(CW\*(C`strategy=\*(C'\fR option:
+.ie n .IP """rebase""" 4
+.el .IP "\f(CWrebase\fR" 4
+.IX Item "rebase"
+Attempt a rebase on top off the remote head. This is the default option.
+.ie n .IP """reclone""" 4
+.el .IP "\f(CWreclone\fR" 4
+.IX Item "reclone"
 Use this option when you have no local changes to the subrepo, and you simply
 want to replace the old content with the new upstream content. If you use \f(CW\*(C`\-\-
-branch\*(C'\fR or \f(CW\*(C`\-\-remote\*(C'\fR options with this option, the \f(CW\*(C`\-\-update\*(C'\fR option is
+branch=\*(C'\fR or \f(CW\*(C`\-\-remote=\*(C'\fR options with this option, the \f(CW\*(C`\-\-update\*(C'\fR option is
 turned on automatically (ie the new remote and branch are stored in .gitrepo
 file). This strategy should never fail.
-.ie n .IP """\-\-rebase""" 4
-.el .IP "\f(CW\-\-rebase\fR" 4
-.IX Item "--rebase"
-Attempt a rebase on top off the remote head.
-.ie n .IP """\-\-merge""" 4
-.el .IP "\f(CW\-\-merge\fR" 4
-.IX Item "--merge"
-Use the default (recursive) merge strategy.
-.ie n .IP """\-\-ours""" 4
-.el .IP "\f(CW\-\-ours\fR" 4
-.IX Item "--ours"
+.ie n .IP """recursive""" 4
+.el .IP "\f(CWrecursive\fR" 4
+.IX Item "recursive"
+Use the recursive merge strategy.
+.ie n .IP """ours""" 4
+.el .IP "\f(CWours\fR" 4
+.IX Item "ours"
 Use recursive + \f(CW\*(C`\-X ours\*(C'\fR option.
-.ie n .IP """\-\-theirs""" 4
-.el .IP "\f(CW\-\-theirs\fR" 4
-.IX Item "--theirs"
+.ie n .IP """theirs""" 4
+.el .IP "\f(CWtheirs\fR" 4
+.IX Item "theirs"
 Use recursive + \f(CW\*(C`\-X theirs\*(C'\fR option.
-.ie n .IP """\-\-graft""" 4
-.el .IP "\f(CW\-\-graft\fR" 4
-.IX Item "--graft"
-This option creates a graft between your local detached subrepo branch and the
-fetched upstream branch, so that you can try a hand merge. Some commands like
-\&\f(CW\*(C`git rebase\*(C'\fR seem to need this.
 .SH "Installation Instructions"
 .IX Header "Installation Instructions"
 There are currently 3 ways to install \f(CW\*(C`git\-subrepo\*(C'\fR. For all of them you need

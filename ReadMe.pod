@@ -50,11 +50,11 @@ attempts to serve them all well:
 
 =over
 
-=item * owner - The person who authorsI<owns>maintains a repo.
+=item * B<owner> - The person who authorsI<owns>maintains a repo.
 
-=item * users - People who are just using/installing the repo.
+=item * B<users> - People who are just using/installing the repo.
 
-=item * collaborators - People who commit code to the repo and subrepos.
+=item * B<collaborators> - People who commit code to the repo and subrepos.
 
 =back
 
@@ -140,6 +140,8 @@ All subsequent commands refer to the subrepo by the name of the
 I<subdir>. From the subdir, all the current information about the subrepo
 can be obtained.
 
+The C<clone> command accepts the C<--branch=> option.
+
 =item C<< git subrepo pull <subdir>|--all [--<strategy>] [-b <branch>] [-r <remote>] [-u] >>
 
 Update the subrepo subdir with the latest remote changes.
@@ -176,6 +178,9 @@ C<log> command.
 The above commands are described in detail below. Also see the section on
 "Merge Strategy Options".
 
+The C<pull> command accepts the C<--all>, C<--branch=>, C<--remote=>, C<--
+strategy=> and C<--update> options.
+
 =item C<< git subrepo push <subdir>|--all [-r <remote>] [-b <branch>] >>
 
 Merge local changes on top of the upstream branch, and push upstream.
@@ -197,6 +202,9 @@ back to the remote. Effectively we do these commands:
 
 Like with the C<pull> command, if this fails, you can do these steps by hand.
 
+The C<push> command accepts the C<--all>, C<--branch=>, C<--remote=>, C<--
+strategy=> and C<--update> options.
+
 =item C<< git subrepo branch <subdir>|--all >>
 
 Create a branch C<< subrepo/<subdir> >> with all the subrepo commits.
@@ -208,12 +216,16 @@ This is useful for doing C<pull> and C<push> commands by hand. The C<checkout>
 command uses this command if the branch doesn't already exist (and then does a
 C<git checkout> on it).
 
+The C<branch> command accepts the C<--all> option.
+
 =item C<< git subrepo checkout <subdir> >>
 
 Shorthand for the following 2 commands:
 
     git subrepo branch <subdir>
     git checkout subrepo/<subdir>
+
+The C<checkout> command accepts the C<--fetch> option.
 
 =item C<< git subrepo fetch <subdir>|--all >>
 
@@ -224,13 +236,16 @@ points at the same commit as C<FETCH_HEAD>. It will also create a remote
 called C<< subrepo/<subdir> >>. These are temporary and you can remove them
 easily with the subrepo C<clean> command.
 
+The C<fetch> command accepts the C<--all>, C<--branch=> and C<--
+remote=> options.
+
 =item C<< git subrepo commit <subdir> >>
 
 Take a properly merged subrepo branch and add it as a single commit.
 
 This command is generally used after a hand-merge. You have done a C<subrepo
 checkout> and merged it with the upstream. This command takes the HEAD of that
-branch and add it on top of your mainline history.
+branch and adds it to the top of your mainline history.
 
 =item C<< git subrepo reset [<branch>] >>
 
@@ -253,12 +268,17 @@ the C<--quiet> flag is used, print less info, and on 1 line per subrepo.
 
 If you have a subrepo branch checked out, show the status of that subrepo.
 
+The C<status> command takes the C<--fetch> option.
+
 =item C<< git subrepo log <subdir> [<git-log-options>] >>
 
 Show log of the subrepo's upstream commits. Same as:
 
     git subrepo fetch <subdir>
     git log subrepo/remote/<subdir>
+
+The C<log> command takes the C<--branch=>, C<--fetch>, and C<--remote=>
+options.
 
 =item C<< git subrepo clean <subdir>|--all >>
 
@@ -267,6 +287,8 @@ Remove artifacts created by C<fetch> and C<branch> commands.
 The C<fetch> and C<branch> operations (and other commands that call them)
 create temporary things like refs, branches, remotes and grafts. This command
 removes all those things.
+
+The C<clean> command takes the C<--all> option.
 
 =item C<git subrepo help>
 
@@ -287,13 +309,18 @@ C<--verbose> for more version info, and C<--quiet> for less.
 
 =item C<-h>
 
-Short help.
+Show a brief view of the commands and options.
 
 =item C<--help>
 
-Long help.
+Gives an overview of the help options available for the subrepo command.
 
-=item C<-a>, C<--all>
+=item C<--version>
+
+Print the git-subrepo version. Just the version number. Try the C<version>
+command for more version info.
+
+=item C<--all> (C<-a>)
 
 If you have multiple subrepos, issue the command to all of them (if
 applicable).
@@ -303,9 +330,19 @@ applicable).
 Use a different branch-name than the remote HEAD or the one saved in
 C<.gitrepo> locally.
 
+=item C<--fetch> (C<-F>)
+
+Use this option to fetch the upstream commits, before running the command.
+
 =item C<< --remote=<remote-url> >> (C<< -r <remote-url> >>)
 
 Use a different remote-url than the one saved in C<.gitrepo> locally.
+
+=item C<< --strategy=<merge-strategy> (-s <merge-strategy>) >>
+
+The C<pull> and C<push> commands attempt a merge. This lets you specify
+alternate strategies. If none of the strategies work, you need to do the
+C<pull> or C<push> by hand. See "Merge Strategy Options".
 
 =item C<--update> (C<-u>)
 
@@ -314,41 +351,55 @@ include these values to the update.
 
 =back
 
-=head2 Merge Strategy Options
-
-When doing a C<pull> command you can specify a 'merge strategy' to be tried:
+=head1 Output Options
 
 =over
 
-=item C<--reclone>
+=item C<--quiet> (C<-q>)
+
+Print as little info as possible.
+
+=item C<--verbose> (C<-v>)
+
+Print information showing what the command is doing under the hood.
+
+=item C<--debug> (C<-x>)
+
+Use the Bash C<set -x> option which prints every command before it is run.
+VERY noisy, but extremely useful in deep debugging.
+
+=back
+
+=head2 Merge Strategy Options
+
+When doing a C<pull> or C<push> command you can specify a 'merge strategy' to
+be tried, with the C<strategy=> option:
+
+=over
+
+=item C<rebase>
+
+Attempt a rebase on top off the remote head. This is the default option.
+
+=item C<reclone>
 
 Use this option when you have no local changes to the subrepo, and you simply
 want to replace the old content with the new upstream content. If you use C<--
-branch> or C<--remote> options with this option, the C<--update> option is
+branch=> or C<--remote=> options with this option, the C<--update> option is
 turned on automatically (ie the new remote and branch are stored in .gitrepo
 file). This strategy should never fail.
 
-=item C<--rebase>
+=item C<recursive>
 
-Attempt a rebase on top off the remote head.
+Use the recursive merge strategy.
 
-=item C<--merge>
-
-Use the default (recursive) merge strategy.
-
-=item C<--ours>
+=item C<ours>
 
 Use recursive + C<-X ours> option.
 
-=item C<--theirs>
+=item C<theirs>
 
 Use recursive + C<-X theirs> option.
-
-=item C<--graft>
-
-This option creates a graft between your local detached subrepo branch and the
-fetched upstream branch, so that you can try a hand merge. Some commands like
-C<git rebase> seem to need this.
 
 =back
 
