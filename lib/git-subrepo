@@ -764,11 +764,13 @@ get-params() {
   local i=0
   local num=${#command_arguments[@]}
   for arg in $@; do
+    # If arg starts with '+' then it is required
     if [[ "$arg" =~ ^\+ ]]; then
       if [ $i -ge $num ]; then
         error "command '$command' requires arg '${arg#+}'"
       fi
       printf -v ${arg#+} "${command_arguments[i]}"
+    # Look for function name after ':' to provide a default value
     elif [[ "$arg" =~ : ]]; then
       if [ $i -lt $num ]; then
         printf -v ${arg%:*} "${command_arguments[i]}"
@@ -778,6 +780,13 @@ get-params() {
     fi
     let i=$((i+1))
   done
+
+  # Check for extra arguments:
+  if [ $num -gt $i ]; then
+    set -- ${command_arguments[@]}
+    for ((j = 1; j <= i; j++)); do shift; done
+    error "Unknown argument(s) '$*' for '$command' command."
+  fi
 }
 
 # Determine the correct subdir path to use:
