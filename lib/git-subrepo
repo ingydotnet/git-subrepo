@@ -7,8 +7,7 @@
 set -e
 
 # Import Bash+ helper functions:
-BASHLIB="${BASH_SOURCE%/*}/git-subrepo.d"
-PATH="$BASHLIB:$PATH" source bash+.bash
+source "${BASH_SOURCE%/*}/git-subrepo.d/bash+.bash"
 bash+:import :std can
 
 VERSION=0.1.0
