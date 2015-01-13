@@ -308,7 +308,7 @@ Good:
 =back
 
 =for html
-<a href="https://travis-ci.org/ingydotnet/gitsubrepo"><img src="https://travis-ci.org/ingydotnet/gitsubrepo.png" alt="gitsubrepo"></a>
+<a href="https://travis-ci.org/ingydotnet/git-subrepo"><img src="https://travis-ci.org/ingydotnet/git-subrepo.png" alt="git-subrepo"></a>
 
 Bad:
 
