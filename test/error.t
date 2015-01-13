@@ -25,6 +25,17 @@ catch() { error="$("$@" 2>&1 || true)"; }
 {
   error="$(
     cd $OWNER/bar
+    catch git subrepo clone foo bar baz quux
+    echo "$error"
+  )"
+  is "$error" \
+    "git-subrepo: Unknown argument(s) 'baz quux' for 'clone' command." \
+    "extra arguments for clone"
+}
+
+{
+  error="$(
+    cd $OWNER/bar
     catch git subrepo clone dummy bard
     echo "$error"
   )"
@@ -46,6 +57,6 @@ catch() { error="$("$@" 2>&1 || true)"; }
 
 # TODO test rest of errors
 
-done_testing 3
+done_testing
 
 source test/teardown
