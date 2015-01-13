@@ -1032,7 +1032,11 @@ assert-subdir-empty() {
 
 get-all-subrepos() {
   local paths=($(
-    find . -name '.gitrepo' | grep '/.gitrepo$' | sed 's/.gitrepo$//' | sort
+    find . -name '.gitrepo' |
+      grep -v '/.git/' |
+      grep '/.gitrepo$' |
+      sed 's/.gitrepo$//' |
+      sort
   ))
   subrepos=()
   local path
