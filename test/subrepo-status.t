@@ -11,7 +11,7 @@ output="$(
   git subrepo status
 )"
 
-like "$output" "This git repo has 2 subrepos:" \
+like "$output" "Status for 2 subrepos:" \
   'Status intro ok'
 
 like "$output" "Git subrepo 'ext/bashplus':" \
