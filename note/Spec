@@ -16,9 +16,9 @@
 
     git subrepo fetch <subdir>
 
-- `checkout`
+- `branch`
 
-- `merge`
+- `checkout`
 
 - `commit`
 
