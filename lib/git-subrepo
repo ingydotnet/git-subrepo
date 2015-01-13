@@ -130,6 +130,8 @@ main() {
 # `git subrepo clone <url> [<subdir>]` command:
 command:clone() {
   command-setup +subrepo_remote subdir:guess-subdir
+
+  # Fetch the upstream subrepo content to clone:
   subrepo:fetch
 
   # Make subdir for clone:
@@ -288,8 +290,6 @@ command:push() {
 # `git subrepo fetch <subdir>` command
 command:fetch() {
   if $in_subrepo; then
-    [ ${#command_arguments[@]} -eq 0 ] ||
-      error "Arguments to 'fetch' are invalid while subrepo checked out."
     local subdir="$in_subrepo_name"
     command-setup
   else
@@ -329,7 +329,7 @@ command:checkout() {
 
 # `git subrepo commit <subdir>` command
 command:commit() {
-  error "'commit' command not yet implemented."
+  error "The 'commit' command not yet implemented."
 }
 
 # `git subrepo reset [<branch>]` command
@@ -357,15 +357,12 @@ command:log() {
   command-setup +subdir
   $fetch_wanted && subrepo:fetch
   [ -e ".git/refs/subrepo/remote/$subdir" ] ||
-    error "No ref 'subrepo/remote/$subdir'. Try fetch (or -F)."
+    error "No ref 'subrepo/remote/$subdir'. Try fetch first."
   EXEC=true RUN git log "subrepo/remote/$subdir"
 }
 
 # `git subrepo clean <subdir>` command
 command:clean() {
-  $in_subrepo &&
-    error "Can't 'clean' while subrepo branch is checked out."
-
   command-setup +subdir
 
   # Remove subrepo branch if exists:
@@ -482,8 +479,6 @@ subrepo:branch() {
 }
 
 subrepo:status-inside-subrepo() {
-  [ ${#command_arguments[@]} -eq 0 ] ||
-    error "Arguments to 'status' are invalid while subrepo checked out."
   RUN git update-ref \
     "refs/heads/$original_head_branch" \
     "$original_head_commit"
@@ -675,7 +670,7 @@ get-command-options() {
       --version)
         echo "$VERSION"
         exit ;;
-      *) error "unexpected option: $option" ;;
+      *) error "Unexpected option: $option" ;;
     esac
   done
 
@@ -703,7 +698,7 @@ get-command-options() {
   if $update_wanted; then
     check_option update
     if [ -z "$subrepo_branch" -o -z "$subrepo_remote" ]; then
-      error "Can't use '--update' without '--branch' or '--remote'"
+      error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
   if [ -n "$merge_strategy" ]; then
@@ -723,13 +718,13 @@ options_clean='all'
 check_option() {
   local var="options_$command"
   [[ ${!var} =~ $1 ]] ||
-    error "Invalid option '--$1' for '$command'"
+    error "Invalid option '--$1' for '$command'."
 }
 
 check_strategy() {
   check_option strategy
   [[ $merge_strategy =~ ^(reclone|rebase|recursive|ours|theirs)$ ]] ||
-    error "Invalid merge strategy: '$merge_strategy'"
+    error "Invalid merge strategy: '$merge_strategy'."
 }
 
 # Do the setup steps needed by most of the subrepo subcommands:
@@ -740,7 +735,7 @@ command-setup() {
   [ -n "$subdir" ] ||
     die "subdir not set"
   [[ "$subdir" =~ ^/ ]] &&
-    error "subdir '$dir' should not be absolute path"
+    error "The subdir '$subdir' should not be absolute path."
   subdir="${subdir#./}"
   subdir="${subdir%/}"
 
@@ -767,7 +762,7 @@ get-params() {
     # If arg starts with '+' then it is required
     if [[ "$arg" =~ ^\+ ]]; then
       if [ $i -ge $num ]; then
-        error "command '$command' requires arg '${arg#+}'"
+        error "Command '$command' requires arg '${arg#+}'."
       fi
       printf -v ${arg#+} "${command_arguments[i]}"
     # Look for function name after ':' to provide a default value
@@ -796,14 +791,14 @@ guess-subdir() {
   dir="${dir%/}"
   dir="${dir##*/}"
   [[ "$dir" =~ ^[-a-zA-Z0-9]+$ ]] ||
-    error "can't determine subdir from '$subrepo_remote'"
+    error "Can't determine subdir from '$subrepo_remote'."
   subdir="$dir"
 }
 
 get-mainline-branch() {
   git:get-mainline-branch-name
   [ -n "$output" ] ||
-    error "Can't determine mainline branch"
+    error "Can't determine mainline branch."
   branch="$output"
 }
 
@@ -812,7 +807,7 @@ get-upstream-head-branch() {
   OUT=true RUN git ls-remote $subrepo_remote
   local remotes="$output"
   [ -n "$remotes" ] ||
-    error "failed to 'git ls-remote $subrepo_remote'"
+    error "Failed to 'git ls-remote $subrepo_remote'."
   local commit="$(
     echo "$remotes" |
     grep HEAD |
@@ -826,7 +821,7 @@ get-upstream-head-branch() {
     cut -f2
   )"
   [[ "$branch" =~ refs/heads/ ]] ||
-    error "problem finding remote default head branch"
+    error "Problem finding remote default head branch."
   output="${branch#refs/heads/}"
 }
 
@@ -835,7 +830,7 @@ read-gitrepo-file() {
   gitrepo="$subdir/.gitrepo"
 
   if [ ! -f "$gitrepo" ]; then
-    error "'$subdir' is not a subrepo"
+    error "'$subdir' is not a subrepo."
   fi
 
   # Read .gitrepo values:
@@ -916,10 +911,10 @@ git subrepo $command ${args[@]}
 # Check that system is ok for this command:
 assert-environment-ok() {
   type git &> /dev/null ||
-    error "can't find your 'git' command in '$PATH'"
+    error "Can't find your 'git' command in '$PATH'."
   git_version="$(git --version)"
   if [[ "$git_version" < "git version 1.7" ]]; then
-    error "requires git version 1.7 or higher; you have '$git_version'"
+    error "Requires git version 1.7 or higher; you have '$git_version'."
   fi
 }
 
@@ -968,7 +963,7 @@ get-command-info() {
 assert-repo-is-ready() {
   # We must be inside a git repo:
   git rev-parse --git-dir &> /dev/null ||
-    error "not inside a git repository"
+    error "Not inside a git repository."
 
   # Get the original branch and commit:
   git:get-head-branch-name
@@ -990,14 +985,23 @@ assert-repo-is-ready() {
     fi
   fi
 
+  if $in_subrepo; then
+    if [[ ! "$command" =~ ^(fetch|commit|reset|status|log)$ ]]; then
+      error "Can't '$command' while subrepo branch is checked out."
+    fi
+    if [ ${#command_arguments[@]} -gt 0 ] && [ "$command" != reset ]; then
+      error "Arguments to '$command' are invalid while subrepo checked out."
+    fi
+  fi
+
   # Make sure we are on a branch:
   [ "$original_head_branch" == HEAD -o -z "$original_head_branch" ] &&
-    error "must be on a branch to run this command."
+    error "Must be on a branch to run this command."
 
   # In a work-tree:
   SAY=false OUT=true RUN git rev-parse --is-inside-work-tree
   [ "$output" == true ] ||
-    error "can't 'subrepo $command' outside a working tree."
+    error "Can't 'subrepo $command' outside a working tree."
 
   # HEAD exists:
   RUN git rev-parse --verify HEAD
@@ -1006,23 +1010,23 @@ assert-repo-is-ready() {
   if [[ "$command" =~ ^(clone|pull|push|checkout)$ ]]; then
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
-      error "can't $command subrepo. Unstaged changes."
+      error "Can't $command subrepo. Unstaged changes."
     git diff-index --quiet --ignore-submodules HEAD ||
-      error "can't $command subrepo. Working tree has changes."
+      error "Can't $command subrepo. Working tree has changes."
     git diff-index --quiet --cached --ignore-submodules HEAD ||
-      error "can't $command subrepo. Index has changes."
+      error "Can't $command subrepo. Index has changes."
   fi
 
   # For now, only support actions from top of repo:
   if [ "$(git rev-parse --git-dir)" != '.git' ]; then
-    error "need to run subrepo command from top level directory of the repo."
+    error "Need to run subrepo command from top level directory of the repo."
   fi
 }
 
 # If subdir exists, make sure it is empty:
 assert-subdir-empty() {
   if [ -e "$subdir" ] && [ -n "$(ls -A $subdir)" ]; then
-    error "subdir '$subdir' exists and is not empty"
+    error "The subdir '$subdir' exists and is not empty."
   fi
 }
 
@@ -1177,7 +1181,7 @@ RUN() {
 
   if [ "$rc" -ne 0 ]; then
     OK=false
-    $FAIL && error "command failed: $*"
+    $FAIL && error "Command failed: '$*'."
   fi
   if $OUT; then
     output="$out"
