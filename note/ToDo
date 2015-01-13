@@ -1,11 +1,5 @@
 == Development
 
-- The status command should be aware of being checked out into subrepo branch
-
-- Change fetch to update
-
-- Implement pull with a --reclone default
-
 - Add version commit id to cmdver in .gitrepo.
   - Update Makefile to install:
     - git-subrepo.d/remote
@@ -18,8 +12,6 @@
 - Write more tests:
   - Make simple fixtures
   - Multiple push sessions
-  - Test all error conditions:
-    - test/error.t
   - Tests for reported rebase errors and other subtree badness
 
 - Make the 'clean' command remove grafts
@@ -55,51 +47,3 @@
   A-----B-----C
              /
       T'--T'+
-
-== Done
-
-+ Switch this repo from submodule to subrepo:
-  + for test-more-bash & bashplus
-  + Need to switch those first
-  + Redo here
-
-+ Save and reset rev state for push/checkout
-
-x Save former pushed commit
-  x This can be saved in .git/info/subrepo/pushed
-
-x Add more meta info to .gitrepo file:
-  x cloned - original upstream commit
-
-+ Remove the 'remove' command.
-
-+ Add new subcommands:
-  + checkout
-  + status
-    + See what submodule and subtree do.
-
-+ Implement clean
-+ Implement --all
-+ Review doc/readme
-x Change former/parent to before
-x Add comments before each config field
-x Apply the transplant_prefix branch (use xxd)
-
-+ Wrap external commands
-  + Show them on verbose
-  + Always check return status
-    + die with output on failure
-+ Implement verbose output
-
-+ Write `git subrepo fetch`
-
-+ Implement --quiet for status
-
-+ Finish ref/remote/branch stuff
-  + fetch
-  + clean
-  + status
-  + checkout
-
-+ The status command should work with 0-n arguments
-
