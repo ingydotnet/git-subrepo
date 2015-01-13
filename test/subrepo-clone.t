@@ -6,8 +6,6 @@ source test/setup
 
 use Test::More
 
-source lib/git-subrepo
-
 clone-foo-and-bar
 
 # Test that the repos look ok:
@@ -115,6 +113,4 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 done_testing 16
 
-# (cd $OWNER/foo;bash);exit
-
-source test/teardown
+teardown
