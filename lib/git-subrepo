@@ -68,6 +68,7 @@ main() {
   local all_wanted=false      # Apply command to all subrepos
   local fetch_wanted=false    # Fetch requested for checkout
   local update_wanted=false   # Update .gitrepo with --branch and/or --remote
+  local in_subrepo=false      # Subrepo is checked out
   local command_remote='???'  # Remote repo for git-subrepo
   local command_commit='???'  # Commit of git-repo being used
 
@@ -75,6 +76,7 @@ main() {
   local gitrepo=              # Path to .gitrepo file
   local current_branch=       # Branch we were on at start of the command
   local merge_strategy=       # Merge strategy to use
+  local in_subrepo_name=      # Name of subrepo that is checked out
 
   local original_head_commit= # HEAD commit id at start of command
   local original_head_branch= # HEAD ref at start of command
@@ -288,6 +290,11 @@ command:branch() {
   command-setup +subdir
   $fetch_wanted && subrepo:fetch
 
+  local branch="subrepo/$subdir"
+  if git:branch-exists "$branch"; then
+    error "Branch '$branch' already exists."
+  fi
+
   # Create the subrepo branch:
   subrepo:branch
 
@@ -299,7 +306,7 @@ command:checkout() {
   command-setup +subdir
   $fetch_wanted && subrepo:fetch
 
-  git:branch-exists || subrepo:branch
+  subrepo:branch
 
   local branch="subrepo/$subdir"
   RUN git checkout "$branch"
@@ -309,19 +316,27 @@ command:checkout() {
 
 # `git subrepo fetch <subdir>` command
 command:fetch() {
-  command-setup +subdir
-
+  if $in_subrepo; then
+    [ ${#command_arguments[@]} -eq 0 ] ||
+      error "Arguments to 'fetch' are invalid while subrepo checked out."
+    local subdir="$in_subrepo_name"
+    command-setup
+  else
+    command-setup +subdir
+  fi
   subrepo:fetch true
 }
 
 # `git subrepo commit <subdir>` command
 command:commit() {
-  error "'commit' command not yet implemented"
+  error "'commit' command not yet implemented."
 }
 
 # `git subrepo reset [<branch>]` command
 command:reset() {
-  get-params +branch
+  $in_subrepo ||
+    error "Can't 'subrepo reset'. Subrepo branch not checked out."
+  get-params branch:get-mainline-branch
   RUN git checkout "$branch"
   RUN git reset --hard "$branch"
   say "Reset to branch '$branch'"
@@ -330,84 +345,11 @@ command:reset() {
 # `git subrepo status [<subdir>]` command:
 # TODO just print subdir name if --quiet
 command:status() {
-  if [ $# -eq 0 ]; then
-    if [[ "$original_head_branch" =~ ^subrepo/ ]]; then
-      echo "You are on a subrepo branch"
-      return
-    fi
-    get-all-subrepos
-    local count=${#subrepos[@]}
-    if [ $count -eq 0 ]; then
-      echo "This git repo has no subrepos."
-      exit 1
-    else
-      echo "This git repo has $count subrepos:"
-      echo
-    fi
+  if $in_subrepo; then
+    subrepo:status-inside-subrepo
   else
-    subrepos=("$@")
+    subrepo:status
   fi
-
-  for subdir in "${subrepos[@]}"; do
-    subdir="${subdir#./}"
-    subdir="${subdir%/}"
-
-    if [ ! -f "$subdir/.gitrepo" ]; then
-      echo "'$subdir' is not a subrepo"
-      echo
-      continue
-    fi
-
-    subrepo_remote=
-    subrepo_branch=
-    read-gitrepo-file
-
-    if $quiet_wanted; then
-      echo "$subdir"
-      return
-    fi
-
-    # Remote Name:
-    local remote="subrepo/$subdir"
-    FAIL=false OUT=true RUN git config "remote.$remote.url"
-    remote="$output"
-
-    # Remote Ref:
-    local ref="refs/subrepo/remote/$subdir"
-    OUT=true RUN git for-each-ref "$ref"
-    local ref_ok="$output"
-
-    # SubRepo Branch:
-    local branch="subrepo/$subdir"
-    OUT=true RUN git for-each-ref "refs/heads/$branch"
-    local branch_ok="$output"
-
-    cat <<...
-Git subrepo '$subdir':
-...
-    [ -n "$branch_ok" ] && cat <<...
-  SubRepo Branch:  $branch
-...
-    [ -n "$remote" ] && cat <<...
-  Remote Name:     subrepo/$subdir
-...
-    cat <<...
-  Remote URL:      $subrepo_remote
-...
-    [ -n "$ref_ok" ] && cat <<...
-  Remote Ref:      $ref
-...
-    cat <<...
-  Tracking Branch: $subrepo_branch
-...
-    [ -n "$subrepo_parent" ] && cat <<...
-  Pulled Commit:   $(git rev-parse --short $subrepo_parent)
-...
-    cat <<...
-  Previous Pull:   $(git rev-parse --short $subrepo_commit)
-
-...
-  done
 }
 
 # `git subrepo log <subdir>` command
@@ -421,6 +363,9 @@ command:log() {
 
 # `git subrepo clean <subdir>` command
 command:clean() {
+  $in_subrepo &&
+    error "Can't 'clean' while subrepo branch is checked out."
+
   command-setup +subdir
 
   # Remove subrepo branch if exists:
@@ -512,9 +457,7 @@ subrepo:fetch() {
 # Create a subrepo branch of changes since last push:
 subrepo:branch() {
   local branch="subrepo/$subdir"
-  if git:branch-exists "$branch"; then
-    error "Branch '$branch' already exists."
-  fi
+  git:branch-exists "$branch" && return
 
   # TODO Actually only filter commits since last push.
   # Make history of subdir changes:
@@ -538,12 +481,159 @@ subrepo:branch() {
   RUN git reset --hard "$original_head_commit"
 }
 
+subrepo:status-inside-subrepo() {
+  [ ${#command_arguments[@]} -eq 0 ] ||
+    error "Arguments to 'status' are invalid while subrepo checked out."
+  RUN git update-ref \
+    "refs/heads/$original_head_branch" \
+    "$original_head_commit"
+  git:get-mainline-branch-name
+  local mainline="$output"
+  cat <<...
+Subrepo '$in_subrepo_name' branch is currently checked out.
+
+...
+
+  local subdir="$in_subrepo_name"
+  status:remote-name
+  local got="$output"
+  status:remote-ref
+  got="$got$output"
+  [ -z "$got" ] || echo
+
+  cat <<...
+To complete a by-hand "pull" of this subrepo:
+
+  *
+  *
+  *
+
+To complete a by-hand "push" of this subrepo:
+
+  *
+  *
+  *
+
+...
+
+[ -z "$mainline" ] || cat <<...
+To checkout and reset the '$mainline' branch:
+
+  git subrepo reset
+
+...
+}
+
+subrepo:status() {
+  if [ ${#command_arguments[@]} -eq 0 ]; then
+    get-all-subrepos
+    local count=${#subrepos[@]}
+    if [ $count -eq 0 ]; then
+      echo "Status: No Subrepos."
+      exit 1
+    else
+      local s=
+      [ "$count" == 1 ] || s=s
+      echo "Status for $count subrepo$s:"
+      echo
+    fi
+  else
+    subrepos=("${command_arguments[@]}")
+  fi
+
+  for subdir in "${subrepos[@]}"; do
+    subdir="${subdir#./}"
+    subdir="${subdir%/}"
+
+    if [ ! -f "$subdir/.gitrepo" ]; then
+      echo "'$subdir' is not a subrepo"
+      echo
+      continue
+    fi
+
+    subrepo_remote=
+    subrepo_branch=
+    read-gitrepo-file
+
+    if $quiet_wanted; then
+      echo "$subdir"
+      return
+    fi
+
+    # SubRepo Branch:
+    local branch="subrepo/$subdir"
+    OUT=true RUN git for-each-ref "refs/heads/$branch"
+    local branch_ok="$output"
+
+    cat <<...
+Git subrepo '$subdir':
+...
+    [ -n "$branch_ok" ] && cat <<...
+  SubRepo Branch:  $branch
+...
+    status:remote-name
+    cat <<...
+  Remote URL:      $subrepo_remote
+...
+    status:remote-ref
+    cat <<...
+  Tracking Branch: $subrepo_branch
+...
+    [ -n "$subrepo_parent" ] && cat <<...
+  Pulled Commit:   $(git rev-parse --short $subrepo_parent)
+...
+    cat <<...
+  Previous Pull:   $(git rev-parse --short $subrepo_commit)
+
+...
+  done
+}
+
+status:remote-name() {
+  # Remote Name:
+  local remote="subrepo/$subdir"
+  FAIL=false OUT=true RUN git config "remote.$remote.url"
+
+  [ -z "$output" ] || cat <<...
+  Remote Name:     subrepo/$subdir
+...
+}
+
+status:remote-ref() {
+  # Remote Ref:
+  local ref="refs/subrepo/remote/$subdir"
+  OUT=true RUN git for-each-ref "$ref"
+
+  [ -z "$output" ] || cat <<...
+  Remote Ref:      $ref
+...
+}
+
 #------------------------------------------------------------------------------
 # Git command wrappers:
 #------------------------------------------------------------------------------
 
 git:branch-exists() {
-  git show-ref --verify --quiet "refs/heads/$1"
+  local branch="$1"
+  git show-ref --verify --quiet "refs/heads/$branch"
+}
+
+git:get-head-branch-name() {
+  output=
+  local name="$(git rev-parse --abbrev-ref HEAD)"
+  [ "$name" == HEAD ] && return
+  output="$name"
+}
+
+git:get-head-branch-commit() {
+  output="$(git rev-parse HEAD)"
+}
+
+git:get-mainline-branch-name() {
+  output=
+  local name="$(git rev-parse --abbrev-ref subrepo/mainline 2>/dev/null)"
+  [ "$name" == subrepo/mainline ] && return
+  output="$name"
 }
 
 #------------------------------------------------------------------------------
@@ -662,6 +752,8 @@ command-setup() {
     subrepo_branch="${subrepo_branch:-$output}"
   else
     read-gitrepo-file
+    # $in_subrepo || read-gitrepo-file
+    # subrepo_remote="subrepo/$subdir"
   fi
 
   :
@@ -697,6 +789,13 @@ guess-subdir() {
   [[ "$dir" =~ ^[-a-zA-Z0-9]+$ ]] ||
     error "can't determine subdir from '$subrepo_remote'"
   subdir="$dir"
+}
+
+get-mainline-branch() {
+  git:get-mainline-branch-name
+  [ -n "$output" ] ||
+    error "Can't determine mainline branch"
+  branch="$output"
 }
 
 # Determine the upstream's default head branch:
@@ -863,10 +962,24 @@ assert-repo-is-ready() {
     error "not inside a git repository"
 
   # Get the original branch and commit:
-  SAY=false OUT=true RUN git rev-parse --abbrev-ref HEAD
+  git:get-head-branch-name
   original_head_branch="$output"
-  SAY=false OUT=true RUN git rev-parse HEAD
+  git:get-head-branch-commit
   original_head_commit="$output"
+
+  # If a subrepo branch is currently checked out, then note it:
+  if [[ "$original_head_branch" =~ ^subrepo/(.*) ]]; then
+    in_subrepo=true
+    in_subrepo_name="${BASH_REMATCH[1]}"
+  # Else save this branch as the 'mainline' for the 'reset' command:
+  else
+    git:get-mainline-branch-name
+    if [ "$output" != "$original_head_branch" ]; then
+      RUN git symbolic-ref \
+        "refs/subrepo/mainline" \
+        "refs/heads/$original_head_branch"
+    fi
+  fi
 
   # Make sure we are on a branch:
   [ "$original_head_branch" == HEAD -o -z "$original_head_branch" ] &&
