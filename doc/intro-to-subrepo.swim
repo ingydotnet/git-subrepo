@@ -15,9 +15,9 @@ wrong, while explaining how the new `subrepo` command fixes the issues.
 It should be noted that there are 3 distinct roles (ways people use repos)
 involved in discussing this topic:
 
-* owner — The primary author and repo owner
-* collaborators — Other developers who contribute to the repo
-* users — People who simply use the repo software
+* *owner* — The primary author and repo owner
+* *collaborators* — Other developers who contribute to the repo
+* *users* — People who simply use the repo software
 
 == Introducing `subrepo`
 
@@ -47,8 +47,8 @@ skynyrd subrepo to the 1976 branch. Since these subrepos are owned by 'you',
 you might want to change them in the context of your freebird repo. When
 things are working, you can push the subrepo changes back:
 
-  git subrepo push --rebase ext/lynyrd
-  git subrepo push --rebase ext/skynyrd
+  git subrepo push ext/lynyrd
+  git subrepo push ext/skynyrd
 
 Looks simple right? It's supposed to be. The intent of `git-subrepo` is to do
 the right things, and to not cause problems.
@@ -115,8 +115,8 @@ gone into making them work decently, they are essentially a kludge to the Git
 model, and it is quite understandable why they haven't worked out as well as
 people would expect.
 
-NOTE: I do realize that submodules are getting better with each release of
-Git, but it's still an endless catch up game.
+NOTE: Submodules /are/ getting better with each release of Git, but it's still
+an endless catch up game.
 
 == Git Subtrees
 
@@ -188,9 +188,9 @@ where they came from.
 
 Consider the equivalent subrepo commands:
 
-  $ git subrepo clone foo git@github.com:my/thing -b mybranch
-  $ git subrepo pull --rebase foo
-  $ git subrepo push --rebase foo
+  $ git subrepo clone git@github.com:my/thing foo -b mybranch
+  $ git subrepo pull foo
+  $ git subrepo push foo
 
 Collaborators see a file called 'foo/.gitrepo', and know that the subdir is a
 subrepo. The file contains all the information needed by future commands
@@ -224,11 +224,13 @@ Good:
 * Pushed history is kept intact.
 * Creates a clean historical view. (See below)
 * Bash code is very simple and easy to follow.
-* Comprehensive test suite. Currently passing on travis: [![Build Status](https://travis-ci.org/ingydotnet/git-subrepo.png?branch=master)](https://travis-ci.org/ingydotnet/git-subrepo)
+* Comprehensive test suite. Currently passing on travis:
+
+<badge travis ingydotnet/gitsubrepo>
 
 Bad:
-* Subrepo is very new.
-* Not well tested in the wild.
+* --Subrepo is very new.-- (no longer true)
+* --Not well tested in the wild.-- (no longer true)
 
 This review may seem somewhat slanted, but I honestly am not aware of any
 "bad" points that I'm not disclosing. That said, I am sure time will reveal
@@ -255,12 +257,11 @@ Given this we do the following steps internally:
 
 This process adds something like this to the top of your history:
 
-  *   29ce688 (HEAD, master) Merge subrepo commit '9b6ddc9'
-  |\
-  | * 9b6ddc9 subrepo clone: git@github.com:you/foo.git (master) -> foo/
+  * 9b6ddc9 git subrepo clone git@github.com:you/foo.git foo/
+  * 37c61a5 Previous head commit of your repo
 
-The entire history has been squashed down into one commit, and that commit has
-no parent. This is important as it keeps your history as clean as possible.
+The entire history has been squashed down into one commit, and placed on top of
+your history.  This is important as it keeps your history as clean as possible.
 You don't need to have the subrepo history in your main project, since it is
 immutably available elsewhere, and you have a pointer to that place.
 
@@ -270,7 +271,7 @@ The new foo/.gitrepo file looks like this:
           remote = git@github.com:you/foo.git
           branch = master
           commit = 14c96c6931b41257b2d42b2edc67ddc659325823
-          former = 9b6ddc9429a4005289ed67134515f7c5cfd289fb
+          parent = 37c61a5a234f5dd6f5c2aec037509f50d3a79b8f
           cmdver = 0.1.0
 
 It contains all the info needed now and later. Note that the repo url is the
@@ -306,18 +307,10 @@ subtree and subrepo. Let's say I run this command sequence using both methods:
 The syntax above is pseudo, but you get the idea. The resulting history using
 subrepo is:
 
-  * 7aa5a63 (HEAD, master) Merge subrepo commit 'b1f60cc'
-  |\
-  | * b1f60cc subrepo pull: git@github.com:user/xyz (commit2) -> tree2/
-  * 353f38f Merge subrepo commit '4fb0276'
-  |\
-  | * 4fb0276 subrepo pull: git@github.com:user/xyz (commit2) -> tree1/
-  * 3f09025 Merge subrepo commit 'bcef2a0'
-  |\
-  | * bcef2a0 subrepo clone: git@github.com:user/xyz (commit1) -> tree2/
-  * 6ec38a0 Merge subrepo commit 'bebf0db'
-  |\
-  | * bebf0db subrepo clone: git@github.com:user/xyz (commit1) -> tree1/
+  * b1f60cc subrepo pull git@github.com:user/xyz tree2/
+  * 4fb0276 subrepo pull git@github.com:user/xyz tree1/
+  * bcef2a0 subrepo clone git@github.com:user/xyz tree2/
+  * bebf0db subrepo clone git@github.com:user/xyz tree1/
   * 64eeaa6 (origin/master, origin/HEAD) O HAI FREND
 
 Compare that to this history using subtree:
@@ -342,24 +335,19 @@ Compare that to this history using subtree:
 
 This was from a minimal case. Subtree history (when viewed this way at least)
 gets unreasonably ugly fast. Subrepo history, by contrast, always looks as
-clean as shown. There is one clone/pull commit, and one merge per operation.
-Both commits are needed because it the clone/pull commit is stored under the
-'former' key in the .gitrepo file, which affects the SHA1 value of the commit.
-By adding the file to the *merge* commit, this becomes possible.
+clean as shown.
 
-The final command, push, is slightly more complicated. Effectively, it tries
-to extract (checkout) the changes made to the subdirectory, rebase them with
-the upstream, and push the resulting history back. It does not squash the
-commits made locally, because it assumed that when you changed the local
-subrepo, you made messages that were intended to eventually be published back
-upstream.
+The final command, push, is slightly more complicated. Effectively, it extracts
+(checkout) the changes made to the subdirectory, rebases/merges them with the
+upstream, and pushes the resulting history back. It does not squash the commits
+made locally, because it assumed that when you changed the local subrepo, you
+made messages that were intended to eventually be published back upstream.
 
 Here are the steps:
 
 * Fetch the remote content.
 * Filter out the local subdir changes into an "local subrepo branch".
 * Remove the .gitrepo state file from the subrepo history.
-* Graft the local subrepo history in the remote history.
 * Rebase the local changes on top of the remote ones.
 * Push the new history upstream.
 * Reset local HEAD to the point before the command was run.
@@ -384,6 +372,8 @@ repo:
 - Submodule :: `git submodule add git@github.com/user/external`
 - Subtree :: `git subtree --squash --prefix=external git@github.com/user/external`
 - Subrepo :: `git subrepo clone git@github.com/user/external`
+
+/…to be completed…/
 
 === Updating from a changed External
 
