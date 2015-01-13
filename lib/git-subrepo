@@ -394,6 +394,7 @@ Git Version: $git_version
 # Subrepo command guts functions:
 #------------------------------------------------------------------------------
 
+# Clone by fetching remote content into our subdir:
 subrepo:clone() {
   # Fetch the upstream subrepo content to clone:
   subrepo:fetch
@@ -404,13 +405,8 @@ subrepo:clone() {
   # Put remote subrepo content in subdir:
   GIT_WORK_TREE="$subdir" RUN git reset --hard "$upstream_head"
 
-  # Set old head ref:
-  RUN git update-ref \
-    "refs/heads/$original_head_branch" \
-    "$original_head_commit"
-
-  # Reset to old ref:
-  RUN git reset --hard "$original_head_branch"
+  # Reset to original commit:
+  RUN git reset --hard "$original_head_commit"
 }
 
 # Fetch the subrepo's remote branch content:
