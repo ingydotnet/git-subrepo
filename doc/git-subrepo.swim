@@ -13,9 +13,9 @@ Git Submodule Alternative
   git subrepo pull <subdir>
   git subrepo push <subdir>
 
+  git subrepo fetch <subdir>
   git subrepo branch <subdir>
   git subrepo checkout <subdir>
-  git subrepo fetch <subdir>
   git subrepo commit <subdir>
   git subrepo reset [<branch>]
 
@@ -151,6 +151,18 @@ the same arguments. Keep reading…
   The `push` command accepts the `--all`, `--branch=`, `--remote=`,
   `--strategy=` and `--update` options.
 
+- `git subrepo fetch <subdir>|--all`
+
+  Fetch the remote/upstream content for a subrepo.
+
+  It will create a Git reference called `subrepo/remote/<subdir>` that points
+  at the same commit as `FETCH_HEAD`. It will also create a remote called
+  `subrepo/<subdir>`. These are temporary and you can remove them easily with
+  the subrepo `clean` command.
+
+  The `fetch` command accepts the `--all`, `--branch=` and `--remote=`
+  options.
+
 - `git subrepo branch <subdir>|--all`
 
   Create a branch `subrepo/<subdir>` with all the subrepo commits.
@@ -173,18 +185,6 @@ the same arguments. Keep reading…
     git checkout subrepo/<subdir>
 
   The `checkout` command accepts the `--fetch` option.
-
-- `git subrepo fetch <subdir>|--all`
-
-  Fetch the remote/upstream content for a subrepo.
-
-  It will create a Git reference called `subrepo/remote/<subdir>` that points
-  at the same commit as `FETCH_HEAD`. It will also create a remote called
-  `subrepo/<subdir>`. These are temporary and you can remove them easily with
-  the subrepo `clean` command.
-
-  The `fetch` command accepts the `--all`, `--branch=` and `--remote=`
-  options.
 
 - `git subrepo commit <subdir>`
 

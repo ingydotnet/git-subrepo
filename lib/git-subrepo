@@ -22,9 +22,9 @@ Commands:
   pull      Pull upstream changes to the subrepo
   push      Push local subrepo changes upstream
 
+  fetch     Fetch a subrepo's remote branch (and create a ref for it)
   branch    Create a branch containing the local subrepo commits
   checkout  Checkout a subrepo branch (creating if necessary)
-  fetch     Fetch a subrepo remote branch (and create a ref for it)
   commit    Commit a merged subrepo branch into the mainline
   reset     Reset to the branch before a subrepo checkout
 
@@ -285,6 +285,19 @@ command:push() {
   say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
+# `git subrepo fetch <subdir>` command
+command:fetch() {
+  if $in_subrepo; then
+    [ ${#command_arguments[@]} -eq 0 ] ||
+      error "Arguments to 'fetch' are invalid while subrepo checked out."
+    local subdir="$in_subrepo_name"
+    command-setup
+  else
+    command-setup +subdir
+  fi
+  subrepo:fetch true
+}
+
 # `git subrepo branch <subdir>` command:
 command:branch() {
   command-setup +subdir
@@ -312,19 +325,6 @@ command:checkout() {
   RUN git checkout "$branch"
 
   say "Switched to branch '$branch'"
-}
-
-# `git subrepo fetch <subdir>` command
-command:fetch() {
-  if $in_subrepo; then
-    [ ${#command_arguments[@]} -eq 0 ] ||
-      error "Arguments to 'fetch' are invalid while subrepo checked out."
-    local subdir="$in_subrepo_name"
-    command-setup
-  else
-    command-setup +subdir
-  fi
-  subrepo:fetch true
 }
 
 # `git subrepo commit <subdir>` command

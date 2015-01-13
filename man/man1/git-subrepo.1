@@ -88,9 +88,9 @@
 \&    git subrepo pull <subdir>
 \&    git subrepo push <subdir>
 \&
+\&    git subrepo fetch <subdir>
 \&    git subrepo branch <subdir>
 \&    git subrepo checkout <subdir>
-\&    git subrepo fetch <subdir>
 \&    git subrepo commit <subdir>
 \&    git subrepo reset [<branch>]
 \&
@@ -260,6 +260,18 @@ Like with the \f(CW\*(C`pull\*(C'\fR command, if this fails, you can do these st
 The \f(CW\*(C`push\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-remote=\*(C'\fR, \f(CW\*(C`\-\-
 strategy=\*(C'\fR and \f(CW\*(C`\-\-update\*(C'\fR options.
 .RE
+.ie n .IP """git subrepo fetch <subdir>|\-\-all""" 4
+.el .IP "\f(CWgit subrepo fetch <subdir>|\-\-all\fR" 4
+.IX Item "git subrepo fetch <subdir>|--all"
+Fetch the remote/upstream content for a subrepo.
+.Sp
+It will create a Git reference called \f(CW\*(C`subrepo/remote/<subdir>\*(C'\fR that
+points at the same commit as \f(CW\*(C`FETCH_HEAD\*(C'\fR. It will also create a remote
+called \f(CW\*(C`subrepo/<subdir>\*(C'\fR. These are temporary and you can remove them
+easily with the subrepo \f(CW\*(C`clean\*(C'\fR command.
+.Sp
+The \f(CW\*(C`fetch\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR and \f(CW\*(C`\-\-
+remote=\*(C'\fR options.
 .ie n .IP """git subrepo branch <subdir>|\-\-all""" 4
 .el .IP "\f(CWgit subrepo branch <subdir>|\-\-all\fR" 4
 .IX Item "git subrepo branch <subdir>|--all"
@@ -284,18 +296,6 @@ Shorthand for the following 2 commands:
 .Ve
 .Sp
 The \f(CW\*(C`checkout\*(C'\fR command accepts the \f(CW\*(C`\-\-fetch\*(C'\fR option.
-.ie n .IP """git subrepo fetch <subdir>|\-\-all""" 4
-.el .IP "\f(CWgit subrepo fetch <subdir>|\-\-all\fR" 4
-.IX Item "git subrepo fetch <subdir>|--all"
-Fetch the remote/upstream content for a subrepo.
-.Sp
-It will create a Git reference called \f(CW\*(C`subrepo/remote/<subdir>\*(C'\fR that
-points at the same commit as \f(CW\*(C`FETCH_HEAD\*(C'\fR. It will also create a remote
-called \f(CW\*(C`subrepo/<subdir>\*(C'\fR. These are temporary and you can remove them
-easily with the subrepo \f(CW\*(C`clean\*(C'\fR command.
-.Sp
-The \f(CW\*(C`fetch\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR and \f(CW\*(C`\-\-
-remote=\*(C'\fR options.
 .ie n .IP """git subrepo commit <subdir>""" 4
 .el .IP "\f(CWgit subrepo commit <subdir>\fR" 4
 .IX Item "git subrepo commit <subdir>"
