@@ -69,8 +69,6 @@ main() {
   local fetch_wanted=false    # Fetch requested for checkout
   local update_wanted=false   # Update .gitrepo with --branch and/or --remote
   local in_subrepo=false      # Subrepo is checked out
-  local command_remote='???'  # Remote repo for git-subrepo
-  local command_commit='???'  # Commit of git-repo being used
 
   local subdir=               # Subdirectory of the subrepo being used
   local gitrepo=              # Path to .gitrepo file
@@ -101,12 +99,12 @@ main() {
 
   # Check environment and parse CLI options:
   assert-environment-ok
+
+  # Parse and validate command options:
   get-command-options "$@"
-  get-command-info
 
   # Make sure repo is in the proper state:
-  [[ "$command" =~ ^(help|version)$ ]] ||
-    assert-repo-is-ready
+  assert-repo-is-ready
 
   # Run the command:
   if $all_wanted; then
@@ -155,7 +153,7 @@ command:clone() {
   RUN git add "$subdir"
 
   # Commit this subrepo clone:
-  RUN git commit -m "$(action-message)"
+  RUN git commit -m "$(subrepo:commit-message)"
 
   # Successful command output:
   say "Subrepo '$subrepo_remote' ($subrepo_branch) cloned into '$subdir'"
@@ -187,7 +185,7 @@ command:pull() {
   # Create a new commit object from the upstream subrepo HEAD^{tree} with a
   # parent being the best common-ancestor just found:
   OUT=true RUN git commit-tree "$output" -p "$subrepo_parent" \
-    -m "$(action-message)"
+    -m "$(subrepo:commit-message)"
   update_commit="$output"
 
   # TODO:
@@ -604,31 +602,36 @@ status:remote-ref() {
 ...
 }
 
-#------------------------------------------------------------------------------
-# Git command wrappers:
-#------------------------------------------------------------------------------
+# Commit msg for an action commit:
+subrepo:commit-message() {
+  local commit="$(git rev-parse --short "$upstream_head")"
+  local args=()
+  if $all_wanted; then
+    args+=("$subdir")
+  fi
+  args+=(${command_arguments[@]})
 
-git:branch-exists() {
-  local branch="$1"
-  git show-ref --verify --quiet "refs/heads/$branch"
-}
+  # Find the specific git-subrepo code used:
+  local command_remote='???'
+  local command_commit='???'
+  get-command-info
 
-git:get-head-branch-name() {
-  output=
-  local name="$(git rev-parse --abbrev-ref HEAD)"
-  [ "$name" == HEAD ] && return
-  output="$name"
-}
+  # Format subrepo commit message:
+  cat <<...
+git subrepo $command ${args[@]}
 
-git:get-head-branch-commit() {
-  output="$(git rev-parse HEAD)"
-}
-
-git:get-mainline-branch-name() {
-  output=
-  local name="$(git rev-parse --abbrev-ref subrepo/mainline 2>/dev/null)"
-  [ "$name" == subrepo/mainline ] && return
-  output="$name"
+{"local":
+  {"subdir":  "$subdir"
+  ,"action":  "$command"}
+,"remote":
+  {"url":     "$subrepo_remote"
+  ,"branch":  "$subrepo_branch"
+  ,"commit":  "$commit"}
+,"git-subrepo":
+  {"version": "$VERSION"
+  ,"commit":  "$command_commit"
+  ,"origin":  "$command_remote"}}
+...
 }
 
 #------------------------------------------------------------------------------
@@ -727,6 +730,10 @@ check_strategy() {
     error "Invalid merge strategy: '$merge_strategy'."
 }
 
+#------------------------------------------------------------------------------
+# Command argument validation:
+#------------------------------------------------------------------------------
+
 # Do the setup steps needed by most of the subrepo subcommands:
 command-setup() {
   get-params "$@"
@@ -795,35 +802,9 @@ guess-subdir() {
   subdir="$dir"
 }
 
-get-mainline-branch() {
-  git:get-mainline-branch-name
-  [ -n "$output" ] ||
-    error "Can't determine mainline branch."
-  branch="$output"
-}
-
-# Determine the upstream's default head branch:
-get-upstream-head-branch() {
-  OUT=true RUN git ls-remote $subrepo_remote
-  local remotes="$output"
-  [ -n "$remotes" ] ||
-    error "Failed to 'git ls-remote $subrepo_remote'."
-  local commit="$(
-    echo "$remotes" |
-    grep HEAD |
-    cut -f1
-  )"
-  local branch="$(
-    echo "$remotes" |
-    grep "$commit" |
-    grep -v HEAD |
-    head -n1 |
-    cut -f2
-  )"
-  [[ "$branch" =~ refs/heads/ ]] ||
-    error "Problem finding remote default head branch."
-  output="${branch#refs/heads/}"
-}
+#------------------------------------------------------------------------------
+# State file (`.gitrepo`) functions:
+#------------------------------------------------------------------------------
 
 # Set subdir and gitrepo vars:
 read-gitrepo-file() {
@@ -883,30 +864,9 @@ update-gitrepo-file() {
   RUN git config --file="$gitrepo" subrepo.cmdver "$VERSION"
 }
 
-# Commit msg for an action commit:
-action-message() {
-  local commit="$(git rev-parse --short "$upstream_head")"
-  local args=()
-  if $all_wanted; then
-    args+=("$subdir")
-  fi
-  args+=(${command_arguments[@]})
-  cat <<...
-git subrepo $command ${args[@]}
-
-{"local":
-  {"subdir":  "$subdir"
-  ,"action":  "$command"}
-,"remote":
-  {"url":     "$subrepo_remote"
-  ,"branch":  "$subrepo_branch"
-  ,"commit":  "$commit"}
-,"git-subrepo":
-  {"version": "$VERSION"
-  ,"commit":  "$command_commit"
-  ,"origin":  "$command_remote"}}
-...
-}
+#------------------------------------------------------------------------------
+# Enviroment checks:
+#------------------------------------------------------------------------------
 
 # Check that system is ok for this command:
 assert-environment-ok() {
@@ -918,49 +878,11 @@ assert-environment-ok() {
   fi
 }
 
-get-command-info() {
-  local bin="$0"
-  if [[ "$bin" =~ / ]]; then
-    local lib="$(dirname "$bin")"
-    if [ -e "$lib/git-subrepo.d/remote" ] &&
-       [ -e "$lib/git-subrepo.d/commit" ]; then
-      command_remote=$(readlink "$lib/git-subrepo.d/remote")
-      command_commit=$(readlink "$lib/git-subrepo.d/commit")
-    elif [[ "$lib" =~ / ]]; then
-      lib="$(dirname "$lib")"
-      if [ -d "$lib/.git" ]; then
-        local remote="$(
-          GIT_DIR=$lib/.git git remote -v |
-            grep '^origin' |
-            head -n1 |
-            cut -f2 |
-            cut -d ' ' -f1
-        )"
-        if [ -n "$remote" ]; then
-          command_remote="$remote"
-        else
-          local remote="$(
-            GIT_DIR=$lib/.git git remote -v |
-              head -n1 |
-              cut -f2 |
-              cut -d ' ' -f1
-          )"
-          if [ -n "$remote" ]; then
-            command_remote="$remote"
-          fi
-        fi
-        GIT_DIR="$lib/.git" OUT=true RUN git rev-parse --short HEAD
-        commit="$output"
-        if [ -n "$commit" ]; then
-          command_commit="$commit"
-        fi
-      fi
-    fi
-  fi
-}
-
 # Make sure git repo is ready:
 assert-repo-is-ready() {
+  # Skip this for trivial info commands:
+  [[ "$command" =~ ^(help|version)$ ]] && return
+
   # We must be inside a git repo:
   git rev-parse --git-dir &> /dev/null ||
     error "Not inside a git repository."
@@ -1030,6 +952,10 @@ assert-subdir-empty() {
   fi
 }
 
+#------------------------------------------------------------------------------
+# Getters of various information:
+#------------------------------------------------------------------------------
+
 get-all-subrepos() {
   local paths=($(
     find . -name '.gitrepo' |
@@ -1050,6 +976,79 @@ add-subrepo() {
     [[ "$1" =~ ^$path ]] && return
   done
   subrepos+=("$1")
+}
+
+get-mainline-branch() {
+  git:get-mainline-branch-name
+  [ -n "$output" ] ||
+    error "Can't determine mainline branch."
+  branch="$output"
+}
+
+# Determine the upstream's default head branch:
+get-upstream-head-branch() {
+  OUT=true RUN git ls-remote $subrepo_remote
+  local remotes="$output"
+  [ -n "$remotes" ] ||
+    error "Failed to 'git ls-remote $subrepo_remote'."
+  local commit="$(
+    echo "$remotes" |
+    grep HEAD |
+    cut -f1
+  )"
+  local branch="$(
+    echo "$remotes" |
+    grep "$commit" |
+    grep -v HEAD |
+    head -n1 |
+    cut -f2
+  )"
+  [[ "$branch" =~ refs/heads/ ]] ||
+    error "Problem finding remote default head branch."
+  output="${branch#refs/heads/}"
+}
+
+get-command-info() {
+  local bin="$0"
+  if [[ "$bin" =~ / ]]; then
+    local lib="$(dirname "$bin")"
+    # XXX Makefile needs to install these symlinks:
+    # If `git-subrepo` was system-installed (`make install`):
+    if [ -e "$lib/git-subrepo.d/remote" ] &&
+       [ -e "$lib/git-subrepo.d/commit" ]; then
+      command_remote=$(readlink "$lib/git-subrepo.d/remote")
+      command_commit=$(readlink "$lib/git-subrepo.d/commit")
+    elif [[ "$lib" =~ / ]]; then
+      lib="$(dirname "$lib")"
+      if [ -d "$lib/.git" ]; then
+        local remote="$(
+          GIT_DIR=$lib/.git git remote -v |
+            grep '^origin' |
+            head -n1 |
+            cut -f2 |
+            cut -d ' ' -f1
+        )"
+        if [ -n "$remote" ]; then
+          command_remote="$remote"
+        else
+          local remote="$(
+            GIT_DIR=$lib/.git git remote -v |
+              head -n1 |
+              cut -f2 |
+              cut -d ' ' -f1
+          )"
+          if [ -n "$remote" ]; then
+            command_remote="$remote"
+          fi
+        fi
+        GIT_DIR="$lib/.git" OUT=true RUN git rev-parse --short HEAD
+        commit="$output"
+        if [ -n "$commit" ]; then
+          command_commit="$commit"
+        fi
+      fi
+    fi
+  fi
 }
 
 # Writes best common-ancestor to $subrepo_parent
@@ -1133,7 +1132,7 @@ get-last-original-head-branch-subrepo-log-hash() {
     --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
   if [ -z "$output" ]; then
     # TODO: "subrepo clone.*$subdir" should better match what is written by
-    # action-message()"
+    # subrepo:commit-message()"
     FAIL=false OUT=true RUN git log \
       --grep="subrepo clone.*$subdir" -n 1 --pretty="format:%H"
   fi
@@ -1153,13 +1152,44 @@ get-last-subrepo-merge-log-entry() {
     # The user hadn't pushed/pulled $subdir before, so they must have only
     # cloned.
     # TODO: "subrepo clone.*$subdir" should better match what is written by
-    # action-message()"
+    # subrepo:commit-message()"
     FAIL=false OUT=true RUN git log \
       --grep="subrepo clone.*$subdir" -n 1 --pretty="format:%H"
   fi
 }
 
-# Smart command runner
+#------------------------------------------------------------------------------
+# Git command wrappers:
+#------------------------------------------------------------------------------
+
+git:branch-exists() {
+  local branch="$1"
+  git show-ref --verify --quiet "refs/heads/$branch"
+}
+
+git:get-head-branch-name() {
+  output=
+  local name="$(git rev-parse --abbrev-ref HEAD)"
+  [ "$name" == HEAD ] && return
+  output="$name"
+}
+
+git:get-head-branch-commit() {
+  output="$(git rev-parse HEAD)"
+}
+
+git:get-mainline-branch-name() {
+  output=
+  local name="$(git rev-parse --abbrev-ref subrepo/mainline 2>/dev/null)"
+  [ "$name" == subrepo/mainline ] && return
+  output="$name"
+}
+
+#------------------------------------------------------------------------------
+# Low level sugar commands:
+#------------------------------------------------------------------------------
+
+# Smart command runner:
 RUN() {
   $verbose_wanted && $SAY && say '>>>' $*
   if $EXEC; then
