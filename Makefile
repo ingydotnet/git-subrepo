@@ -79,7 +79,7 @@ uninstall-doc:
 .PHONY: doc
 update: doc compgen
 
-doc: $(MAN1)/$(NAME).1
+doc: $(MAN1)/$(NAME).1 Intro.pod
 
 compgen:
 	perl pkg/bin/generate-completion.pl $(DOC) > \
@@ -94,6 +94,8 @@ $(MAN1)/$(NAME).1: $(NAME).1
 ReadMe.pod: $(DOC)
 	swim --to=pod --wrap --complete $< > $@
 
+Intro.pod: doc/intro-to-subrepo.swim
+	swim --to=pod --wrap --complete $< > $@
 
 clean purge:
 	rm -fr tmp
