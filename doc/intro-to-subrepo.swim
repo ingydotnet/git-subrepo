@@ -226,7 +226,7 @@ Good:
 * Bash code is very simple and easy to follow.
 * Comprehensive test suite. Currently passing on travis:
 
-<badge travis ingydotnet/gitsubrepo>
+<badge travis ingydotnet/git-subrepo>
 
 Bad:
 * --Subrepo is very new.-- (no longer true)
