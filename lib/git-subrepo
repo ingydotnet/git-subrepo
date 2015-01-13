@@ -128,22 +128,8 @@ main() {
 command:clone() {
   command-setup +subrepo_remote subdir:guess-subdir
 
-  # Fetch the upstream subrepo content to clone:
-  subrepo:fetch
-
-  # Make subdir for clone:
-  RUN mkdir -p "$subdir"
-
-  # Put remote subrepo content in subdir:
-  GIT_WORK_TREE="$subdir" RUN git reset --hard "$upstream_head"
-
-  # Set old head ref:
-  RUN git update-ref \
-    "refs/heads/$original_head_branch" \
-    "$original_head_commit"
-
-  # Reset to old ref:
-  RUN git reset --hard "$original_head_branch"
+  # "clone" the subrepo into the subdir:
+  subrepo:clone
 
   # Add a new .gitrepo file:
   update-gitrepo-file
@@ -407,6 +393,25 @@ Git Version: $git_version
 #------------------------------------------------------------------------------
 # Subrepo command guts functions:
 #------------------------------------------------------------------------------
+
+subrepo:clone() {
+  # Fetch the upstream subrepo content to clone:
+  subrepo:fetch
+
+  # Make subdir for clone:
+  RUN mkdir -p "$subdir"
+
+  # Put remote subrepo content in subdir:
+  GIT_WORK_TREE="$subdir" RUN git reset --hard "$upstream_head"
+
+  # Set old head ref:
+  RUN git update-ref \
+    "refs/heads/$original_head_branch" \
+    "$original_head_commit"
+
+  # Reset to old ref:
+  RUN git reset --hard "$original_head_branch"
+}
 
 # Fetch the subrepo's remote branch content:
 subrepo:fetch() {
@@ -1040,8 +1045,7 @@ get-command-info() {
             command_remote="$remote"
           fi
         fi
-        GIT_DIR="$lib/.git" OUT=true RUN git rev-parse --short HEAD
-        commit="$output"
+        commit="$(GIT_DIR="$lib/.git" git rev-parse --short HEAD)"
         if [ -n "$commit" ]; then
           command_commit="$commit"
         fi
