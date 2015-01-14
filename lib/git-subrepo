@@ -154,7 +154,7 @@ command:pull() {
 
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit" ]; then
-    say "subrepo '$subdir' is up to date"
+    say "Subrepo '$subdir' is up to date"
     return
   fi
 
@@ -182,7 +182,9 @@ command:pull() {
   RUN git merge --no-ff \
     -s recursive -X subtree="$subdir" -X patience "$update_commit"
 
-  OK || { say "git subrepo '$subdir' failed to complete pull"; return; }
+  OK ||
+    error "Failed to pull '$subdir'."
+
   # Now, if our subrepo pull has the same parent as the merge commit (i.e.
   # HEAD^ equals HEAD^2^) then we don't need to clean
   OUT=true RUN git rev-parse HEAD^
@@ -245,7 +247,8 @@ command:push() {
       FAIL=false RUN git rebase \
         --onto "$upstream_head" "$output" "$checkout_branch"
     else
-      say "Unable to rebase changes from local branch onto subrepo origin as git log entry of last $subdir clone/merge wasn't found."
+      err "Unable to rebase changes from local branch onto subrepo origin."
+      err "Git log entry of previous $subdir clone/merge wasn't found."
       OK=false
     fi
   fi
@@ -257,9 +260,9 @@ command:push() {
   fi
 
   if ! OK; then
-    say "The subrepo push command failed to rebase to upstream."
-    say "Try 'git subrepo checkout', and then merge by hand."
-    say "See doc for more info: 'git subrepo help'."
+    err "The subrepo push command failed to rebase to upstream."
+    err "Try 'git subrepo checkout', and then merge by hand."
+    err "See doc for more info: 'git subrepo help'."
     return
   fi
 
@@ -404,14 +407,14 @@ subrepo:clone() {
   # Put remote subrepo content in subdir:
   GIT_WORK_TREE="$subdir" RUN git reset --hard "$upstream_head"
 
-  # Reset to original commit:
-  RUN git reset --hard "$original_head_commit"
+  # Reset index to original commit:
+  RUN git reset --mixed "$original_head_commit"
 
   # Add a new .gitrepo file:
   update-gitrepo-file
 
   # Add the subdir content to mainline index:
-  RUN git add "$subdir"
+  RUN git add -A "$subdir"
 
   # Commit this subrepo clone:
   RUN git commit -m "$(subrepo:commit-message)"
@@ -653,6 +656,10 @@ git subrepo $command ${args[@]}
 #------------------------------------------------------------------------------
 # Support functions:
 #------------------------------------------------------------------------------
+
+# TODO:
+# Collect original options and arguments into an array for commit message
+#   They should be normalized and pruned
 
 # Parse command line options:
 get-command-options() {
@@ -1057,7 +1064,7 @@ get-command-info() {
             command_remote="$remote"
           fi
         fi
-        commit="$(GIT_DIR="$lib/.git" git rev-parse --short HEAD)"
+        local commit="$(GIT_DIR="$lib/.git" git rev-parse --short HEAD)"
         if [ -n "$commit" ]; then
           command_commit="$commit"
         fi
@@ -1088,7 +1095,7 @@ get-best-common-ancestor-for-merge() {
   OUT=true RUN git mktree < \
     <(git ls-tree "$subrepo_parent:$subdir" | sed -r '/^.*\.gitrepo.*$/d')
   if [ -z $output ]; then
-    say "Failed to obtain tree-id of $subdir in relevant clone/pull commit object without .gitrepo file"
+    err "Failed to obtain tree-id of $subdir in relevant clone/pull commit object without .gitrepo file."
     return
   fi
   outer_loop_term_tree="$output"
@@ -1122,7 +1129,7 @@ get-best-common-ancestor-for-merge() {
       OUT=true RUN git mktree < \
         <(git ls-tree "$i:$subdir" | sed -r '/^.*\.gitrepo.*$/d')
       if [ -z "$output" ]; then
-        say "Failed to obtain tree-id of $subdir in $i without .gitrepo file"
+        err "Failed to obtain tree-id of $subdir in $i without .gitrepo file."
         continue
       fi
       if [ "$output" = "$o" ]; then
@@ -1154,7 +1161,7 @@ get-last-original-head-branch-subrepo-log-hash() {
   if [ -n "$output" ]; then
     subrepo_parent="$output" # AKA common-ancestor for merge to be done soon.
   else
-    say "Failed to obtain last subrepo log entry."
+    err "Failed to obtain last subrepo log entry."
   fi
 }
 
