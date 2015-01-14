@@ -35,6 +35,13 @@ clone-foo-and-bar() {
   ) &> /dev/null || die
 }
 
+subrepo-clone-bar-into-foo() {
+  (
+    cd $OWNER/foo
+    git subrepo clone ../../../$UPSTREAM/bar
+  ) &> /dev/null || die
+}
+
 add-new-files() {
   local file
   for file in $*; do

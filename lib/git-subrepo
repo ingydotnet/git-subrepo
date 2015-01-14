@@ -307,10 +307,8 @@ command:checkout() {
   command-setup +subdir
   $fetch_wanted && subrepo:fetch
 
-  subrepo:branch
-
   local branch="subrepo/$subdir"
-  RUN git checkout "$branch"
+  subrepo:checkout
 
   say "Switched to branch '$branch'"
 }
@@ -493,6 +491,12 @@ subrepo:branch() {
 
   # Reset to the branch where we started:
   RUN git reset --hard "$original_head_commit"
+}
+
+subrepo:checkout() {
+  subrepo:branch
+
+  RUN git checkout --quiet "$branch"
 }
 
 subrepo:status() {
