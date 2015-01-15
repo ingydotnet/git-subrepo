@@ -322,9 +322,11 @@ command:commit() {
 command:reset() {
   $in_subrepo ||
     error "Can't 'subrepo reset'. Subrepo branch not checked out."
+
   get-params branch:get-mainline-branch
-  RUN git checkout "$branch"
-  RUN git reset --hard "$branch"
+
+  subrepo:reset
+
   say "Reset to branch '$branch'"
 }
 
@@ -497,6 +499,11 @@ subrepo:checkout() {
   subrepo:branch
 
   RUN git checkout --quiet "$branch"
+}
+
+subrepo:reset() {
+  RUN git checkout --quiet "$branch"
+  RUN git reset --hard "$branch"
 }
 
 subrepo:status() {
