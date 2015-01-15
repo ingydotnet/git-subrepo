@@ -929,7 +929,7 @@ assert-repo-is-ready() {
     git:get-mainline-branch-name
     if [ "$output" != "$original_head_branch" ]; then
       RUN git symbolic-ref \
-        "refs/subrepo/mainline" \
+        "SUBREPO_ORIG_HEAD" \
         "refs/heads/$original_head_branch"
     fi
   fi
@@ -1206,8 +1206,8 @@ git:get-head-branch-commit() {
 
 git:get-mainline-branch-name() {
   output=
-  local name="$(git rev-parse --abbrev-ref subrepo/mainline 2>/dev/null)"
-  [ "$name" == subrepo/mainline ] && return
+  local name="$(git rev-parse --abbrev-ref SUBREPO_ORIG_HEAD 2>/dev/null)"
+  [ "$name" == SUBREPO_ORIG_HEAD ] && return
   output="$name"
 }
 
