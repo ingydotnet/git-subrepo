@@ -124,7 +124,7 @@ clone-foo-and-bar
       cd $OWNER/bar
       git subrepo --quiet clone ../../../$UPSTREAM/foo
       git subrepo --quiet checkout foo
-      rm -fr .git/refs/subrepo/mainline
+      rm -fr .git/SUBREPO_ORIG_HEAD
       catch git subrepo reset
     )" \
     "git-subrepo: Can't determine mainline branch." \
