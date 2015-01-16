@@ -90,9 +90,7 @@
 \&
 \&    git subrepo fetch <subdir>
 \&    git subrepo branch <subdir>
-\&    git subrepo checkout <subdir>
 \&    git subrepo commit <subdir>
-\&    git subrepo reset [<branch>]
 \&
 \&    git subrepo status [<subdir>]
 \&    git subrepo log <subdir>
@@ -209,11 +207,7 @@ The \f(CW\*(C`pull\*(C'\fR command will attempt to do the following commands in 
 .IP "\(bu" 4
 \&\f(CW\*(C`git subrepo branch <subdir>\*(C'\fR
 .IP "\(bu" 4
-\&\f(CW\*(C`git checkout subrepo/<subdir>\*(C'\fR
-.IP "\(bu" 4
-\&\f(CW\*(C`git merge \-s <strategy> refs/subrepo/remote/<subdir>\*(C'\fR
-.IP "\(bu" 4
-\&\f(CW\*(C`git subrepo reset\*(C'\fR
+\&\f(CW\*(C`git subrepo rebase <subdir>\*(C'\fR
 .IP "\(bu" 4
 \&\f(CW\*(C`git subrepo commit <subdir>\*(C'\fR
 .RE
@@ -281,46 +275,17 @@ Scan the history of the mainline for all the commits that affect the \f(CW\*(C`s
 (since the last subrepo pull or clone) and create a new branch from them
 called \f(CW\*(C`subrepo/<subdir>\*(C'\fR.
 .Sp
-This is useful for doing \f(CW\*(C`pull\*(C'\fR and \f(CW\*(C`push\*(C'\fR commands by hand. The \f(CW\*(C`checkout\*(C'\fR
-command uses this command if the branch doesn't already exist (and then does a
-\&\f(CW\*(C`git checkout\*(C'\fR on it).
+This is useful for doing \f(CW\*(C`pull\*(C'\fR and \f(CW\*(C`push\*(C'\fR commands by hand.
 .Sp
 The \f(CW\*(C`branch\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR option.
-.ie n .IP """git subrepo checkout <subdir>""" 4
-.el .IP "\f(CWgit subrepo checkout <subdir>\fR" 4
-.IX Item "git subrepo checkout <subdir>"
-Shorthand for the following 2 commands:
-.Sp
-.Vb 2
-\&    git subrepo branch <subdir>
-\&    git checkout subrepo/<subdir>
-.Ve
-.Sp
-The \f(CW\*(C`checkout\*(C'\fR command accepts the \f(CW\*(C`\-\-fetch\*(C'\fR option.
 .ie n .IP """git subrepo commit <subdir>""" 4
 .el .IP "\f(CWgit subrepo commit <subdir>\fR" 4
 .IX Item "git subrepo commit <subdir>"
 Take a properly merged subrepo branch and add it as a single commit.
 .Sp
 This command is generally used after a hand-merge. You have done a \f(CW\*(C`subrepo
-checkout\*(C'\fR and merged it with the upstream. This command takes the \s-1HEAD\s0 of that
+branch\*(C'\fR and merged it with the upstream. This command takes the \s-1HEAD\s0 of that
 branch and adds it to the top of your mainline history.
-.ie n .IP """git subrepo reset [<branch>]""" 4
-.el .IP "\f(CWgit subrepo reset [<branch>]\fR" 4
-.IX Item "git subrepo reset [<branch>]"
-Checkout and reset to the mainline branch.
-.Sp
-When you do a \f(CW\*(C`subrepo checkout\*(C'\fR from a non-subrepo branch, that branch and
-its \s-1HEAD\s0 are saved. This command will reset to those values. This just saves
-you the trouble of remembering where you started when you are done with a
-subrepo branch.
-.Sp
-This is the same as:
-.Sp
-.Vb 2
-\&    git reset \-\-hard <branch>
-\&    git checkout <branch>
-.Ve
 .ie n .IP """git subrepo status [<subdir>] [\-\-quiet]""" 4
 .el .IP "\f(CWgit subrepo status [<subdir>] [\-\-quiet]\fR" 4
 .IX Item "git subrepo status [<subdir>] [--quiet]"

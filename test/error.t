@@ -28,15 +28,6 @@ clone-foo-and-bar
 {
   is "$(
       cd $OWNER/bar
-      catch git subrepo reset
-    )" \
-    "git-subrepo: Can't 'subrepo reset'. Subrepo branch not checked out." \
-    "Error OK: can't reset unless subrepo checked out"
-}
-
-{
-  is "$(
-      cd $OWNER/bar
       git subrepo --quiet clone ../../../$UPSTREAM/foo
       git subrepo --quiet clean foo
       catch git subrepo log foo
@@ -91,7 +82,7 @@ clone-foo-and-bar
 
 {
   # XXX add 'commit' to cmds here when implemented:
-  for cmd in pull push fetch branch checkout log clean; do
+  for cmd in pull push fetch branch log clean; do
     is "$(
         cd $OWNER/bar
         catch git subrepo $cmd
@@ -122,25 +113,6 @@ clone-foo-and-bar
 {
   is "$(
       cd $OWNER/bar
-      git subrepo --quiet clone ../../../$UPSTREAM/foo
-      git subrepo --quiet checkout foo
-      rm -fr .git/SUBREPO_ORIG_HEAD
-      catch git subrepo reset
-    )" \
-    "git-subrepo: Can't determine mainline branch." \
-    "Error OK: reset fails if no mainline ref"
-
-  (
-    cd $OWNER/bar
-    git subrepo --quiet reset master
-    git subrepo --quiet clean foo
-    git reset --quiet --hard HEAD^
-  )
-}
-
-{
-  is "$(
-      cd $OWNER/bar
       catch git subrepo pull lala
     )" \
     "git-subrepo: 'lala' is not a subrepo." \
@@ -153,11 +125,12 @@ clone-foo-and-bar
   (
     cd $OWNER/bar
     git subrepo --quiet clone ../../../$UPSTREAM/foo
-    git subrepo --quiet checkout foo
+    git subrepo --quiet branch foo
+    git checkout --quiet subrepo/foo
   )
 
   # Test that certain commands don't run inside a subrepo branch:
-  for cmd in clone pull push branch checkout clean; do
+  for cmd in clone pull push branch clean; do
     is "$(
         cd $OWNER/bar
         catch git subrepo $cmd
@@ -178,7 +151,7 @@ clone-foo-and-bar
 
   (
     cd $OWNER/bar
-    git subrepo --quiet reset
+    git checkout --quiet master
     git subrepo --quiet clean foo
     git reset --quiet --hard HEAD^
   )
@@ -249,6 +222,6 @@ clone-foo-and-bar
     "Error OK: clone non-repo"
 }
 
-done_testing 36
+done_testing 32
 
 teardown
