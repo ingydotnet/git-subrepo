@@ -71,7 +71,7 @@
 .\" ========================================================================
 .\"
 .IX Title "README 1"
-.TH README 1 "2015-01-12" "perl v5.18.1" "User Contributed Perl Documentation"
+.TH README 1 "2015-01-15" "perl v5.18.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -172,8 +172,8 @@ The complete \*(L"Installation Instructions\*(R" can be found below.
 .SH "Commands"
 .IX Header "Commands"
 All the \fBsubrepo\fR commands use names of actual Git commands and try to do
-similar operations to their Git counterparts. They also attempt to give
-similar output in an attempt to make the subrepo usage intuitive to
+operations that are similar to their Git counterparts. They also attempt to
+give similar output in an attempt to make the subrepo usage intuitive to
 experienced Git users.
 .PP
 Please note that the commands are \fInot\fR exact equivalents, and do not take
@@ -197,10 +197,10 @@ All subsequent commands refer to the subrepo by the name of the
 can be obtained.
 .Sp
 The \f(CW\*(C`clone\*(C'\fR command accepts the \f(CW\*(C`\-\-branch=\*(C'\fR option.
-.ie n .IP """git subrepo pull <subdir>|\-\-all [\-\-<strategy>] [\-b <branch>] [\-r <remote>] [\-u]""" 4
-.el .IP "\f(CWgit subrepo pull <subdir>|\-\-all [\-\-<strategy>] [\-b <branch>] [\-r <remote>] [\-u]\fR" 4
-.IX Item "git subrepo pull <subdir>|--all [--<strategy>] [-b <branch>] [-r <remote>] [-u]"
-Update the subrepo subdir with the latest remote changes.
+.ie n .IP """git subrepo pull <subdir>|\-\-all [\-s <strategy>] [\-b <branch>] [\-r <remote>] [\-u]""" 4
+.el .IP "\f(CWgit subrepo pull <subdir>|\-\-all [\-s <strategy>] [\-b <branch>] [\-r <remote>] [\-u]\fR" 4
+.IX Item "git subrepo pull <subdir>|--all [-s <strategy>] [-b <branch>] [-r <remote>] [-u]"
+Update the subrepo subdir with the latest upstream changes.
 .Sp
 The \f(CW\*(C`pull\*(C'\fR command will attempt to do the following commands in one go:
 .RS 4
@@ -239,7 +239,7 @@ strategy=\*(C'\fR and \f(CW\*(C`\-\-update\*(C'\fR options.
 .ie n .IP """git subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]""" 4
 .el .IP "\f(CWgit subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]\fR" 4
 .IX Item "git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]"
-Merge local changes on top of the upstream branch, and push upstream.
+Merge local changes onto upstream branch, and push upstream.
 .Sp
 We fetch the upstream remote, rebase or merge on top of that head, and push
 back to the remote. Effectively we do these commands:
@@ -275,10 +275,11 @@ remote=\*(C'\fR options.
 .ie n .IP """git subrepo branch <subdir>|\-\-all""" 4
 .el .IP "\f(CWgit subrepo branch <subdir>|\-\-all\fR" 4
 .IX Item "git subrepo branch <subdir>|--all"
-Create a branch \f(CW\*(C`subrepo/<subdir>\*(C'\fR with all the subrepo commits.
+Create a branch with local subrepo commits since last pull.
 .Sp
 Scan the history of the mainline for all the commits that affect the \f(CW\*(C`subdir\*(C'\fR
-(since the last subrepo pull or clone) and create a new branch from them.
+(since the last subrepo pull or clone) and create a new branch from them
+called \f(CW\*(C`subrepo/<subdir>\*(C'\fR.
 .Sp
 This is useful for doing \f(CW\*(C`pull\*(C'\fR and \f(CW\*(C`push\*(C'\fR commands by hand. The \f(CW\*(C`checkout\*(C'\fR
 command uses this command if the branch doesn't already exist (and then does a
