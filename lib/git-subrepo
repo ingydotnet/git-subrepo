@@ -468,16 +468,27 @@ subrepo:fetch() {
   true    # This is actually needed.
 }
 
-# Create a subrepo branch of changes since last push:
+# Create a subrepo branch of changes since last pull:
 subrepo:branch() {
   local branch="subrepo/$subdir"
   git:branch-exists "$branch" && return
 
-  # TODO Actually only filter commits since last push.
-  # Make history of subdir changes:
+  # Find the commit of the last pull. The one after its recorded parent:
+  local start_commit="$(
+    git log --format=%P$'\t'%H | grep "^$subrepo_parent" | cut -f2
+  )"
+  [ -n "$start_commit" ] ||
+    error "Can't find previous pull commit"
+
+  # Remove commits before last pull:
+  RUN git filter-branch --force \
+    --parent-filter "grep -v $start_commit || true" \
+    -- "$start_commit"^..HEAD
+
+  # Get commits specific to the subdir:
   RUN git filter-branch -f \
     --subdirectory-filter "$subdir" \
-    -- HEAD
+    HEAD
 
   # Remove the .gitrepo file from the history:
   RUN git filter-branch -f \
