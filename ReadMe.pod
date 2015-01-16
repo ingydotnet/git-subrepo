@@ -114,8 +114,8 @@ The complete "Installation Instructions" can be found below.
 =head1 Commands
 
 All the B<subrepo> commands use names of actual Git commands and try to do
-similar operations to their Git counterparts. They also attempt to give
-similar output in an attempt to make the subrepo usage intuitive to
+operations that are similar to their Git counterparts. They also attempt to
+give similar output in an attempt to make the subrepo usage intuitive to
 experienced Git users.
 
 Please note that the commands are I<not> exact equivalents, and do not take
@@ -142,9 +142,9 @@ can be obtained.
 
 The C<clone> command accepts the C<--branch=> option.
 
-=item C<< git subrepo pull <subdir>|--all [--<strategy>] [-b <branch>] [-r <remote>] [-u] >>
+=item C<< git subrepo pull <subdir>|--all [-s <strategy>] [-b <branch>] [-r <remote>] [-u] >>
 
-Update the subrepo subdir with the latest remote changes.
+Update the subrepo subdir with the latest upstream changes.
 
 The C<pull> command will attempt to do the following commands in one go:
 
@@ -183,7 +183,7 @@ strategy=> and C<--update> options.
 
 =item C<< git subrepo push <subdir>|--all [-r <remote>] [-b <branch>] >>
 
-Merge local changes on top of the upstream branch, and push upstream.
+Merge local changes onto upstream branch, and push upstream.
 
 We fetch the upstream remote, rebase or merge on top of that head, and push
 back to the remote. Effectively we do these commands:
@@ -219,10 +219,11 @@ remote=> options.
 
 =item C<< git subrepo branch <subdir>|--all >>
 
-Create a branch C<< subrepo/<subdir> >> with all the subrepo commits.
+Create a branch with local subrepo commits since last pull.
 
 Scan the history of the mainline for all the commits that affect the C<subdir>
-(since the last subrepo pull or clone) and create a new branch from them.
+(since the last subrepo pull or clone) and create a new branch from them
+called C<< subrepo/<subdir> >>.
 
 This is useful for doing C<pull> and C<push> commands by hand. The C<checkout>
 command uses this command if the branch doesn't already exist (and then does a

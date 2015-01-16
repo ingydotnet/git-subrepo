@@ -78,8 +78,8 @@ The complete "Installation Instructions" can be found below.
 = Commands
 
 All the *subrepo* commands use names of actual Git commands and try to do
-similar operations to their Git counterparts. They also attempt to give
-similar output in an attempt to make the subrepo usage intuitive to
+operations that are similar to their Git counterparts. They also attempt to
+give similar output in an attempt to make the subrepo usage intuitive to
 experienced Git users.
 
 Please note that the commands are /not/ exact equivalents, and do not take all
@@ -104,9 +104,9 @@ the same arguments. Keep reading…
 
   The `clone` command accepts the `--branch=` option.
 
-- `git subrepo pull <subdir>|--all [--<strategy>] [-b <branch>] [-r <remote>] [-u]`
+- `git subrepo pull <subdir>|--all [-s <strategy>] [-b <branch>] [-r <remote>] [-u]`
 
-  Update the subrepo subdir with the latest remote changes.
+  Update the subrepo subdir with the latest upstream changes.
 
   The `pull` command will attempt to do the following commands in one go:
 
@@ -136,7 +136,7 @@ the same arguments. Keep reading…
 
 - `git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]`
 
-  Merge local changes on top of the upstream branch, and push upstream.
+  Merge local changes onto upstream branch, and push upstream.
 
   We fetch the upstream remote, rebase or merge on top of that head, and push
   back to the remote. Effectively we do these commands:
@@ -165,11 +165,11 @@ the same arguments. Keep reading…
 
 - `git subrepo branch <subdir>|--all`
 
-  Create a branch `subrepo/<subdir>` with all the subrepo commits.
+  Create a branch with local subrepo commits since last pull.
 
   Scan the history of the mainline for all the commits that affect the
   `subdir` (since the last subrepo pull or clone) and create a new branch from
-  them.
+  them called `subrepo/<subdir>`.
 
   This is useful for doing `pull` and `push` commands by hand. The `checkout`
   command uses this command if the branch doesn't already exist (and then does
