@@ -15,9 +15,7 @@ Git Submodule Alternative
 
   git subrepo fetch <subdir>
   git subrepo branch <subdir>
-  git subrepo checkout <subdir>
   git subrepo commit <subdir>
-  git subrepo reset [<branch>]
 
   git subrepo status [<subdir>]
   git subrepo log <subdir>
@@ -112,9 +110,7 @@ the same arguments. Keep reading…
 
   * `git subrepo fetch <subdir>`
   * `git subrepo branch <subdir>`
-  * `git checkout subrepo/<subdir>`
-  * `git merge -s <strategy> refs/subrepo/remote/<subdir>`
-  * `git subrepo reset`
+  * `git subrepo rebase <subdir>`
   * `git subrepo commit <subdir>`
 
   In other words, you could do all the above commands yourself, for the same
@@ -171,42 +167,17 @@ the same arguments. Keep reading…
   `subdir` (since the last subrepo pull or clone) and create a new branch from
   them called `subrepo/<subdir>`.
 
-  This is useful for doing `pull` and `push` commands by hand. The `checkout`
-  command uses this command if the branch doesn't already exist (and then does
-  a `git checkout` on it).
+  This is useful for doing `pull` and `push` commands by hand.
 
   The `branch` command accepts the `--all` option.
-
-- `git subrepo checkout <subdir>`
-
-  Shorthand for the following 2 commands:
-
-    git subrepo branch <subdir>
-    git checkout subrepo/<subdir>
-
-  The `checkout` command accepts the `--fetch` option.
 
 - `git subrepo commit <subdir>`
 
   Take a properly merged subrepo branch and add it as a single commit.
 
   This command is generally used after a hand-merge. You have done a `subrepo
-  checkout` and merged it with the upstream. This command takes the HEAD of
+  branch` and merged it with the upstream. This command takes the HEAD of
   that branch and adds it to the top of your mainline history.
-
-- `git subrepo reset [<branch>]`
-
-  Checkout and reset to the mainline branch.
-
-  When you do a `subrepo checkout` from a non-subrepo branch, that branch and
-  its HEAD are saved. This command will reset to those values. This just saves
-  you the trouble of remembering where you started when you are done with a
-  subrepo branch.
-
-  This is the same as:
-
-    git reset --hard <branch>
-    git checkout <branch>
 
 - `git subrepo status [<subdir>] [--quiet]`
 

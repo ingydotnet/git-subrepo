@@ -23,9 +23,7 @@ Commands:
 
   fetch     Fetch a subrepo's remote branch (and create a ref for it)
   branch    Create a branch containing the local subrepo commits
-  checkout  Checkout a subrepo branch (creating if necessary)
   commit    Commit a merged subrepo branch into the mainline
-  reset     Reset to the branch before a subrepo checkout
 
   status    Get status of a subrepo (or all of them)
   log       Show log of a subrepo's upstream history
@@ -65,7 +63,7 @@ main() {
   local quiet_wanted=false    # Output should be quiet
   local verbose_wanted=false  # Output should be verbose
   local all_wanted=false      # Apply command to all subrepos
-  local fetch_wanted=false    # Fetch requested for checkout
+  local fetch_wanted=false    # Fetch requested before a command
   local update_wanted=false   # Update .gitrepo with --branch and/or --remote
   local in_subrepo=false      # Subrepo is checked out
 
@@ -142,9 +140,7 @@ command:clone() {
 # TODO Command needs rewrite:
 # * `git subrepo fetch <subdir>`
 # * `git subrepo branch <subdir>`
-# * `git checkout subrepo/<subdir>`
 # * `git merge -s <strategy> refs/subrepo/remote/<subdir>`
-# * `git subrepo reset`
 # * `git subrepo commit <subdir>`
 command:pull() {
   command-setup +subdir
@@ -180,7 +176,7 @@ command:pull() {
 #   update_commit="$output"
 # 
 #   # TODO:
-#   # This merge can fail, so we need to checkout/merge/remerge instead.
+#   # This merge can fail, so we need to branch/merge/remerge instead.
 # 
 #   # Merge the update with the subtree strategy:
 #   RUN git merge --no-ff \
@@ -232,7 +228,7 @@ command:push() {
   # XXX Probably don't fetch on push.
   subrepo:fetch
 
-  # Checkout the subrepo to a branch:
+  # Make a branch for subrepo changes:
   subrepo:branch
 
   local checkout_branch="subrepo/$subdir"
@@ -306,32 +302,9 @@ command:branch() {
   say "Created branch 'subrepo/$subdir'"
 }
 
-# `git subrepo checkout <subdir>` command:
-command:checkout() {
-  command-setup +subdir
-  $fetch_wanted && subrepo:fetch
-
-  local branch="subrepo/$subdir"
-  subrepo:checkout
-
-  say "Switched to branch '$branch'"
-}
-
 # `git subrepo commit <subdir>` command
 command:commit() {
   error "The 'commit' command not yet implemented."
-}
-
-# `git subrepo reset [<branch>]` command
-command:reset() {
-  $in_subrepo ||
-    error "Can't 'subrepo reset'. Subrepo branch not checked out."
-
-  get-params branch:get-mainline-branch
-
-  subrepo:reset
-
-  say "Reset to branch '$branch'"
 }
 
 # `git subrepo status [<subdir>]` command:
@@ -509,7 +482,7 @@ subrepo:branch() {
   RUN git filter-branch -f \
     --tree-filter "rm -f .gitrepo"
 
-  # Create a branch for this checkout:
+  # Create a branch for this commit set:
   RUN git branch "$branch"
 
 #   # Graft subrepo branch to upstream:
@@ -519,17 +492,6 @@ subrepo:branch() {
 
   # Reset to the branch where we started:
   RUN git reset --hard "$original_head_commit"
-}
-
-subrepo:checkout() {
-  subrepo:branch
-
-  RUN git checkout --quiet "$branch"
-}
-
-subrepo:reset() {
-  RUN git checkout --quiet "$branch"
-  RUN git reset --hard "$branch"
 }
 
 subrepo:status() {
@@ -615,25 +577,10 @@ Subrepo '$in_subrepo_name' branch is currently checked out.
   got="$got$output"
   [ -z "$got" ] || echo
 
-  cat <<...
-To complete a by-hand "pull" of this subrepo:
-
-  *
-  *
-  *
-
-To complete a by-hand "push" of this subrepo:
-
-  *
-  *
-  *
-
-...
-
 [ -z "$mainline" ] || cat <<...
-To checkout and reset the '$mainline' branch:
+To checkout the '$mainline' branch:
 
-  git subrepo reset
+  git checkout $mainline
 
 ...
 }
@@ -775,7 +722,6 @@ options_clone='branch'
 options_pull='all branch remote strategy update'
 options_push='all branch remote strategy update'
 options_branch='all'
-options_checkout='fetch'
 options_fetch='all branch remote'
 # options_status='fetch'
 options_log='branch fetch remote'
@@ -990,7 +936,7 @@ assert-repo-is-ready() {
   RUN git rev-parse --verify HEAD
 
   # Repo is in a clean state:
-  if [[ "$command" =~ ^(clone|pull|push|checkout)$ ]]; then
+  if [[ "$command" =~ ^(clone|pull|push)$ ]]; then
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
       error "Can't $command subrepo. Unstaged changes."
@@ -1037,13 +983,6 @@ add-subrepo() {
     [[ "$1" =~ ^$path ]] && return
   done
   subrepos+=("$1")
-}
-
-get-mainline-branch() {
-  git:get-mainline-branch-name
-  [ -n "$output" ] ||
-    error "Can't determine mainline branch."
-  branch="$output"
 }
 
 # Determine the upstream's default head branch:

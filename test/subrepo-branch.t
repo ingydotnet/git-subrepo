@@ -29,7 +29,7 @@ done_testing
 teardown
 
 #### Note: 'clone' no longer makes branches and remotes. But these tests
-#### should be applied to checkout tests.
+#### should be applied to branch tests.
 # remote="$(
 #   cd $OWNER/foo
 #   git remote -v | grep 'subrepo/bar'

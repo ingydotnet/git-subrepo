@@ -12,7 +12,7 @@ subrepo-clone-bar-into-foo
 
 (
   cd $OWNER/foo
-  git subrepo --quiet checkout bar
+  git subrepo --quiet branch bar
 )
 
 test-exists \
@@ -22,7 +22,6 @@ test-exists \
 
 is "$(
   cd $OWNER/foo
-  git subrepo --quiet reset
   git subrepo clean bar
 )" \
   "Removed branch 'subrepo/bar'
