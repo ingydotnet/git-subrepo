@@ -92,7 +92,7 @@ main() {
   local FAIL=true             # Flag for RUN: fail on error
   local OUT=false             # Flag for RUN: put output in $output
   local SAY=true              # Flag for RUN: print command for verbose
-  local EXEC=false            # Flag for RUN: don't run subprocess
+  local EXEC=false            # Flag for RUN: run subprocess
 
   local git_version=          # Git version in use
 
