@@ -561,11 +561,11 @@ Git subrepo '$subdir':
     cat <<...
   Tracking Branch: $subrepo_branch
 ...
-    [ -n "$subrepo_parent" ] && cat <<...
-  Pulled Commit:   $(git rev-parse --short $subrepo_parent)
+    [ -n "$subrepo_commit" ] && cat <<...
+  Pulled Commit:   $(git rev-parse --short $subrepo_commit)
 ...
     cat <<...
-  Previous Pull:   $(git rev-parse --short $subrepo_commit)
+  Parent Commit:   $(git rev-parse --short $subrepo_parent)
 
 ...
   done
@@ -862,9 +862,8 @@ read-gitrepo-file() {
   SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.commit
   subrepo_commit="$output"
 
-  # XXX FAIL=false is a hack for missing 'former'
-  SAY=false FAIL=false OUT=true RUN git config \
-    --file="$gitrepo" subrepo.parent
+  FAIL=false \
+  SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
   subrepo_parent="$output"
 }
 
