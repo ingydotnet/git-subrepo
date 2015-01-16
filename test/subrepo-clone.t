@@ -40,26 +40,6 @@ gitrepo=$OWNER/foo/bar/.gitrepo
     "$gitrepo"
 }
 
-#### Note: 'clone' no longer makes branches and remotes. But these tests
-#### should be applied to checkout tests.
-# remote="$(
-#   cd $OWNER/foo
-#   git remote -v | grep 'subrepo/bar'
-#   true
-# )"
-# 
-# ok "`[ -n "$remote" ]`" \
-#   'subrepo/bar remote exists'
-# 
-# remote_branch="$(
-#   cd $OWNER/foo
-#   git branch -a | grep 'subrepo/remote/bar'
-#   true
-# )"
-# 
-# ok "`[ -n "$remote" ]`" \
-#   'subrepo/remote/bar branch exists'
-
 # Test foo/bar/.gitrepo file contents:
 {
   foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
