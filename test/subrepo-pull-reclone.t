@@ -16,16 +16,17 @@ clone-foo-and-bar
 test-exists \
   "$OWNER/foo/bar/bard/"
 
+export XYZ=1
 is "$(
   cd $OWNER/foo
-  git subrepo pull --strategy=reclone bar
+  git subrepo --force clone ../../../$UPSTREAM/bar
 )" \
   "Subrepo 'bar' is up to date" \
   "No reclone if same commit"
 
 (
   cd $OWNER/foo
-  git subrepo --quiet pull --strategy=reclone bar --branch=A
+  git subrepo --quiet clone --force ../../../$UPSTREAM/bar --branch=A
 )
 
 test-exists \
@@ -33,7 +34,7 @@ test-exists \
 
 (
   cd $OWNER/foo
-  git subrepo --quiet pull --strategy=reclone bar --branch=master
+  git subrepo --quiet clone -f ../../../$UPSTREAM/bar --branch=master
 )
 
 test-exists \

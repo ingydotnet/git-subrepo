@@ -26,7 +26,6 @@ Commands:
   commit    Commit a merged subrepo branch into the mainline
 
   status    Get status of a subrepo (or all of them)
-  log       Show log of a subrepo's upstream history
   clean     Remove branches, remotes and grafts for a subrepo
 
   help      Documentation for git-subrepo (or specfic command)
@@ -42,14 +41,14 @@ version     Print the git-subrepo version number
 
 a,all       Perform command on all current subrepos
 b,branch=   Specify an upstream branch
+f,force     Force certain operations
 F,fetch     Fetch the upstream content first
 r,remote=   Specify an upstream remote
-s,strategy= Specify a merge strategy
 u,update    Add the --branch and/or --remote overrides to .gitrepo
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
-x,debug     Turn on -x Bash debugging
+x,DEBUG     Turn on -x Bash debugging
 "
 
 #------------------------------------------------------------------------------
@@ -63,20 +62,16 @@ main() {
   local quiet_wanted=false    # Output should be quiet
   local verbose_wanted=false  # Output should be verbose
   local all_wanted=false      # Apply command to all subrepos
+  local force_wanted=false    # Force certain operations
   local fetch_wanted=false    # Fetch requested before a command
   local update_wanted=false   # Update .gitrepo with --branch and/or --remote
-  local in_subrepo=false      # Subrepo is checked out
 
   local subdir=               # Subdirectory of the subrepo being used
   local gitrepo=              # Path to .gitrepo file
-  local current_branch=       # Branch we were on at start of the command
-  local merge_strategy=       # Merge strategy to use
-  local in_subrepo_name=      # Name of subrepo that is checked out
 
   local original_head_commit= # HEAD commit id at start of command
   local original_head_branch= # HEAD ref at start of command
   local upstream_head=        # HEAD commit id from a subrepo fetch
-  local update_commit=        # Commit made for clone or pull
 
   local subrepo_remote=       # Remote url for subrepo's upstream repo
   local subrepo_branch=       # Upstream branch to clone/push/pull
@@ -126,27 +121,26 @@ main() {
 command:clone() {
   command-setup +subrepo_remote subdir:guess-subdir
 
-  # Fetch the upstream subrepo content to clone:
-  subrepo:fetch
-
-  # "clone" the subrepo into the subdir:
+  # (re)clone the subrepo into the subdir:
+  local command_done=false
   subrepo:clone
+  "$command_done" && return
 
   # Successful command output:
-  say "Subrepo '$subrepo_remote' ($subrepo_branch) cloned into '$subdir'"
+  local re=
+  $force_wanted && re=re
+  say "Subrepo '$subrepo_remote' ($subrepo_branch) ${re}cloned into '$subdir'"
 }
 
 # `git subrepo pull <subdir>` command:
-# TODO Command needs rewrite:
-# * `git subrepo fetch <subdir>`
-# * `git subrepo branch <subdir>`
-# * `git merge -s <strategy> refs/subrepo/remote/<subdir>`
-# * `git subrepo commit <subdir>`
 command:pull() {
   command-setup +subdir
 
-  # Fetch remote content:
-  subrepo:fetch
+# if remote ref exists
+#   say 'using remote ref'
+# else
+#   say 'fetching remote'
+#   fetch remote ref (at --branch)
 
   # Check if we already are up to date:
   if [ "$upstream_head" == "$subrepo_commit" ]; then
@@ -154,135 +148,38 @@ command:pull() {
     return
   fi
 
-  if [ "$merge_strategy" == reclone ]; then
-    subrepo:pull-reclone
-    say "Subrepo '$subdir' recloned from '$subrepo_remote' ($subrepo_branch)"
-    return
-  else
-    subrepo:pull
-    say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
-    return
-  fi
+# git subrepo branch --force <subdir>
+# if branch was created
+#   say the following rebase command
+#   git rebase remote-ref subrepo-branch --force-rebase
+#   # we are now in the subrepo branch
+#   if error
+#     say instructions
+#     say error output
+# else
+#   git branch subrepo/<subdir>
+#   git checkout subrepo/<subdir>
+#   git reset --hard remote-ref
+# git subrepo commit # no <subdir>
+# git checkout ORIG_HEAD
+# remove remote ref if we fetched during pull
 
-#   # Writes best common-ancestor to $subrepo_parent
-#   get-best-common-ancestor-for-merge
-# 
-#   OUT=true RUN git log --max-count=1 --format=%T "$upstream_head"
-# 
-#   # Create a new commit object from the upstream subrepo HEAD^{tree} with a
-#   # parent being the best common-ancestor just found:
-#   OUT=true RUN git commit-tree "$output" -p "$subrepo_parent" \
-#     -m "$(subrepo:commit-message)"
-#   update_commit="$output"
-# 
-#   # TODO:
-#   # This merge can fail, so we need to branch/merge/remerge instead.
-# 
-#   # Merge the update with the subtree strategy:
-#   RUN git merge --no-ff \
-#     -s recursive -X subtree="$subdir" -X patience "$update_commit"
-# 
-#   OK ||
-#     error "Failed to pull '$subdir'."
-# 
-#   # Now, if our subrepo pull has the same parent as the merge commit (i.e.
-#   # HEAD^ equals HEAD^2^) then we don't need to clean
-#   OUT=true RUN git rev-parse HEAD^
-#   local headparent="$output"
-#   OUT=true RUN git rev-parse HEAD^2^
-#   if [ "$headparent" != "$output" ]; then
-#     # Prune the merge history to keep things looking clean:
-#     RUN git filter-branch -f \
-#       --parent-filter "sed 's/ -p $subrepo_parent//'" \
-#       -- "$update_commit"^..HEAD ^HEAD^
-# 
-#     # The update_commit just got rewritten. Need new id:
-#     FAIL=false OUT=true RUN git rev-parse HEAD^2
-#     if ! OK; then
-#       # This bit helps when there is no second parent- which occurs in certain
-#       # workflows.
-#       FAIL=false OUT=true RUN git rev-parse HEAD
-#     fi
-#     update_commit="$output"
-#   fi
-# 
-#   # Update the subdir/.gitrepo file:
-#   update-gitrepo-file
-#   RUN git add "$gitrepo"
-#   RUN git commit --quiet --amend \
-#     --message="Merge subrepo commit '$(git rev-parse --short "$update_commit")'"
-# 
-#   # Successful command output:
-#   say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
+  say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
 }
 
 # `git subrepo push <subdir>` command:
-# TODO Command needs rewrite:
-# * `git subrepo fetch <subdir>`
-# * `git subrepo branch <subdir>`
-# * `git rebase refs/subrepo/remote/<subdir> subrepo/<subrepo>`
-# * `git push <remote> subrepo/<subrepo>`
 command:push() {
   command-setup +subdir
 
-  # XXX Probably don't fetch on push.
-  subrepo:fetch
-
-  # Make a branch for subrepo changes:
-  subrepo:branch
-
-  local checkout_branch="subrepo/$subdir"
-  RUN git checkout "$checkout_branch"
-
-  # Attempt to rebase changes onto upstream:
-  FAIL=false RUN git rebase "$upstream_head" "$checkout_branch"
-
-  if ! OK; then
-    # Let's rebase a bit more intelligently by using the log to see when the
-    # last clone/merge was.  Attempt to rebase A..$checkout_branch onto
-    # $upstream_head where A is last clone/merge log entry.
-    RUN git rebase --abort #Abort prior failed rebase.
-    get-last-subrepo-merge-log-entry
-    if [ -n "$output" ]; then
-      FAIL=false RUN git rebase \
-        --onto "$upstream_head" "$output" "$checkout_branch"
-    else
-      err "Unable to rebase changes from local branch onto subrepo origin."
-      err "Git log entry of previous $subdir clone/merge wasn't found."
-      OK=false
-    fi
-  fi
-
-  if OK; then
-    FAIL=false RUN git push \
-      "$subrepo_remote" \
-      "+$checkout_branch:$subrepo_branch"
-  fi
-
-  if ! OK; then
-    err "The subrepo push command failed to rebase to upstream."
-    err "Try 'git subrepo checkout', and then merge by hand."
-    err "See doc for more info: 'git subrepo help'."
-    return
-  fi
-
-  # Checkout starting branch:
-  RUN git checkout "$original_head_branch"
-
-  # Delete the checkout branch:
-  #RUN git branch -D "$checkout_branch"
+# git subrepo pull <subdir>
+# git push …
 
   say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
 # `git subrepo fetch <subdir>` command
 command:fetch() {
-  if $in_subrepo; then
-    local subdir="$in_subrepo_name"
-    command-setup
-  else
-    command-setup +subdir
-  fi
+  command-setup +subdir
   subrepo:fetch true
 }
 
@@ -291,9 +188,11 @@ command:branch() {
   command-setup +subdir
   $fetch_wanted && subrepo:fetch
 
+  # TODO Support force here
+
   local branch="subrepo/$subdir"
   if git:branch-exists "$branch"; then
-    error "Branch '$branch' already exists."
+    error "Branch '$branch' already exists. Use '--force' to override."
   fi
 
   # Create the subrepo branch:
@@ -304,52 +203,19 @@ command:branch() {
 
 # `git subrepo commit <subdir>` command
 command:commit() {
-  error "The 'commit' command not yet implemented."
+  command-setup +subdir
+  subrepo:commit
 }
 
 # `git subrepo status [<subdir>]` command:
-# TODO just print subdir name if --quiet
 command:status() {
-  if $in_subrepo; then
-    subrepo:status-inside-subrepo
-  else
-    subrepo:status
-  fi
-}
-
-# `git subrepo log <subdir>` command
-command:log() {
-  command-setup +subdir
-  $fetch_wanted && subrepo:fetch
-  [ -e ".git/refs/subrepo/remote/$subdir" ] ||
-    error "No ref 'subrepo/remote/$subdir'. Try fetch first."
-  EXEC=true RUN git log "subrepo/remote/$subdir"
+  subrepo:status
 }
 
 # `git subrepo clean <subdir>` command
 command:clean() {
   command-setup +subdir
-
-  # Remove subrepo branch if exists:
-  local ref="refs/heads/subrepo/$subdir"
-  if [ -e ".git/$ref" ]; then
-    RUN git update-ref -d "$ref"
-    say "Removed branch '${ref#refs/heads/}'"
-  fi
-
-  local remote="subrepo/$subdir"
-  FAIL=false OUT=true RUN git config "remote.$remote.url"
-  if [ -n "$output" ]; then
-    RUN git remote rm "$remote"
-    say "Removed remote '$remote'"
-  fi
-
-  # Remove remote ref if exists:
-  local ref="refs/subrepo/remote/$subdir"
-  if [ -e ".git/$ref" ]; then
-    RUN git update-ref -d "$ref"
-    say "Removed ref '$ref'"
-  fi
+  subrepo:clean
 }
 
 # Launch the manpage viewer:
@@ -378,6 +244,31 @@ Git Version: $git_version
 
 # Clone by fetching remote content into our subdir:
 subrepo:clone() {
+  re="$1"
+
+  # Turn off force unless really a reclone:
+  if $force_wanted && [ ! -f "$gitrepo" ]; then
+    force_wanted=false
+  fi
+
+  if $force_wanted; then
+    subrepo:fetch
+    read-gitrepo-file
+    # Check if we already are up to date:
+    if [ "$upstream_head" == "$subrepo_commit" ]; then
+      say "Subrepo '$subdir' is up to date"
+      command_done=true
+      return
+    fi
+    # Remove the old subdir:
+    RUN git rm -r "$subdir"
+  else
+    assert-subdir-empty
+    get-upstream-head-branch
+    subrepo_branch="${subrepo_branch:-$output}"
+    subrepo:fetch
+  fi
+
   # Make subdir for clone:
   RUN mkdir -p "$subdir"
 
@@ -400,20 +291,7 @@ subrepo:clone() {
 subrepo:pull() {
   subrepo:branch
 
-  if [ "$merge_strategy" == rebase ]; then
-    git rebase "subrepo/$subdir" "subrepo/remote/$subdir"
-  else
-    die 43
-  fi
   exit 0
-}
-
-subrepo:pull-reclone() {
-  # Remove the old subdir:
-  RUN git rm -r "$subdir"
-
-  # Make the new subdir:
-  subrepo:clone
 }
 
 # Fetch the subrepo's remote branch content:
@@ -461,17 +339,10 @@ subrepo:branch() {
   local branch="subrepo/$subdir"
   git:branch-exists "$branch" && return
 
-  # Find the commit of the last pull. The one after its recorded parent:
-  local start_commit="$(
-    git log --format=%P$'\t'%H | grep "^$subrepo_parent" | cut -f2
-  )"
-  [ -n "$start_commit" ] ||
-    error "Can't find previous pull commit"
-
   # Remove commits before last pull:
-  RUN git filter-branch --force \
-    --parent-filter "grep -v $start_commit || true" \
-    -- "$start_commit"^..HEAD
+  FAIL=false RUN git filter-branch --force \
+    --parent-filter "grep -v $subrepo_parent || true" \
+    -- "$subrepo_parent"..HEAD
 
   # Get commits specific to the subdir:
   RUN git filter-branch -f \
@@ -485,16 +356,18 @@ subrepo:branch() {
   # Create a branch for this commit set:
   RUN git branch "$branch"
 
-#   # Graft subrepo branch to upstream:
-#   OUT=true RUN git rev-list --max-parents=0 HEAD
-#   local root="$output"
-#   echo "$root $subrepo_commit" >> .git/info/grafts
-
   # Reset to the branch where we started:
   RUN git reset --hard "$original_head_commit"
 }
 
+# Commit a merged subrepo branch:
+subrepo:commit() {
+  die
+}
+
+# Show detailed status report for a subrepo:
 subrepo:status() {
+# TODO just print subdir name if --quiet
   if [ ${#command_arguments[@]} -eq 0 ]; then
     get-all-subrepos
     local count=${#subrepos[@]}
@@ -510,7 +383,6 @@ subrepo:status() {
   else
     subrepos=("${command_arguments[@]}")
   fi
-
   for subdir in "${subrepos[@]}"; do
     subdir="${subdir#./}"
     subdir="${subdir%/}"
@@ -541,17 +413,31 @@ Git subrepo '$subdir':
     [ -n "$branch_ok" ] && cat <<...
   SubRepo Branch:  $branch
 ...
-    status:remote-name
+
+    local remote="subrepo/$subdir"
+    FAIL=false OUT=true RUN git config "remote.$remote.url"
+    [ -z "$output" ] || cat <<...
+  Remote Name:     subrepo/$subdir
+...
+
     cat <<...
   Remote URL:      $subrepo_remote
 ...
-    status:remote-ref
+
+    local ref="refs/subrepo/remote/$subdir"
+    OUT=true RUN git for-each-ref "$ref"
+    [ -z "$output" ] || cat <<...
+  Remote Ref:      $ref
+...
+
     cat <<...
   Tracking Branch: $subrepo_branch
 ...
+
     [ -n "$subrepo_commit" ] && cat <<...
   Pulled Commit:   $(git rev-parse --short $subrepo_commit)
 ...
+
     cat <<...
   Parent Commit:   $(git rev-parse --short $subrepo_parent)
 
@@ -559,50 +445,27 @@ Git subrepo '$subdir':
   done
 }
 
-subrepo:status-inside-subrepo() {
-  RUN git update-ref \
-    "refs/heads/$original_head_branch" \
-    "$original_head_commit"
-  git:get-mainline-branch-name
-  local mainline="$output"
-  cat <<...
-Subrepo '$in_subrepo_name' branch is currently checked out.
+subrepo:clean() {
+  # Remove subrepo branch if exists:
+  local ref="refs/heads/subrepo/$subdir"
+  if [ -e ".git/$ref" ]; then
+    RUN git update-ref -d "$ref"
+    say "Removed branch '${ref#refs/heads/}'"
+  fi
 
-...
-
-  local subdir="$in_subrepo_name"
-  status:remote-name
-  local got="$output"
-  status:remote-ref
-  got="$got$output"
-  [ -z "$got" ] || echo
-
-[ -z "$mainline" ] || cat <<...
-To checkout the '$mainline' branch:
-
-  git checkout $mainline
-
-...
-}
-
-status:remote-name() {
-  # Remote Name:
   local remote="subrepo/$subdir"
   FAIL=false OUT=true RUN git config "remote.$remote.url"
+  if [ -n "$output" ]; then
+    RUN git remote rm "$remote"
+    say "Removed remote '$remote'"
+  fi
 
-  [ -z "$output" ] || cat <<...
-  Remote Name:     subrepo/$subdir
-...
-}
-
-status:remote-ref() {
-  # Remote Ref:
+  # Remove remote ref if exists:
   local ref="refs/subrepo/remote/$subdir"
-  OUT=true RUN git for-each-ref "$ref"
-
-  [ -z "$output" ] || cat <<...
-  Remote Ref:      $ref
-...
+  if [ -e ".git/$ref" ]; then
+    RUN git update-ref -d "$ref"
+    say "Removed ref '$ref'"
+  fi
 }
 
 # Commit msg for an action commit:
@@ -667,11 +530,10 @@ get-command-options() {
       -b) subrepo_branch="$1"
           override_branch="$1"
           shift ;;
+      -f) force_wanted=true ;;
       -F) fetch_wanted=true ;;
       -r) subrepo_remote="$1"
           override_remote="$1"
-          shift ;;
-      -s) merge_strategy="$1"
           shift ;;
       -u) update_wanted=true ;;
       -q) quiet_wanted=true ;;
@@ -696,6 +558,9 @@ get-command-options() {
   if $all_wanted; then
     check_option all
   fi
+  if $force_wanted; then
+    check_option force
+  fi
   if $fetch_wanted; then
     check_option fetch
   fi
@@ -711,31 +576,19 @@ get-command-options() {
       error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
-  if [ -n "$merge_strategy" ]; then
-    check_strategy
-  else
-    merge_strategy=rebase
-  fi
 }
 
-options_clone='branch'
-options_pull='all branch remote strategy update'
-options_push='all branch remote strategy update'
-options_branch='all'
+options_clone='branch force'
+options_pull='all branch remote update'
+options_push='all branch force remote update'
+options_branch='all force'
 options_fetch='all branch remote'
 # options_status='fetch'
-options_log='branch fetch remote'
 options_clean='all'
 check_option() {
   local var="options_$command"
   [[ ${!var} =~ $1 ]] ||
     error "Invalid option '--$1' for '$command'."
-}
-
-check_strategy() {
-  check_option strategy
-  [[ $merge_strategy =~ ^(reclone|rebase|recursive|ours|theirs)$ ]] ||
-    error "Invalid merge strategy: '$merge_strategy'."
 }
 
 #------------------------------------------------------------------------------
@@ -756,17 +609,11 @@ command-setup() {
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
   gitrepo="$subdir/.gitrepo"
-  if [ "$command" == "clone" ]; then
-    assert-subdir-empty
-    get-upstream-head-branch
-    subrepo_branch="${subrepo_branch:-$output}"
-  else
+  if [ "$command" != "clone" ]; then
     read-gitrepo-file
-    # $in_subrepo || read-gitrepo-file
-    # subrepo_remote="subrepo/$subdir"
   fi
 
-  :
+  true
 }
 
 # Parse command line args according to a simple dsl spec:
@@ -902,25 +749,7 @@ assert-repo-is-ready() {
 
   # If a subrepo branch is currently checked out, then note it:
   if [[ "$original_head_branch" =~ ^subrepo/(.*) ]]; then
-    in_subrepo=true
-    in_subrepo_name="${BASH_REMATCH[1]}"
-  # Else save this branch as the 'mainline' for the 'reset' command:
-  else
-    git:get-mainline-branch-name
-    if [ "$output" != "$original_head_branch" ]; then
-      RUN git symbolic-ref \
-        "SUBREPO_ORIG_HEAD" \
-        "refs/heads/$original_head_branch"
-    fi
-  fi
-
-  if $in_subrepo; then
-    if [[ ! "$command" =~ ^(fetch|commit|reset|status|log)$ ]]; then
-      error "Can't '$command' while subrepo branch is checked out."
-    fi
-    if [ ${#command_arguments[@]} -gt 0 ] && [ "$command" != reset ]; then
-      error "Arguments to '$command' are invalid while subrepo checked out."
-    fi
+    error "Can't '$command' while subrepo branch is checked out."
   fi
 
   # Make sure we are on a branch:
@@ -963,6 +792,8 @@ assert-subdir-empty() {
 # Getters of various information:
 #------------------------------------------------------------------------------
 
+# Find all the current subrepos by looking for all the subdirectories that
+# contain a `.gitrepo` file.
 get-all-subrepos() {
   local paths=($(
     find . -name '.gitrepo' |
@@ -1008,6 +839,9 @@ get-upstream-head-branch() {
   output="${branch#refs/heads/}"
 }
 
+# Get location and version info about the git-subrepo command itself. This
+# info goes into commit messages, so we can find out exactly how the commits
+# were done.
 get-command-info() {
   local bin="$0"
   if [[ "$bin" =~ / ]]; then
@@ -1050,113 +884,6 @@ get-command-info() {
   fi
 }
 
-# Writes best common-ancestor to $subrepo_parent
-get-best-common-ancestor-for-merge() {
-  # Writes to $subrepo_parent if relevant clone/pull subrepo log entry found;
-  # writes latest match. Note log doesn't contain last subrepo push.
-  get-last-original-head-branch-subrepo-log-hash
-
-  # Now, if there were no commits since the above we know we have the best
-  # common-ancestor:
-  OUT=true RUN git rev-parse "$original_head_branch"
-  if [ "$output" = "$subrepo_parent" ]; then
-    return
-  fi
-
-  # Need to know when to terminate outer loop, must get tree object of above
-  # relevant clone/pull commit object for the subrepo directory without the
-  # .gitrepo file included:
-  local outer_loop_term_tree=
-  # RUN doesn't support piping completely, must do this process substition to
-  # get output of mktree
-  OUT=true RUN git mktree < \
-    <(git ls-tree "$subrepo_parent:$subdir" | sed -r '/^.*\.gitrepo.*$/d')
-  if [ -z $output ]; then
-    err "Failed to obtain tree-id of $subdir in relevant clone/pull commit object without .gitrepo file."
-    return
-  fi
-  outer_loop_term_tree="$output"
-
-  # These are the outer loop elements, the tree of each commit in the subrepo
-  # branch:
-  OUT=true RUN sed '/commit/d' < \
-    <(git rev-list subrepo/remote/$subdir --format="format:%T")
-  local outer_loop_elems="$output"
-
-  # These are the inner loop elements, cached here so they're only looked up
-  # once.
-  OUT=true RUN git rev-list \
-    "$subrepo_parent".."$original_head_branch" -- "$subdir"
-  local inner_loop_elems="$output"
-
-  # Outer loop we search subrepo/$suddir branch A..HEAD^{tree} where A was
-  # found above ($outer_loop_term_tree).  Start at subrepo/$subdir branch and
-  # traverse to A as long as match (subrepo push) is not found.
-  # KLUDGE: Note I have a bit of uncertainty about this iteration. Might be a
-  # good spot for a new test case.
-  for o in $outer_loop_elems; do
-    if [ "$o" = "$outer_loop_term_tree" ]; then
-       # No need to continue. We know $subrepo_parent is best common-ancestor.
-       break
-    fi
-
-    # Inner loop we search $original_head_branch branch B..HEAD where B is
-    # $subrepo_parent found earlier.
-    for i in $inner_loop_elems; do
-      OUT=true RUN git mktree < \
-        <(git ls-tree "$i:$subdir" | sed -r '/^.*\.gitrepo.*$/d')
-      if [ -z "$output" ]; then
-        err "Failed to obtain tree-id of $subdir in $i without .gitrepo file."
-        continue
-      fi
-      if [ "$output" = "$o" ]; then
-        # We have discovered that the subrepo had been pushed to from
-        # $original_head_branch since the last clone/pull. We know that $i is
-        # the best common ancestor!
-        subrepo_parent="$i"
-        return
-      fi
-    done
-  done
-}
-
-# Writes to $subrepo_parent if relevant subrepo log entry found; writes latest
-# match.
-get-last-original-head-branch-subrepo-log-hash() {
-  # First try the log for pull/clone entries. Note no push entries are
-  # possible in the log, so we must search for that later as it would be the
-  # best common-ancestor candidate as git won't automatically select it during
-  # the merge.
-  FAIL=false OUT=true RUN git log \
-    --grep="git subrepo pull $subdir" -n 1 --pretty="format:%H"
-  if [ -z "$output" ]; then
-    # TODO: "subrepo clone.*$subdir" should better match what is written by
-    # subrepo:commit-message()"
-    FAIL=false OUT=true RUN git log \
-      --grep="subrepo clone.*$subdir" -n 1 --pretty="format:%H"
-  fi
-  if [ -n "$output" ]; then
-    subrepo_parent="$output" # AKA common-ancestor for merge to be done soon.
-  else
-    err "Failed to obtain last subrepo log entry."
-  fi
-}
-
-get-last-subrepo-merge-log-entry() {
-  # Get last subrepo merge commit to the local branch for $subdir
-  # TODO: This would match subrepos in $subdir as well! Need to resolve.
-  FAIL=false OUT=true RUN git log \
-    --grep="Merge subrepo commit" -n 1 --pretty="format:%H"
-  if [ -z "$output" ]; then
-    # The user hadn't pushed/pulled $subdir before, so they must have only
-    # cloned.
-    # TODO: "subrepo clone.*$subdir" should better match what is written by
-    # subrepo:commit-message()"
-    FAIL=false OUT=true RUN git log \
-      --grep="subrepo clone.*$subdir" -n 1 --pretty="format:%H"
-  fi
-}
-
 #------------------------------------------------------------------------------
 # Git command wrappers:
 #------------------------------------------------------------------------------
@@ -1175,13 +902,6 @@ git:get-head-branch-name() {
 
 git:get-head-branch-commit() {
   output="$(git rev-parse HEAD)"
-}
-
-git:get-mainline-branch-name() {
-  output=
-  local name="$(git rev-parse --abbrev-ref SUBREPO_ORIG_HEAD 2>/dev/null)"
-  [ "$name" == SUBREPO_ORIG_HEAD ] && return
-  output="$name"
 }
 
 #------------------------------------------------------------------------------

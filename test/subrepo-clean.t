@@ -16,7 +16,6 @@ subrepo-clone-bar-into-foo
 )
 
 test-exists \
-  "$OWNER/foo/.git/SUBREPO_ORIG_HEAD" \
   "$OWNER/foo/.git/refs/heads/subrepo/bar" \
   "$OWNER/foo/.git/refs/subrepo/remote/bar"
 
@@ -30,7 +29,6 @@ Removed ref 'refs/subrepo/remote/bar'" \
   "subrepo clean command output is correct"
 
 test-exists \
-  "$OWNER/foo/.git/SUBREPO_ORIG_HEAD" \
   "!$OWNER/foo/.git/refs/heads/subrepo/bar" \
   "!$OWNER/foo/.git/refs/subrepo/remote/bar"
 
