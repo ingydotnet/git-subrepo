@@ -15,28 +15,12 @@ clone-foo-and-bar
       git subrepo --quiet branch foo
       catch git subrepo branch foo
     )" \
-    "git-subrepo: Branch 'subrepo/foo' already exists." \
+    "git-subrepo: Branch 'subrepo/foo' already exists. Use '--force' to override." \
     "Error OK: can't create a branch that exists"
 
   (
     cd $OWNER/bar
     git subrepo --quiet clean foo
-    git reset --quiet --hard HEAD^
-  )
-}
-
-{
-  is "$(
-      cd $OWNER/bar
-      git subrepo --quiet clone ../../../$UPSTREAM/foo
-      git subrepo --quiet clean foo
-      catch git subrepo log foo
-    )" \
-    "git-subrepo: No ref 'subrepo/remote/foo'. Try fetch first." \
-    "Error OK: log command needs a ref fetched"
-
-  (
-    cd $OWNER/bar
     git reset --quiet --hard HEAD^
   )
 }
@@ -66,12 +50,6 @@ clone-foo-and-bar
 }
 
 {
-  is "$(catch git subrepo pull --strategy=octopus)" \
-    "git-subrepo: Invalid merge strategy: 'octopus'." \
-    "Error OK: test invalid merge strategy"
-}
-
-{
   is "$(
       cd $OWNER/bar
       catch git subrepo pull /home/user/bar/foo
@@ -82,7 +60,7 @@ clone-foo-and-bar
 
 {
   # XXX add 'commit' to cmds here when implemented:
-  for cmd in pull push fetch branch log clean; do
+  for cmd in pull push fetch branch commit clean; do
     is "$(
         cd $OWNER/bar
         catch git subrepo $cmd
@@ -130,23 +108,13 @@ clone-foo-and-bar
   )
 
   # Test that certain commands don't run inside a subrepo branch:
-  for cmd in clone pull push branch clean; do
+  for cmd in clone pull push fetch branch commit status clean; do
     is "$(
         cd $OWNER/bar
         catch git subrepo $cmd
       )" \
       "git-subrepo: Can't '$cmd' while subrepo branch is checked out." \
       "Error OK: '$cmd' fails when subrepo checked out"
-  done
-
-  # Test that certain commands don't accept args inside a subrepo branch:
-  for cmd in fetch commit status log; do
-    is "$(
-        cd $OWNER/bar
-        catch git subrepo $cmd arg1
-      )" \
-      "git-subrepo: Arguments to '$cmd' are invalid while subrepo checked out." \
-      "Error OK: '$cmd' accepts no args when subrepo checked out"
   done
 
   (
@@ -222,6 +190,6 @@ clone-foo-and-bar
     "Error OK: clone non-repo"
 }
 
-done_testing 32
+done_testing 29
 
 teardown

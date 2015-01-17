@@ -18,7 +18,6 @@ Git Submodule Alternative
   git subrepo commit <subdir>
 
   git subrepo status [<subdir>]
-  git subrepo log <subdir>
   git subrepo clean <subdir>
 
   git subrepo help [<command>]
@@ -57,7 +56,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Moving/renaming a subrepo subdir JustWorks™.
 * Your git history is kept squeaky clean.
 * Upstream history (clone/pull) is condensed into a single commit.
-* You can see the complete subrepo history by using `git subrepo log`.
+* You can see the subrepo history by using `git log subrepo/remote/<subdir>`.
 * Commits pushed back upstream are *not* condensed.
 * Easy to play around with subrepos and then reset back.
 * No configuration required.
@@ -83,7 +82,7 @@ experienced Git users.
 Please note that the commands are /not/ exact equivalents, and do not take all
 the same arguments. Keep reading…
 
-- `git subrepo clone <repository> [<subdir>] [-b <upstream-branch>]`
+- `git subrepo clone <repository> [<subdir>] [-b <upstream-branch>] [-f]`
 
   Add a repository as a subrepo in a subdir of your repository.
 
@@ -100,9 +99,11 @@ the same arguments. Keep reading…
   From the subdir, all the current information about the subrepo can be
   obtained.
 
-  The `clone` command accepts the `--branch=` option.
+  The `--force` option will "reclone" (completely replace) an existing subdir.
 
-- `git subrepo pull <subdir>|--all [-s <strategy>] [-b <branch>] [-r <remote>] [-u]`
+  The `clone` command accepts the `--branch=` and `--force` options.
+
+- `git subrepo pull <subdir>|--all [-b <branch>] [-r <remote>] [-u]`
 
   Update the subrepo subdir with the latest upstream changes.
 
@@ -110,25 +111,25 @@ the same arguments. Keep reading…
 
   * `git subrepo fetch <subdir>`
   * `git subrepo branch <subdir>`
-  * `git subrepo rebase <subdir>`
-  * `git subrepo commit <subdir>`
+  * `git rebase subrepo/remote/<subdir> subrepo/<subdir>`
+  * `git subrepo commit`
+  * `git checkout ORIG_HEAD`
 
   In other words, you could do all the above commands yourself, for the same
-  effect. If any of the commands fail, subrepo will reset, and tell you to do
-  this by hand. Generally a failure would be in the merge, where conflicts can
-  happen. Since Git has lots of ways to resolve conflicts to your personal
-  tastes, the subrepo command defers to letting you do this by hand.
+  effect. If any of the commands fail, subrepo will stop and tell you to
+  finish this by hand. Generally a failure would be in the rebase, where
+  conflicts can happen. Since Git has lots of ways to resolve conflicts to
+  your personal tastes, the subrepo command defers to letting you do this by
+  hand.
 
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
-  clean. You can easily see the subrepo's history with the subrepo `log`
-  command.
+  clean. You can easily see the subrepo's history with the `git log` command.
 
-  The above commands are described in detail below. Also see the section on
-  "Merge Strategy Options".
+  The above commands are described in detail below.
 
-  The `pull` command accepts the `--all`, `--branch=`, `--remote=`,
-  `--strategy=` and `--update` options.
+  The `pull` command accepts the `--all`, `--branch=`, `--remote=` and
+  `--update` options.
 
 - `git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]`
 
@@ -137,15 +138,15 @@ the same arguments. Keep reading…
   We fetch the upstream remote, rebase or merge on top of that head, and push
   back to the remote. Effectively we do these commands:
 
-  * `git subrepo fetch <subdir>`
-  * `git subrepo branch <subdir>`
-  * `git rebase refs/subrepo/remote/<subdir> subrepo/<subrepo>`
-  * `git push <remote> subrepo/<subrepo>`
+  * `git subrepo pull <subdir>`
+  * `git push subrepo/<subdir> <subdir>.remote -b <subdir>.branch`
 
   Like with the `pull` command, if this fails, you can do these steps by hand.
 
-  The `push` command accepts the `--all`, `--branch=`, `--remote=`,
-  `--strategy=` and `--update` options.
+  The `--force` option will do a force push.
+
+  The `push` command accepts the `--all`, `--branch=`, `--force`, `--remote=`
+  and `--update` options.
 
 - `git subrepo fetch <subdir>|--all`
 
@@ -169,15 +170,24 @@ the same arguments. Keep reading…
 
   This is useful for doing `pull` and `push` commands by hand.
 
-  The `branch` command accepts the `--all` option.
+  Use the `--force` option to write over an existing `subrepo/<subdir>`
+  branch.
+
+  The `branch` command accepts the `--all` and `--force` options.
 
 - `git subrepo commit <subdir>`
 
-  Take a properly merged subrepo branch and add it as a single commit.
+  Add subrepo branch to current history as a single commit.
 
   This command is generally used after a hand-merge. You have done a `subrepo
-  branch` and merged it with the upstream. This command takes the HEAD of
-  that branch and adds it to the top of your mainline history.
+  branch` and merged (rebased) it with the upstream. This command takes the
+  HEAD of that branch and adds it to the top of your mainline history.
+
+  This command requires that the upstream HEAD be in the `subrepo/<subdir>`
+  branch history. That way the same branch can push upstream. Use the
+  `--force` option to commit anyway.
+
+  The `commit` command accepts the `--force` option.
 
 - `git subrepo status [<subdir>] [--quiet]`
 
@@ -187,16 +197,6 @@ the same arguments. Keep reading…
   If you have a subrepo branch checked out, show the status of that subrepo.
 
   The `status` command takes the `--fetch` option.
-
-- `git subrepo log <subdir> [<git-log-options>]`
-
-  Show log of the subrepo's upstream commits. Same as:
-
-    git subrepo fetch <subdir>
-    git log subrepo/remote/<subdir>
-
-  The `log` command takes the `--branch=`, `--fetch`, and `--remote=`
-  options.
 
 - `git subrepo clean <subdir>|--all`
 
@@ -244,6 +244,10 @@ the same arguments. Keep reading…
   Use a different branch-name than the remote HEAD or the one saved in
   `.gitrepo` locally.
 
+- `--force` (`-f`)
+
+  Use this option to force certain commands that fail in the general case.
+
 - `--fetch` (`-F`)
 
   Use this option to fetch the upstream commits, before running the command.
@@ -251,12 +255,6 @@ the same arguments. Keep reading…
 - `--remote=<remote-url>` (`-r <remote-url>`)
 
   Use a different remote-url than the one saved in `.gitrepo` locally.
-
-- `--strategy=<merge-strategy> (-s <merge-strategy>)`
-
-  The `pull` and `push` commands attempt a merge. This lets you specify
-  alternate strategies. If none of the strategies work, you need to do the
-  `pull` or `push` by hand. See "Merge Strategy Options".
 
 - `--update` (`-u`)
 
@@ -273,39 +271,10 @@ the same arguments. Keep reading…
 
   Print information showing what the command is doing under the hood.
 
-- `--debug` (`-x`)
+- `--DEBUG` (`-x`)
 
   Use the Bash `set -x` option which prints every command before it is run.
   VERY noisy, but extremely useful in deep debugging.
-
-== Merge Strategy Options
-
-When doing a `pull` or `push` command you can specify a 'merge strategy' to be
-tried, with the `strategy=` option:
-
-- `rebase`
-
-  Attempt a rebase on top off the remote head. This is the default option.
-
-- `reclone`
-
-  Use this option when you have no local changes to the subrepo, and you
-  simply want to replace the old content with the new upstream content. If you
-  use `--branch=` or `--remote=` options with this option, the `--update`
-  option is turned on automatically (ie the new remote and branch are stored
-  in .gitrepo file). This strategy should never fail.
-
-- `recursive`
-
-  Use the recursive merge strategy.
-
-- `ours`
-
-  Use recursive + `-X ours` option.
-
-- `theirs`
-
-  Use recursive + `-X theirs` option.
 
 = Installation Instructions
 
