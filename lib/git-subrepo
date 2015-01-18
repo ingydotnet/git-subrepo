@@ -114,7 +114,12 @@ main() {
 }
 
 #------------------------------------------------------------------------------
-# API command functions:
+# API command functions.
+#
+# Most of these commands call a subrepo:$command function to do the actual
+# work. The user facing output is done  (via `say`) is done up here. The
+# subrepo:* worker functions are meant to be called interally and don't print
+# info to the user.
 #------------------------------------------------------------------------------
 
 # `git subrepo clone <url> [<subdir>]` command:
@@ -188,7 +193,9 @@ command:branch() {
   command-setup +subdir
   $fetch_wanted && subrepo:fetch
 
-  # TODO Support force here
+  if $force_wanted; then
+    FAIL=false RUN git branch -D "subrepo/$subdir"
+  fi
 
   local branch="subrepo/$subdir"
   if git:branch-exists "$branch"; then
@@ -203,7 +210,9 @@ command:branch() {
 
 # `git subrepo commit <subdir>` command
 command:commit() {
-  command-setup +subdir
+  command-setup +subdir subrepo_commit_ref
+  [ -n "$subrepo_commit_ref" ] ||
+    subrepo_commit_ref="subrepo/$subdir"
   subrepo:commit
 }
 
@@ -239,7 +248,7 @@ Git Version: $git_version
 }
 
 #------------------------------------------------------------------------------
-# Subrepo command guts functions:
+# Subrepo command worker functions.
 #------------------------------------------------------------------------------
 
 # Clone by fetching remote content into our subdir:
@@ -272,20 +281,8 @@ subrepo:clone() {
   # Make subdir for clone:
   RUN mkdir -p "$subdir"
 
-  # Put remote subrepo content in subdir:
-  GIT_WORK_TREE="$subdir" RUN git reset --hard "$upstream_head"
-
-  # Reset index to original commit:
-  RUN git reset --mixed "$original_head_commit"
-
-  # Add a new .gitrepo file:
-  update-gitrepo-file
-
-  # Add the subdir content to mainline index:
-  RUN git add -A "$subdir"
-
-  # Commit this subrepo clone:
-  RUN git commit -m "$(subrepo:commit-message)"
+  subrepo_commit_ref="$upstream_head"
+  subrepo:commit
 }
 
 subrepo:pull() {
@@ -362,7 +359,30 @@ subrepo:branch() {
 
 # Commit a merged subrepo branch:
 subrepo:commit() {
-  die
+  # XXX This needs to be 'ref-exists':
+  # if ! git:branch-exists "$branch"; then
+  #   error "Commit point '$subrepo_commit_ref' does not exist."
+  # fi
+
+  (
+    cd "./$subdir"
+    RUN rm -fr $(ls -A)
+  )
+
+  # Put remote subrepo content in subdir:
+  GIT_WORK_TREE="$subdir" RUN git reset --hard "$subrepo_commit_ref"
+
+  # Reset index to original commit:
+  RUN git reset --mixed "$original_head_commit"
+
+  # Add a new .gitrepo file:
+  update-gitrepo-file
+
+  # Add the subdir content to mainline index:
+  RUN git add -A "$subdir"
+
+  # Commit this subrepo clone:
+  RUN git commit -m "$(subrepo:commit-message)"
 }
 
 # Show detailed status report for a subrepo:
