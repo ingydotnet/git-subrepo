@@ -64,8 +64,8 @@ things are working, you can push the subrepo changes back:
     git subrepo push ext/lynyrd
     git subrepo push ext/skynyrd
 
-Looks simple right? It's supposed to be. The intent of C<git-subrepo> is to do
-the right things, and to not cause problems.
+Looks simple right? It's supposed to be. The intent of C<subrepo> is to do the
+right things, and to not cause problems.
 
 Of course there's more to it under the hood, and that's what the rest of this
 article is about.
@@ -262,7 +262,7 @@ applied to that subrepo.
 
 =head2 Git Subrepos
 
-Now is a good time to dive into the techinical aspects of the C<git-subrepo>
+Now is a good time to dive into the techinical aspects of the C<subrepo>
 command, but first let me explain how it came about.
 
 As you may have surmised by now, I am the author of git-subrepo. I'd used
@@ -343,9 +343,7 @@ Given this we do the following steps internally:
 
 =item * Checkout the index into the new subdir
 
-=item * Create a new subrepo commit object for the tree
-
-=item * Create a merge commit to combine the subrepo commit and the mainline HEAD
+=item * Create a new subrepo commit object for the subdir content
 
 =item * Add a state file called .gitrepo to the new subrepo/subdir
 
@@ -379,25 +377,23 @@ form. This is the best practice. Users of your repo don't need access to this
 url, because the content is already in your repo. Only you and your
 collaborators need this url to pull/push in the future.
 
-The next command is the pull command. Normally you just give it the
-subrepoI<subdir path (although you can change the branch with -b), and it will
-get the other info from the subdir>.gitrepo file.
+The next command is the pull command. Normally you just give it the subrepo's
+subdir path (although you can change the branch with -b), and it will get the
+other info from the subdir/.gitrepo file.
 
 The pull command does these steps:
 
 =over
 
-=item * Fetch the remote content
+=item * Fetch the upstream content
 
 =item * Check if anything needs pulling
 
-=item * Create a "pull" commit for the new upstream tree
+=item * Create a branch of local subrepo commits since last pull
 
-=item * Merge this commit into the repo with the subtree strategy
+=item * Rebase this branch onto the upstream commits
 
-=item * Remove the parent pointer of the pull commit (clean history)
-
-=item * Put the pull commit id into the merge commit
+=item * Commit the HEAD of the rebased content
 
 =item * Update/amend the .gitrepo file
 
@@ -410,8 +406,8 @@ subtree and subrepo. Let's say I run this command sequence using both methods:
 
     $ git subxxxx add tree1 <remote> <commit1>
     $ git subxxxx add tree2 <remote> <commit1>
-    $ git subxxxx push tree1 <remote> <commit2>
-    $ git subxxxx push tree2 <remote> <commit2>
+    $ git subxxxx pull tree1 <remote> <commit2>
+    $ git subxxxx pull tree2 <remote> <commit2>
 
 The syntax above is pseudo, but you get the idea. The resulting history using
 subrepo is:
@@ -446,79 +442,45 @@ This was from a minimal case. Subtree history (when viewed this way at least)
 gets unreasonably ugly fast. Subrepo history, by contrast, always looks as
 clean as shown.
 
-The final command, push, is slightly more complicated. Effectively, it
-extracts (checkout) the changes made to the subdirectory, rebases/merges
-them with the upstream, and pushes the resulting history back. It does not
-squash the commits made locally, because it assumed that when you changed
-the local subrepo, you made messages that were intended to eventually be
-published back upstream.
+The final command, push, bascially just does the pull/rebase dance above
+described, and pushes the resulting history back. It does not squash the
+commits made locally, because it assumed that when you changed the local
+subrepo, you made messages that were intended to eventually be published
+back upstream.
 
-Here are the steps:
+=head2 Conflict Resolution
+
+The commands described above can also be done "by hand". If something fails
+during a pull or push (generally in the rebasing) then the command will tell
+you what to do to finish up.
+
+You might choose to do everything by hand, and do your own merging strategies.
+This is perfectly reasonable. The C<subrepo> command offers a few other helper
+commands to help you get the job done:
 
 =over
 
-=item * Fetch the remote content.
+=item * C<fetch> - Fetch the upstream and create a C<< subrepo/remote/<subdir> >> ref.
 
-=item * Filter out the local subdir changes into an "local subrepo branch".
+=item * C<branch> - Create a branch of local subdir commits since the last pull, called C<< subrepo/<subdir> >>.
 
-=item * Remove the .gitrepo state file from the subrepo history.
+=item * C<commit> - Commit a merged branches HEAD back into your repo.
 
-=item * Rebase the local changes on top of the remote ones.
+=item * C<status> - Show lots of useful info about the current state of the subrepos.
 
-=item * Push the new history upstream.
+=item * C<clean> - Remove branches, ref and remotes created by subrepo commands.
 
-=item * Reset local HEAD to the point before the command was run.
-
-=item * Delete the subrepo branch.
+=item * C<help> - Read the complete documentation!
 
 =back
 
-=head2 Side-by-Side Comparison
+=head2 Conclusion
 
 Hopefully by now, you see that submodules are a painful choice with a dubious
-future, and that subtree, while a solid idea has many usage issues. In this
-final section I'll compare/contrast common usage of working with external
-repos, using these commands.
+future, and that subtree, while a solid idea has many usage issues.
 
-To keep the lingo clear, I'll use the term "External" to mean the
-general concept of an external repo that might e used as a submodule,
-subtree or subrepo.
-
-=head3 Adding a new External
-
-As an owner or collaborator, you have decided to add a new External to
-your repo:
-
-=over
-
-=item Submodule
-
-C<git submodule add git@github.com/user/external>
-
-=item Subtree
-
-C<git subtree --squash --prefix=external git@github.com/user/external>
-
-=item Subrepo
-
-C<git subrepo clone git@github.com/user/external>
-
-
-=back
-
-I<…to be completed…>
-
-=head3 Updating from a changed External
-
-=head3 Pushing External changes upstream
-
-=head3 Moving/Renaming an External
-
-=head3 Making an External on a branch
-
-=head3 Changing the tracking branch of an External
-
-=head3 Removing an External
+Give C<subrepo> a try. It's painless, easily revertable and just might be what
+the doctor ordered.
 
 =head2 Reference Links
 

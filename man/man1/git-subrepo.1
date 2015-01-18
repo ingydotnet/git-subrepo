@@ -71,7 +71,7 @@
 .\" ========================================================================
 .\"
 .IX Title "README 1"
-.TH README 1 "2015-01-16" "perl v5.18.1" "User Contributed Perl Documentation"
+.TH README 1 "2015-01-17" "perl v5.18.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -82,7 +82,7 @@
 .SH "Synopsis"
 .IX Header "Synopsis"
 .Vb 1
-\&    git subrepo \-h    # Short usage help
+\&    git subrepo \-h    # Help Overview
 \&
 \&    git subrepo clone <remote\-url> [<subdir>]
 \&    git subrepo pull <subdir>
@@ -123,7 +123,7 @@ Simple and intuitive commandline usage.
 .IP "\(bu" 4
 Users get your repo and all your subrepos just by cloning your repo.
 .IP "\(bu" 4
-Users do not need to install git-subrepo, ever.
+Users do not need to install \f(CW\*(C`git\-subrepo\*(C'\fR, ever.
 .IP "\(bu" 4
 Collaborators do not need to install unless they want to push/pull.
 .IP "\(bu" 4
@@ -133,13 +133,13 @@ Well named branches and remotes are generated for manual operations.
 .IP "\(bu" 4
 Owners do not deal with the complications of keeping submodules in sync.
 .IP "\(bu" 4
-Subrepos can contain other subrepos.
+Subrepo repositories can contain subrepos themselves.
 .IP "\(bu" 4
 Branching with subrepos JustWorks™.
 .IP "\(bu" 4
 Different branches can have different subrepos in different states, etc.
 .IP "\(bu" 4
-Moving/renaming a subrepo subdir JustWorks™.
+Moving\fIrenaming\fRdeleting a subrepo subdir JustWorks™.
 .IP "\(bu" 4
 Your git history is kept squeaky clean.
 .IP "\(bu" 4
@@ -149,7 +149,7 @@ You can see the subrepo history by using \f(CW\*(C`git log subrepo/remote/<subdi
 .IP "\(bu" 4
 Commits pushed back upstream are \fBnot\fR condensed.
 .IP "\(bu" 4
-Easy to play around with subrepos and then reset back.
+Trivial to try any subrepo operations and then reset back.
 .IP "\(bu" 4
 No configuration required.
 .IP "\(bu" 4
@@ -210,9 +210,9 @@ The \f(CW\*(C`pull\*(C'\fR command will attempt to do the following commands in 
 .IP "\(bu" 4
 \&\f(CW\*(C`git rebase subrepo/remote/<subdir> subrepo/<subdir>\*(C'\fR
 .IP "\(bu" 4
-\&\f(CW\*(C`git subrepo commit\*(C'\fR
-.IP "\(bu" 4
 \&\f(CW\*(C`git checkout ORIG_HEAD\*(C'\fR
+.IP "\(bu" 4
+\&\f(CW\*(C`git subrepo commit <subdir>\*(C'\fR
 .RE
 .RS 4
 .Sp
@@ -236,13 +236,13 @@ update\*(C'\fR options.
 .IX Item "git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]"
 Merge local changes onto upstream branch, and push upstream.
 .Sp
-We fetch the upstream remote, rebase or merge on top of that head, and push
-back to the remote. Effectively we do these commands:
+Fetch the upstream remote, rebase or merge on top of that head, and push back
+to the remote. Effectively, do these commands:
 .RS 4
 .IP "\(bu" 4
 \&\f(CW\*(C`git subrepo pull <subdir>\*(C'\fR
 .IP "\(bu" 4
-\&\f(CW\*(C`git push subrepo/<subdir> <subdir>.remote \-b <subdir>.branch\*(C'\fR
+\&\f(CW\*(C`git push subrepo/<subdir> subrepo/remote/<subdir>\*(C'\fR
 .RE
 .RS 4
 .Sp
@@ -278,10 +278,14 @@ This is useful for doing \f(CW\*(C`pull\*(C'\fR and \f(CW\*(C`push\*(C'\fR comma
 .Sp
 Use the \f(CW\*(C`\-\-force\*(C'\fR option to write over an existing \f(CW\*(C`subrepo/<subdir>\*(C'\fR branch.
 .Sp
+Note: if no commits have been made to the subdir since the last
+      \f(CW\*(C`pull\*(C'\fR/\f(CW\*(C`clone\*(C'\fR then the \f(CW\*(C`branch\*(C'\fR will fail saying "No new commit to
+      \f(CW\*(C`<subdir>\*(C'\fR.
+.Sp
 The \f(CW\*(C`branch\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR and \f(CW\*(C`\-\-force\*(C'\fR options.
-.ie n .IP """git subrepo commit <subdir>""" 4
-.el .IP "\f(CWgit subrepo commit <subdir>\fR" 4
-.IX Item "git subrepo commit <subdir>"
+.ie n .IP """git subrepo commit <subdir> [<subrepo\-ref>]""" 4
+.el .IP "\f(CWgit subrepo commit <subdir> [<subrepo\-ref>]\fR" 4
+.IX Item "git subrepo commit <subdir> [<subrepo-ref>]"
 Add subrepo branch to current history as a single commit.
 .Sp
 This command is generally used after a hand-merge. You have done a \f(CW\*(C`subrepo
@@ -292,14 +296,20 @@ This command requires that the upstream \s-1HEAD\s0 be in the \f(CW\*(C`subrepo/
 branch history. That way the same branch can push upstream. Use the \f(CW\*(C`\-\-force\*(C'\fR
 option to commit anyway.
 .Sp
+Note: You may \f(CW\*(C`commit\*(C'\fR any Git ref to the subrepo. This is not normally
+      done, but it is how you can do a \f(CW\*(C`pull\*(C'\fR by hand when the \f(CW\*(C`branch\*(C'\fR
+      fails because you have no local commits (by committing the remote ref).
+      The ref still needs to have the upstream \s-1HEAD \s0(unless, of course, you
+      force it).
+.Sp
 The \f(CW\*(C`commit\*(C'\fR command accepts the \f(CW\*(C`\-\-force\*(C'\fR option.
-.ie n .IP """git subrepo status [<subdir>] [\-\-quiet]""" 4
-.el .IP "\f(CWgit subrepo status [<subdir>] [\-\-quiet]\fR" 4
-.IX Item "git subrepo status [<subdir>] [--quiet]"
+.ie n .IP """git subrepo status [<subdir>]""" 4
+.el .IP "\f(CWgit subrepo status [<subdir>]\fR" 4
+.IX Item "git subrepo status [<subdir>]"
 Get the status of a subrepo. Show the status of all subrepos by default. If
 the \f(CW\*(C`\-\-quiet\*(C'\fR flag is used, print less info, and on 1 line per subrepo.
 .Sp
-If you have a subrepo branch checked out, show the status of that subrepo.
+The \f(CW\*(C`\-\-verbose\*(C'\fR option will show all the recent local and upstream commits.
 .Sp
 The \f(CW\*(C`status\*(C'\fR command takes the \f(CW\*(C`\-\-fetch\*(C'\fR option.
 .ie n .IP """git subrepo clean <subdir>|\-\-all""" 4
@@ -308,8 +318,8 @@ The \f(CW\*(C`status\*(C'\fR command takes the \f(CW\*(C`\-\-fetch\*(C'\fR optio
 Remove artifacts created by \f(CW\*(C`fetch\*(C'\fR and \f(CW\*(C`branch\*(C'\fR commands.
 .Sp
 The \f(CW\*(C`fetch\*(C'\fR and \f(CW\*(C`branch\*(C'\fR operations (and other commands that call them)
-create temporary things like refs, branches, remotes and grafts. This command
-removes all those things.
+create temporary things like refs, branches and remotes. This command removes
+all those things.
 .Sp
 The \f(CW\*(C`clean\*(C'\fR command takes the \f(CW\*(C`\-\-all\*(C'\fR option.
 .ie n .IP """git subrepo help""" 4
@@ -370,16 +380,18 @@ include these values to the update.
 .ie n .IP """\-\-quiet"" (""\-q"")" 4
 .el .IP "\f(CW\-\-quiet\fR (\f(CW\-q\fR)" 4
 .IX Item "--quiet (-q)"
-Print as little info as possible.
+Print as little info as possible. Applicable to most commands.
 .ie n .IP """\-\-verbose"" (""\-v"")" 4
 .el .IP "\f(CW\-\-verbose\fR (\f(CW\-v\fR)" 4
 .IX Item "--verbose (-v)"
-Print information showing what the command is doing under the hood.
+Print information showing what the command is doing under the hood. Applicable
+to most commands.
 .ie n .IP """\-\-DEBUG"" (""\-x"")" 4
 .el .IP "\f(CW\-\-DEBUG\fR (\f(CW\-x\fR)" 4
 .IX Item "--DEBUG (-x)"
-Use the Bash \f(CW\*(C`set \-x\*(C'\fR option which prints every command before it is run.
-\&\s-1VERY\s0 noisy, but extremely useful in deep debugging.
+Use the Bash \f(CW\*(C`set \-x\*(C'\fR option which prints every command before it is
+run. \s-1VERY\s0 noisy, but extremely useful in deep debugging. Applicable to
+all commands.
 .SH "Installation Instructions"
 .IX Header "Installation Instructions"
 There are currently 3 ways to install \f(CW\*(C`git\-subrepo\*(C'\fR. For all of them you need
