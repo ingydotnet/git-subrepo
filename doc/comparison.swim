@@ -1,0 +1,31 @@
+# Work in progress, removed from intro-to-subrepo.swim
+
+In this final section I'll compare/contrast common usage of working with
+external repos, using these commands.
+
+To keep the lingo clear, I'll use the term "External" to mean the general
+concept of an external repo that might e used as a submodule, subtree or
+subrepo.
+
+=== Adding a new External
+
+As an owner or collaborator, you have decided to add a new External to your
+repo:
+
+- Submodule :: `git submodule add git@github.com/user/external`
+- Subtree :: `git subtree --squash --prefix=external git@github.com/user/external`
+- Subrepo :: `git subrepo clone git@github.com/user/external`
+
+/…to be completed…/
+
+=== Updating from a changed External
+
+=== Pushing External changes upstream
+
+=== Moving/Renaming an External
+
+=== Making an External on a branch
+
+=== Changing the tracking branch of an External
+
+=== Removing an External

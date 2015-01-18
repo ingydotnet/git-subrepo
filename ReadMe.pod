@@ -15,7 +15,7 @@ git-subrepo(1) - Git Submodule Alternative
 
 =head1 Synopsis
 
-    git subrepo -h    # Short usage help
+    git subrepo -h    # Help Overview
 
     git subrepo clone <remote-url> [<subdir>]
     git subrepo pull <subdir>
@@ -63,7 +63,7 @@ The C<git-subrepo> command benefits these roles in the following ways:
 
 =item * Users get your repo and all your subrepos just by cloning your repo.
 
-=item * Users do not need to install git-subrepo, ever.
+=item * Users do not need to install C<git-subrepo>, ever.
 
 =item * Collaborators do not need to install unless they want to push/pull.
 
@@ -73,13 +73,13 @@ The C<git-subrepo> command benefits these roles in the following ways:
 
 =item * Owners do not deal with the complications of keeping submodules in sync.
 
-=item * Subrepos can contain other subrepos.
+=item * Subrepo repositories can contain subrepos themselves.
 
 =item * Branching with subrepos JustWorks™.
 
 =item * Different branches can have different subrepos in different states, etc.
 
-=item * Moving/renaming a subrepo subdir JustWorks™.
+=item * MovingI<renaming>deleting a subrepo subdir JustWorks™.
 
 =item * Your git history is kept squeaky clean.
 
@@ -89,7 +89,7 @@ The C<git-subrepo> command benefits these roles in the following ways:
 
 =item * Commits pushed back upstream are B<not> condensed.
 
-=item * Easy to play around with subrepos and then reset back.
+=item * Trivial to try any subrepo operations and then reset back.
 
 =item * No configuration required.
 
@@ -155,9 +155,9 @@ The C<pull> command will attempt to do the following commands in one go:
 
 =item * C<< git rebase subrepo/remote/<subdir> subrepo/<subdir> >>
 
-=item * C<git subrepo commit>
-
 =item * C<git checkout ORIG_HEAD>
+
+=item * C<< git subrepo commit <subdir> >>
 
 =back
 
@@ -180,14 +180,14 @@ update> options.
 
 Merge local changes onto upstream branch, and push upstream.
 
-We fetch the upstream remote, rebase or merge on top of that head, and push
-back to the remote. Effectively we do these commands:
+Fetch the upstream remote, rebase or merge on top of that head, and push back
+to the remote. Effectively, do these commands:
 
 =over
 
 =item * C<< git subrepo pull <subdir> >>
 
-=item * C<< git push subrepo/<subdir> <subdir>.remote -b <subdir>.branch >>
+=item * C<< git push subrepo/<subdir> subrepo/remote/<subdir> >>
 
 =back
 
@@ -223,9 +223,13 @@ This is useful for doing C<pull> and C<push> commands by hand.
 Use the C<--force> option to write over an existing C<< subrepo/<subdir>
 >> branch.
 
+Note: if no commits have been made to the subdir since the last
+      C<pull>/C<clone> then the C<branch> will fail saying "No new commit to
+      C<< <subdir> >>.
+
 The C<branch> command accepts the C<--all> and C<--force> options.
 
-=item C<< git subrepo commit <subdir> >>
+=item C<< git subrepo commit <subdir> [<subrepo-ref>] >>
 
 Add subrepo branch to current history as a single commit.
 
@@ -237,14 +241,20 @@ This command requires that the upstream HEAD be in the C<< subrepo/<subdir> >>
 branch history. That way the same branch can push upstream. Use the C<--force>
 option to commit anyway.
 
+Note: You may C<commit> any Git ref to the subrepo. This is not normally
+      done, but it is how you can do a C<pull> by hand when the C<branch>
+      fails because you have no local commits (by committing the remote ref).
+      The ref still needs to have the upstream HEAD (unless, of course, you
+      force it).
+
 The C<commit> command accepts the C<--force> option.
 
-=item C<< git subrepo status [<subdir>] [--quiet] >>
+=item C<< git subrepo status [<subdir>] >>
 
 Get the status of a subrepo. Show the status of all subrepos by default. If
 the C<--quiet> flag is used, print less info, and on 1 line per subrepo.
 
-If you have a subrepo branch checked out, show the status of that subrepo.
+The C<--verbose> option will show all the recent local and upstream commits.
 
 The C<status> command takes the C<--fetch> option.
 
@@ -253,8 +263,8 @@ The C<status> command takes the C<--fetch> option.
 Remove artifacts created by C<fetch> and C<branch> commands.
 
 The C<fetch> and C<branch> operations (and other commands that call them)
-create temporary things like refs, branches, remotes and grafts. This command
-removes all those things.
+create temporary things like refs, branches and remotes. This command removes
+all those things.
 
 The C<clean> command takes the C<--all> option.
 
@@ -323,16 +333,18 @@ include these values to the update.
 
 =item C<--quiet> (C<-q>)
 
-Print as little info as possible.
+Print as little info as possible. Applicable to most commands.
 
 =item C<--verbose> (C<-v>)
 
-Print information showing what the command is doing under the hood.
+Print information showing what the command is doing under the hood. Applicable
+to most commands.
 
 =item C<--DEBUG> (C<-x>)
 
-Use the Bash C<set -x> option which prints every command before it is run.
-VERY noisy, but extremely useful in deep debugging.
+Use the Bash C<set -x> option which prints every command before it is
+run. VERY noisy, but extremely useful in deep debugging. Applicable to
+all commands.
 
 =back
 
