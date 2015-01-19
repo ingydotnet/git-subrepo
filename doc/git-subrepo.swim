@@ -278,7 +278,12 @@ the same arguments. Keep reading…
 
 - `--verbose` (`-v`)
 
-  Print information showing what the command is doing under the hood.
+  Print more information about the command execution and results. Applicable
+  to most commands.
+
+- `--debug` (`-d`)
+
+  Show the actual git (and other) commands being executed under the hood.
   Applicable to most commands.
 
 - `--DEBUG` (`-x`)

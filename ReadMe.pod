@@ -337,8 +337,13 @@ Print as little info as possible. Applicable to most commands.
 
 =item C<--verbose> (C<-v>)
 
-Print information showing what the command is doing under the hood. Applicable
-to most commands.
+Print more information about the command execution and results. Applicable to
+most commands.
+
+=item C<--debug> (C<-d>)
+
+Show the actual git (and other) commands being executed under the hood.
+Applicable to most commands.
 
 =item C<--DEBUG> (C<-x>)
 
