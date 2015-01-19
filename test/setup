@@ -48,7 +48,7 @@ add-new-files() {
     echo "new file $file" > "$file"
     git add "$file"
   done
-  git commit -m "add new file: $file"
+  git commit --quiet -m "add new file: $file" &> /dev/null
 }
 
 modify-files() {
