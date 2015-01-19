@@ -12,6 +12,7 @@ clone-foo-and-bar
   is "$(
       cd $OWNER/bar
       git subrepo --quiet clone ../../../$UPSTREAM/foo
+      add-new-files foo/file
       git subrepo --quiet branch foo
       catch git subrepo branch foo
     )" \
@@ -102,7 +103,9 @@ clone-foo-and-bar
   # Clone a subrepo and check it out:
   (
     cd $OWNER/bar
+    git reset --quiet --hard HEAD^
     git subrepo --quiet clone ../../../$UPSTREAM/foo
+    add-new-files foo/file
     git subrepo --quiet branch foo
     git checkout --quiet subrepo/foo
   )

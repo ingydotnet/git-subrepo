@@ -12,6 +12,7 @@ subrepo-clone-bar-into-foo
 
 (
   cd $OWNER/foo
+  add-new-files bar/file
   git subrepo --quiet branch bar
 )
 

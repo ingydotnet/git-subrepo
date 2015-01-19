@@ -48,6 +48,7 @@ u,update    Add the --branch and/or --remote overrides to .gitrepo
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
+d,debug     Show the actual commands used
 x,DEBUG     Turn on -x Bash debugging
 "
 
@@ -77,6 +78,7 @@ main() {
   local subrepo_branch=       # Upstream branch to clone/push/pull
   local subrepo_commit=       # Upstream HEAD from previous clone/pull
   local subrepo_parent=       # Local commit from before previous clone/pull
+  local subrepo_former=       # A retired gitrepo key that might still show up
 
   local override_remote=      # Remote specified with -r
   local override_branch=      # Remote specified with -b
@@ -204,6 +206,9 @@ command:branch() {
 
   # Create the subrepo branch:
   subrepo:branch
+  OK || error \
+"Can't create subrepo branch for '$subdir'.
+No local subrepo commits since last pull/clone."
 
   say "Created branch 'subrepo/$subdir'"
 }
@@ -211,6 +216,18 @@ command:branch() {
 # `git subrepo commit <subdir>` command
 command:commit() {
   command-setup +subdir subrepo_commit_ref
+
+  # XXX We need the fetch ref used for the branch rebase. This needs to be
+  # preserved much better, since it could change between the rebase and the
+  # commit. We can at least verify the the upstream HEAD is one of the subrepo
+  # branch commits.
+  local ref="refs/subrepo/remote/$subdir"
+  git:rev-exists "$ref" ||
+    error "Can't find ref '$ref'."
+
+  OUT=true RUN git rev-parse "$ref"
+  upstream_head="$output"
+
   [ -n "$subrepo_commit_ref" ] ||
     subrepo_commit_ref="subrepo/$subdir"
   subrepo:commit
@@ -333,24 +350,54 @@ subrepo:fetch() {
 
 # Create a subrepo branch of changes since last pull:
 subrepo:branch() {
+  # Just return if the branch already exists:
   local branch="subrepo/$subdir"
   git:branch-exists "$branch" && return
+
+  # Make sure there is at least one commit after the last pull.
+  # (That translates to 2 commits after the parent of last pull):
+  local count="$(git rev-list "$subrepo_parent"..HEAD -2 | wc -l)"
+  if [ "$count" != 2 ]; then
+    OK=false
+    return
+  fi
 
   # Remove commits before last pull:
   FAIL=false RUN git filter-branch --force \
     --parent-filter "grep -v $subrepo_parent || true" \
     -- "$subrepo_parent"..HEAD
 
+  # Note: We need to have the last pull commit or this next step can fail.
   # Get commits specific to the subdir:
-  RUN git filter-branch -f \
+  FAIL=false RUN git filter-branch -f \
     --subdirectory-filter "$subdir" \
     HEAD
+
+  # Make sure there is at least one *subrepo* commit after the last pull:
+  local count="$(git rev-list HEAD -2 | wc -l)"
+  if [ "$count" != 2 ]; then
+    # Reset to the branch where we started:
+    RUN git reset --hard "$original_head_commit"
+    OK=false
+    return
+  fi
+
+  # Now we can get rid of the previous pull commit.
+  # First get the final commit, which is the last pull one:
+  local prev_pull_commit="$(git rev-list HEAD | tail -1)"
+  [ -n "$prev_pull_commit" ] ||
+    die "Can't find previous clone/pull commit."
+
+  # Then remove it:
+  FAIL=false RUN git filter-branch --force \
+    --parent-filter "grep -v $prev_pull_commit || true" \
+    -- "$prev_pull_commit"..HEAD
 
   # Remove the .gitrepo file from the history:
   RUN git filter-branch -f \
     --tree-filter "rm -f .gitrepo"
 
-  # Create a branch for this commit set:
+  # Create a branch for this new commit set:
   RUN git branch "$branch"
 
   # Reset to the branch where we started:
@@ -359,31 +406,40 @@ subrepo:branch() {
 
 # Commit a merged subrepo branch:
 subrepo:commit() {
-  # XXX This needs to be 'ref-exists':
-  # if ! git:branch-exists "$branch"; then
-  #   error "Commit point '$subrepo_commit_ref' does not exist."
-  # fi
+  o "Check that '$subrepo_commit_ref' exists"
+  git:rev-exists "$subrepo_commit_ref" ||
+    error "Commit ref '$subrepo_commit_ref' does not exist."
 
+  o "Remove old content of the subdir."
   (
     cd "./$subdir"
     RUN rm -fr $(ls -A)
   )
 
-  # Put remote subrepo content in subdir:
+  o "Put remote subrepo content into '$subdir/'."
   GIT_WORK_TREE="$subdir" RUN git reset --hard "$subrepo_commit_ref"
 
-  # Reset index to original commit:
+  o "Reset index to original commit"
   RUN git reset --mixed "$original_head_commit"
 
-  # Add a new .gitrepo file:
+  o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
 
-  # Add the subdir content to mainline index:
+  o "Add '$subdir/' content to the index."
   RUN git add -A "$subdir"
 
-  # Commit this subrepo clone:
+  o "Commit to the '$original_head_branch' branch."
   RUN git commit -m "$(subrepo:commit-message)"
+
+  o "Done"
 }
+
+o() {
+  $verbose_wanted && echo "* $1"
+  # bash -i || true
+  :
+}
+
 
 # Show detailed status report for a subrepo:
 subrepo:status() {
@@ -454,14 +510,20 @@ Git subrepo '$subdir':
   Tracking Branch: $subrepo_branch
 ...
 
-    [ -n "$subrepo_commit" ] && cat <<...
+    [ -z "$subrepo_commit" ] || cat <<...
   Pulled Commit:   $(git rev-parse --short $subrepo_commit)
 ...
 
-    cat <<...
+    if [ -n "$subrepo_parent" ]; then
+      cat <<...
   Parent Commit:   $(git rev-parse --short $subrepo_parent)
-
 ...
+    elif [ -n "$subrepo_former" ]; then
+      cat <<...
+  Former Commit:   $(git rev-parse --short $subrepo_former) *** DEPRECATED ***
+...
+    fi
+    echo
   done
 }
 
@@ -485,6 +547,11 @@ subrepo:clean() {
   if [ -e ".git/$ref" ]; then
     RUN git update-ref -d "$ref"
     say "Removed ref '$ref'"
+  fi
+
+  # Remove all subrepo refs if --all
+  if "$all_wanted"; then
+    RUN rm -fr .git/refs/subrepo/
   fi
 }
 
@@ -706,6 +773,11 @@ read-gitrepo-file() {
   FAIL=false \
   SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
   subrepo_parent="$output"
+
+  if [ -z "$subrepo_parent" ]; then
+    SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.former
+    subrepo_former="$output"
+  fi
 }
 
 # Update the subdir/.gitrepo state file:
@@ -909,8 +981,11 @@ get-command-info() {
 #------------------------------------------------------------------------------
 
 git:branch-exists() {
-  local branch="$1"
-  git show-ref --verify --quiet "refs/heads/$branch"
+  git:rev-exists "refs/heads/$1"
+}
+
+git:rev-exists() {
+  git rev-list "$1" -1 &> /dev/null
 }
 
 git:get-head-branch-name() {
