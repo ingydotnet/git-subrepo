@@ -653,13 +653,12 @@ get-command-options() {
   fi
 }
 
+options_branch='all force'
+options_clean='all force'
 options_clone='branch force'
+options_fetch='all branch remote'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
-options_branch='all force'
-options_fetch='all branch remote'
-# options_status='fetch'
-options_clean='all'
 check_option() {
   local var="options_$command"
   [[ ${!var} =~ $1 ]] ||
