@@ -179,8 +179,8 @@ command:fetch() {
 command:branch() {
   command-setup +subdir
   if $fetch_wanted; then
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
-    subrepo:fetch
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    CALL subrepo:fetch
   fi
 
   if $force_wanted; then
@@ -259,7 +259,7 @@ command:status() {
       continue
     fi
 
-    # SubRepo Branch:
+    # Subrepo Branch:
     local branch="subrepo/$subdir"
     OUT=true RUN git for-each-ref "refs/heads/$branch"
     local branch_ok="$output"
@@ -268,7 +268,7 @@ command:status() {
 Git subrepo '$subdir':
 ...
     [ -n "$branch_ok" ] && cat <<...
-  SubRepo Branch:  $branch
+  Subrepo Branch:  $branch
 ...
 
     local remote="subrepo/$subdir"
@@ -284,7 +284,7 @@ Git subrepo '$subdir':
     local ref="refs/subrepo/$subdir/upstream"
     OUT=true RUN git for-each-ref "$ref"
     [ -z "$output" ] || cat <<...
-  Remote Ref:      $ref
+  Upstream Ref:    $ref
 ...
 
     cat <<...
@@ -297,8 +297,9 @@ Git subrepo '$subdir':
 
     if [ -n "$subrepo_parent" ]; then
       cat <<...
-  Parent Commit:   $(git rev-parse --short $subrepo_parent)
+  Pull Parent:     $(git rev-parse --short $subrepo_parent)
 ...
+    # TODO Remove this eventually:
     elif [ -n "$subrepo_former" ]; then
       cat <<...
   Former Commit:   $(git rev-parse --short $subrepo_former) *** DEPRECATED ***
@@ -653,7 +654,7 @@ get-command-options() {
   fi
 }
 
-options_branch='all force'
+options_branch='all fetch force'
 options_clean='all force'
 options_clone='branch force'
 options_fetch='all branch remote'
