@@ -203,7 +203,7 @@ command:commit() {
   # preserved much better, since it could change between the rebase and the
   # commit. We can at least verify the the upstream HEAD is one of the subrepo
   # branch commits.
-  local ref="refs/subrepo/remote/$subdir"
+  local ref="refs/subrepo/$subdir/remote"
   git:rev-exists "$ref" ||
     error "Can't find ref '$ref'."
 
@@ -285,9 +285,7 @@ subrepo:clone() {
 }
 
 subrepo:pull() {
-  subrepo:branch
-
-  local upstream_ref="subrepo/remote/$subdir"
+  local upstream_ref="refs/subrepo/$subdir/remote"
   if git:rev-exists "$upstream_ref"; then
     o "Using upstream ref '$upstream_ref'."
   else
@@ -364,7 +362,7 @@ subrepo:fetch() {
     fi
   fi
 
-  local ref="refs/subrepo/remote/$subdir"
+  local ref="refs/subrepo/$subdir/remote"
   OUT=true RUN git for-each-ref "$ref"
   if [ -z "$output" ]; then
     RUN git update-ref "$ref" "$upstream_head"
@@ -526,7 +524,7 @@ Git subrepo '$subdir':
   Remote URL:      $subrepo_remote
 ...
 
-    local ref="refs/subrepo/remote/$subdir"
+    local ref="refs/subrepo/$subdir/remote"
     OUT=true RUN git for-each-ref "$ref"
     [ -z "$output" ] || cat <<...
   Remote Ref:      $ref
@@ -569,7 +567,7 @@ subrepo:clean() {
   fi
 
   # Remove remote ref if exists:
-  local ref="refs/subrepo/remote/$subdir"
+  local ref="refs/subrepo/$subdir/remote"
   if [ -e ".git/$ref" ]; then
     RUN git update-ref -d "$ref"
     say "Removed ref '$ref'"

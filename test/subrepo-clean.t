@@ -18,7 +18,7 @@ subrepo-clone-bar-into-foo
 
 test-exists \
   "$OWNER/foo/.git/refs/heads/subrepo/bar" \
-  "$OWNER/foo/.git/refs/subrepo/remote/bar"
+  "$OWNER/foo/.git/refs/subrepo/bar/remote"
 
 is "$(
   cd $OWNER/foo
@@ -26,12 +26,12 @@ is "$(
 )" \
   "Removed branch 'subrepo/bar'
 Removed remote 'subrepo/bar'
-Removed ref 'refs/subrepo/remote/bar'" \
+Removed ref 'refs/subrepo/bar/remote'" \
   "subrepo clean command output is correct"
 
 test-exists \
   "!$OWNER/foo/.git/refs/heads/subrepo/bar" \
-  "!$OWNER/foo/.git/refs/subrepo/remote/bar"
+  "!$OWNER/foo/.git/refs/subrepo/bar/remote"
 
 done_testing
 
