@@ -209,7 +209,7 @@ command:commit() {
   # preserved much better, since it could change between the rebase and the
   # commit. We can at least verify the the upstream HEAD is one of the subrepo
   # branch commits.
-  local ref="refs/subrepo/$subdir/remote"
+  local ref="refs/subrepo/$subdir/upstream"
   git:rev-exists "$ref" ||
     error "Can't find ref '$ref'."
 
@@ -281,7 +281,7 @@ Git subrepo '$subdir':
   Remote URL:      $subrepo_remote
 ...
 
-    local ref="refs/subrepo/$subdir/remote"
+    local ref="refs/subrepo/$subdir/upstream"
     OUT=true RUN git for-each-ref "$ref"
     [ -z "$output" ] || cat <<...
   Remote Ref:      $ref
@@ -379,7 +379,7 @@ subrepo:clone() {
 }
 
 subrepo:pull() {
-  local upstream_ref="refs/subrepo/$subdir/remote"
+  local upstream_ref="refs/subrepo/$subdir/upstream"
   if git:rev-exists "$upstream_ref"; then
     o "Using upstream ref '$upstream_ref'."
   else
@@ -451,7 +451,7 @@ subrepo:fetch() {
     fi
   fi
 
-  local ref="refs/subrepo/$subdir/remote"
+  local ref="refs/subrepo/$subdir/upstream"
   o "Create ref '$ref'."
   RUN git update-ref "$ref" "$upstream_head"
 }
@@ -557,7 +557,7 @@ subrepo:clean() {
   fi
 
   # Remove remote ref if exists:
-  local ref="refs/subrepo/$subdir/remote"
+  local ref="refs/subrepo/$subdir/upstream"
   if [ -e ".git/$ref" ]; then
     o "Remove ref '$ref'."
     RUN git update-ref -d "$ref"
@@ -959,9 +959,9 @@ get-command-info() {
     local lib="$(dirname "$bin")"
     # XXX Makefile needs to install these symlinks:
     # If `git-subrepo` was system-installed (`make install`):
-    if [ -e "$lib/git-subrepo.d/remote" ] &&
+    if [ -e "$lib/git-subrepo.d/upstream" ] &&
        [ -e "$lib/git-subrepo.d/commit" ]; then
-      command_remote=$(readlink "$lib/git-subrepo.d/remote")
+      command_remote=$(readlink "$lib/git-subrepo.d/upstream")
       command_commit=$(readlink "$lib/git-subrepo.d/commit")
     elif [[ "$lib" =~ / ]]; then
       lib="$(dirname "$lib")"
