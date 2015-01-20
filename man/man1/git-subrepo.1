@@ -71,7 +71,7 @@
 .\" ========================================================================
 .\"
 .IX Title "README 1"
-.TH README 1 "2015-01-18" "perl v5.18.1" "User Contributed Perl Documentation"
+.TH README 1 "2015-01-20" "perl v5.18.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -321,7 +321,10 @@ The \f(CW\*(C`fetch\*(C'\fR and \f(CW\*(C`branch\*(C'\fR operations (and other c
 create temporary things like refs, branches and remotes. This command removes
 all those things.
 .Sp
-The \f(CW\*(C`clean\*(C'\fR command takes the \f(CW\*(C`\-\-all\*(C'\fR option.
+Use \f(CW\*(C`\-\-force\*(C'\fR to remove refs. Refs are not removed by default because they
+are sometimes needed between commands.
+.Sp
+The \f(CW\*(C`clean\*(C'\fR command takes the \f(CW\*(C`\-\-all\*(C'\fR and \f(CW\*(C`\-\-force\*(C'\fR options.
 .ie n .IP """git subrepo help""" 4
 .el .IP "\f(CWgit subrepo help\fR" 4
 .IX Item "git subrepo help"

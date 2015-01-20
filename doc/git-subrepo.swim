@@ -135,8 +135,8 @@ the same arguments. Keep reading…
 
   Merge local changes onto upstream branch, and push upstream.
 
-  Fetch the upstream remote, rebase or merge on top of that head, and push back
-  to the remote. Effectively, do these commands:
+  Fetch the upstream remote, rebase or merge on top of that head, and push
+  back to the remote. Effectively, do these commands:
 
   * `git subrepo pull <subdir>`
   * `git push subrepo/<subdir> subrepo/remote/<subdir>`
@@ -191,10 +191,10 @@ the same arguments. Keep reading…
   branch history. That way the same branch can push upstream. Use the
   `--force` option to commit anyway.
 
-  Note: You may `commit` any Git ref to the subrepo. This is not normally done,
-  but it is how you can do a `pull` by hand when the `branch` fails because you
-  have no local commits (by committing the remote ref). The ref still needs to
-  have the upstream HEAD (unless, of course, you force it).
+  Note: You may `commit` any Git ref to the subrepo. This is not normally
+  done, but it is how you can do a `pull` by hand when the `branch` fails
+  because you have no local commits (by committing the remote ref). The ref
+  still needs to have the upstream HEAD (unless, of course, you force it).
 
   The `commit` command accepts the `--force` option.
 
@@ -212,10 +212,13 @@ the same arguments. Keep reading…
   Remove artifacts created by `fetch` and `branch` commands.
 
   The `fetch` and `branch` operations (and other commands that call them)
-  create temporary things like refs, branches and remotes. This command removes
-  all those things.
+  create temporary things like refs, branches and remotes. This command
+  removes all those things.
 
-  The `clean` command takes the `--all` option.
+  Use `--force` to remove refs. Refs are not removed by default because they
+  are sometimes needed between commands.
+
+  The `clean` command takes the `--all` and `--force` options.
 
 - `git subrepo help`
 
@@ -304,7 +307,8 @@ a line like this one to your shell startup script:
 
   source /path/to/git-subrepo/init
 
-That will modify your `PATH` and `MANPATH`, and also enable command completion.
+That will modify your `PATH` and `MANPATH`, and also enable command
+completion.
 
 The second method is to do these things by hand. This might afford you more
 control of your shell environment. Simply add the `lib` and `man` directories

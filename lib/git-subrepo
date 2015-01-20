@@ -205,16 +205,15 @@ No local subrepo commits since last pull/clone."
 command:commit() {
   command-setup +subdir subrepo_commit_ref
 
-  # XXX We need the fetch ref used for the branch rebase. This needs to be
-  # preserved much better, since it could change between the rebase and the
-  # commit. We can at least verify the the upstream HEAD is one of the subrepo
-  # branch commits.
-  local ref="refs/subrepo/$subdir/upstream"
-  git:rev-exists "$ref" ||
-    error "Can't find ref '$ref'."
-
-  OUT=true RUN git rev-parse "$ref"
-  upstream_head="$output"
+  # Get the upstream head associated with the commit:
+  {
+    # XXX We need the fetch ref used for the rebase. This needs to be preserved
+    # better, since it could change between the rebase and the commit.
+    local ref="refs/subrepo/$subdir/upstream"
+    git:rev-exists "$ref" ||
+      error "Can't find ref '$ref'."
+    upstream_head="$(git rev-parse "$ref")"
+  }
 
   [ -n "$subrepo_commit_ref" ] ||
     subrepo_commit_ref="subrepo/$subdir"
@@ -259,16 +258,12 @@ command:status() {
       continue
     fi
 
-    # Subrepo Branch:
-    local branch="subrepo/$subdir"
-    OUT=true RUN git for-each-ref "refs/heads/$branch"
-    local branch_ok="$output"
-
     cat <<...
 Git subrepo '$subdir':
 ...
-    [ -n "$branch_ok" ] && cat <<...
-  Subrepo Branch:  $branch
+
+    git:branch-exists "subrepo/$subdir" && cat <<...
+  Subrepo Branch:  subrepo/$subdir
 ...
 
     local remote="subrepo/$subdir"
@@ -282,8 +277,7 @@ Git subrepo '$subdir':
 ...
 
     local ref="refs/subrepo/$subdir/upstream"
-    OUT=true RUN git for-each-ref "$ref"
-    [ -z "$output" ] || cat <<...
+    git:ref-exists "$ref" && cat <<...
   Upstream Ref:    $ref
 ...
 
@@ -299,6 +293,7 @@ Git subrepo '$subdir':
       cat <<...
   Pull Parent:     $(git rev-parse --short $subrepo_parent)
 ...
+
     # TODO Remove this eventually:
     elif [ -n "$subrepo_former" ]; then
       cat <<...
@@ -519,6 +514,9 @@ subrepo:commit() {
   git:rev-exists "$subrepo_commit_ref" ||
     error "Commit ref '$subrepo_commit_ref' does not exist."
 
+  # TODO verify $upstream_head is one of the subrepo branch commits.
+  # TODO allow --force to commit anyway.
+
   o "Remove old content of the subdir."
   (
     cd "./$subdir"
@@ -557,15 +555,8 @@ subrepo:clean() {
     RUN git remote rm "$remote"
   fi
 
-  # Remove remote ref if exists:
-  local ref="refs/subrepo/$subdir/upstream"
-  if [ -e ".git/$ref" ]; then
-    o "Remove ref '$ref'."
-    RUN git update-ref -d "$ref"
-  fi
-
   if "$force_wanted"; then
-    # Remove all subrepo refs if --all
+    o "Remove all subrepo refs."
     if "$all_wanted"; then
       RUN rm -fr .git/refs/subrepo/
     else
@@ -1006,6 +997,10 @@ git:branch-exists() {
 
 git:rev-exists() {
   git rev-list "$1" -1 &> /dev/null
+}
+
+git:ref-exists() {
+  test -n "$(git for-each-ref "$1")"
 }
 
 git:get-head-branch-name() {
