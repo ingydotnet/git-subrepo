@@ -25,12 +25,18 @@ is "$(
   git subrepo --verbose clean bar
 )" \
   "* Remove branch 'subrepo/bar'.
-* Remove remote 'subrepo/bar'.
-* Remove ref 'refs/subrepo/bar/upstream'." \
+* Remove remote 'subrepo/bar'." \
   "subrepo clean command output is correct"
 
 test-exists \
-  "!$OWNER/foo/.git/refs/heads/subrepo/bar" \
+  "!$OWNER/foo/.git/refs/heads/subrepo/bar"
+
+(
+  cd $OWNER/foo
+  git subrepo clean --force bar
+)
+
+test-exists \
   "!$OWNER/foo/.git/refs/subrepo/bar/upstream"
 
 done_testing

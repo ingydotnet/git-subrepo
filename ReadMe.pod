@@ -266,7 +266,10 @@ The C<fetch> and C<branch> operations (and other commands that call them)
 create temporary things like refs, branches and remotes. This command removes
 all those things.
 
-The C<clean> command takes the C<--all> option.
+Use C<--force> to remove refs. Refs are not removed by default because they
+are sometimes needed between commands.
+
+The C<clean> command takes the C<--all> and C<--force> options.
 
 =item C<git subrepo help>
 
