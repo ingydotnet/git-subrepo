@@ -412,6 +412,9 @@ subrepo:pull() {
     FAIL=false OUT=true RUN git rebase "$upstream_ref" "$branch_name"
     if ! OK; then
       o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
+      local ref="refs/subrepo/$subdir/upstream"
+      o "Reset everything to state before this pull."
+      RUN git update-ref -d "$ref"
       RUN git rebase --abort
       RUN git checkout --quiet "$original_head_branch"
       RUN git reset --hard "$original_head_commit"
@@ -429,7 +432,11 @@ subrepo:pull() {
   subrepo_commit_ref="$branch_name"
   CALL subrepo:commit
 
-  local ref="refs/subrepo/pull/$subdir"
+  local ref="refs/subrepo/$subdir/upstream"
+  o "Remove fetched upstream ref '$ref'."
+  RUN git update-ref -d "$ref"
+
+  local ref="refs/subrepo/$subdir/pull"
   o "Create ref '$ref' for branch '$branch_name'."
   RUN git update-ref "$ref" "$branch_name"
 }
