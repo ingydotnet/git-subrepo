@@ -155,7 +155,7 @@ command:pull() {
   elif [[ "$ERR" -eq 1 ]]; then
     say "Subrepo '$subdir' is up to date"
   elif [[ "$ERR" -eq 2 ]]; then
-    say "Rebase failed. <put instructions here...>"
+    error-pull-rebase
   else
     die
   fi
@@ -985,6 +985,26 @@ get-command-info() {
       fi
     fi
   fi
+}
+
+#------------------------------------------------------------------------------
+# Instructional errors:
+#------------------------------------------------------------------------------
+error-pull-rebase() {
+  cat <<...
+The 'git rebase' command failed during your pull.
+You will need to pull by hand. Follow these steps:
+
+  git subrepo fetch $subdir
+  git subrepo branch $subdir
+  git rebase refs/subrepo/$subdir/upstream subrepo/$subdir
+  # Resolve the conflicts
+  git checkout $original_head_branch
+  git subrepo commit $subdir
+
+See 'git help subrepo' for more help.
+
+...
 }
 
 #------------------------------------------------------------------------------
