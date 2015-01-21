@@ -85,7 +85,7 @@ The C<git-subrepo> command benefits these roles in the following ways:
 
 =item * Upstream history (clone/pull) is condensed into a single commit.
 
-=item * You can see the subrepo history by using C<< git log subrepo/remote/<subdir> >>.
+=item * You can see the subrepo history with C<< git log subrepo/<subdir>/upstream >>.
 
 =item * Commits pushed back upstream are B<not> condensed.
 
@@ -169,31 +169,40 @@ tastes, the subrepo command defers to letting you do this by hand.
 
 Like the C<clone> command, C<pull> will squash all the changes (since the last
 pull or clone) into one commit. This keeps your mainline history nice and
-clean. You can easily see the subrepo's history with the C<git log> command.
+clean. You can easily see the subrepo's history with the C<git log> command:
 
-The above commands are described in detail below.
+    git log refs/subrepo/<subdir>/upstream
+
+The set of commands used above are described in detail below.
 
 The C<pull> command accepts the C<--all>, C<--branch=>, C<--remote=> and C<--
 update> options.
 
 =item C<< git subrepo push <subdir>|--all [-r <remote>] [-b <branch>] >>
 
-Merge local changes onto upstream branch, and push upstream.
+Push a properly merged subrepo branch back upstream.
 
-Fetch the upstream remote, rebase or merge on top of that head, and push back
-to the remote. Effectively, do these commands:
+The C<push> command requires that you have a subrepo branch that has been
+merged/rebased with the upstream HEAD. That means the upstream HEAD is one of
+the commits in the subrepo branch. Normally you get a branch in this state
+with a C<pull> command:
 
-=over
+    # Commit changes to subrepo's subdir
+    git subrepo pull <subdir>
+    git subrepo push <subdir>
 
-=item * C<< git subrepo pull <subdir> >>
+Under the hood, the C<push> command does very little. It just checks a
+couple things and then does a C<git push>. It is basically a sugar command
+the lets you run:
 
-=item * C<< git push subrepo/<subdir> subrepo/<subdir> >>
+    git subrepo push <subdir>
 
-=back
+Instead of:
 
-Like with the C<pull> command, if this fails, you can do these steps by hand.
+    git push subrepo/<subdir> subrepo/<subdir>:<upstream_branch>
 
-The C<--force> option will do a force push.
+The C<--force> option will do a force push. Force pushes are typically
+discouraged. Only use this option if you fully understand it.
 
 The C<push> command accepts the C<--all>, C<--branch=>, C<--force>, C<--
 remote=> and C<--update> options.
@@ -202,7 +211,7 @@ remote=> and C<--update> options.
 
 Fetch the remote/upstream content for a subrepo.
 
-It will create a Git reference called C<< subrepo/remote/<subdir> >> that
+It will create a Git reference called C<< subrepo/<subdir>/upstream >> that
 points at the same commit as C<FETCH_HEAD>. It will also create a remote
 called C<< subrepo/<subdir> >>. These are temporary and you can remove them
 easily with the subrepo C<clean> command.
@@ -224,8 +233,7 @@ Use the C<--force> option to write over an existing C<< subrepo/<subdir>
 >> branch.
 
 Note: if no commits have been made to the subdir since the last
-      C<pull>/C<clone> then the C<branch> will fail saying "No new commit to
-      C<< <subdir> >>.
+      C<pull>/C<clone> then the C<branch> command will fail.
 
 The C<branch> command accepts the C<--all> and C<--force> options.
 
@@ -235,28 +243,23 @@ Add subrepo branch to current history as a single commit.
 
 This command is generally used after a hand-merge. You have done a C<subrepo
 branch> and merged (rebased) it with the upstream. This command takes the HEAD
-of that branch and adds it to the top of your mainline history.
+of that branch, puts its content into the subrepo subdir and adds a new commit
+for it to the top of your mainline history.
 
 This command requires that the upstream HEAD be in the C<< subrepo/<subdir> >>
 branch history. That way the same branch can push upstream. Use the C<--force>
 option to commit anyway.
-
-Note: You may C<commit> any Git ref to the subrepo. This is not normally
-      done, but it is how you can do a C<pull> by hand when the C<branch>
-      fails because you have no local commits (by committing the remote ref).
-      The ref still needs to have the upstream HEAD (unless, of course, you
-      force it).
 
 The C<commit> command accepts the C<--force> option.
 
 =item C<< git subrepo status [<subdir>] >>
 
 Get the status of a subrepo. Show the status of all subrepos by default. If
-the C<--quiet> flag is used, print less info, and on 1 line per subrepo.
+the C<--quiet> flag is used, just print the subrepo names, one per line.
 
 The C<--verbose> option will show all the recent local and upstream commits.
 
-The C<status> command takes the C<--fetch> option.
+The C<status> command accepts the C<--fetch> option.
 
 =item C<< git subrepo clean <subdir>|--all >>
 
@@ -267,7 +270,9 @@ create temporary things like refs, branches and remotes. This command removes
 all those things.
 
 Use C<--force> to remove refs. Refs are not removed by default because they
-are sometimes needed between commands.
+are sometimes needed between commands. To remove all subrepo artifacts:
+
+    git subrepo clean --all --force
 
 The C<clean> command takes the C<--all> and C<--force> options.
 

@@ -145,7 +145,7 @@ Your git history is kept squeaky clean.
 .IP "\(bu" 4
 Upstream history (clone/pull) is condensed into a single commit.
 .IP "\(bu" 4
-You can see the subrepo history by using \f(CW\*(C`git log subrepo/remote/<subdir>\*(C'\fR.
+You can see the subrepo history with \f(CW\*(C`git log subrepo/<subdir>/upstream\*(C'\fR.
 .IP "\(bu" 4
 Commits pushed back upstream are \fBnot\fR condensed.
 .IP "\(bu" 4
@@ -224,9 +224,13 @@ tastes, the subrepo command defers to letting you do this by hand.
 .Sp
 Like the \f(CW\*(C`clone\*(C'\fR command, \f(CW\*(C`pull\*(C'\fR will squash all the changes (since the last
 pull or clone) into one commit. This keeps your mainline history nice and
-clean. You can easily see the subrepo's history with the \f(CW\*(C`git log\*(C'\fR command.
+clean. You can easily see the subrepo's history with the \f(CW\*(C`git log\*(C'\fR command:
 .Sp
-The above commands are described in detail below.
+.Vb 1
+\&    git log refs/subrepo/<subdir>/upstream
+.Ve
+.Sp
+The set of commands used above are described in detail below.
 .Sp
 The \f(CW\*(C`pull\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-remote=\*(C'\fR and \f(CW\*(C`\-\-
 update\*(C'\fR options.
@@ -234,31 +238,44 @@ update\*(C'\fR options.
 .ie n .IP """git subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]""" 4
 .el .IP "\f(CWgit subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]\fR" 4
 .IX Item "git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]"
-Merge local changes onto upstream branch, and push upstream.
+Push a properly merged subrepo branch back upstream.
 .Sp
-Fetch the upstream remote, rebase or merge on top of that head, and push back
-to the remote. Effectively, do these commands:
-.RS 4
-.IP "\(bu" 4
-\&\f(CW\*(C`git subrepo pull <subdir>\*(C'\fR
-.IP "\(bu" 4
-\&\f(CW\*(C`git push subrepo/<subdir> subrepo/<subdir>\*(C'\fR
-.RE
-.RS 4
+The \f(CW\*(C`push\*(C'\fR command requires that you have a subrepo branch that has been
+merged/rebased with the upstream \s-1HEAD.\s0 That means the upstream \s-1HEAD\s0 is one of
+the commits in the subrepo branch. Normally you get a branch in this state
+with a \f(CW\*(C`pull\*(C'\fR command:
 .Sp
-Like with the \f(CW\*(C`pull\*(C'\fR command, if this fails, you can do these steps by hand.
+.Vb 3
+\&    # Commit changes to subrepo\*(Aqs subdir
+\&    git subrepo pull <subdir>
+\&    git subrepo push <subdir>
+.Ve
 .Sp
-The \f(CW\*(C`\-\-force\*(C'\fR option will do a force push.
+Under the hood, the \f(CW\*(C`push\*(C'\fR command does very little. It just checks a
+couple things and then does a \f(CW\*(C`git push\*(C'\fR. It is basically a sugar command
+the lets you run:
+.Sp
+.Vb 1
+\&    git subrepo push <subdir>
+.Ve
+.Sp
+Instead of:
+.Sp
+.Vb 1
+\&    git push subrepo/<subdir> subrepo/<subdir>:<upstream_branch>
+.Ve
+.Sp
+The \f(CW\*(C`\-\-force\*(C'\fR option will do a force push. Force pushes are typically
+discouraged. Only use this option if you fully understand it.
 .Sp
 The \f(CW\*(C`push\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-force\*(C'\fR, \f(CW\*(C`\-\-
 remote=\*(C'\fR and \f(CW\*(C`\-\-update\*(C'\fR options.
-.RE
 .ie n .IP """git subrepo fetch <subdir>|\-\-all""" 4
 .el .IP "\f(CWgit subrepo fetch <subdir>|\-\-all\fR" 4
 .IX Item "git subrepo fetch <subdir>|--all"
 Fetch the remote/upstream content for a subrepo.
 .Sp
-It will create a Git reference called \f(CW\*(C`subrepo/remote/<subdir>\*(C'\fR that
+It will create a Git reference called \f(CW\*(C`subrepo/<subdir>/upstream\*(C'\fR that
 points at the same commit as \f(CW\*(C`FETCH_HEAD\*(C'\fR. It will also create a remote
 called \f(CW\*(C`subrepo/<subdir>\*(C'\fR. These are temporary and you can remove them
 easily with the subrepo \f(CW\*(C`clean\*(C'\fR command.
@@ -279,8 +296,7 @@ This is useful for doing \f(CW\*(C`pull\*(C'\fR and \f(CW\*(C`push\*(C'\fR comma
 Use the \f(CW\*(C`\-\-force\*(C'\fR option to write over an existing \f(CW\*(C`subrepo/<subdir>\*(C'\fR branch.
 .Sp
 Note: if no commits have been made to the subdir since the last
-      \f(CW\*(C`pull\*(C'\fR/\f(CW\*(C`clone\*(C'\fR then the \f(CW\*(C`branch\*(C'\fR will fail saying "No new commit to
-      \f(CW\*(C`<subdir>\*(C'\fR.
+      \f(CW\*(C`pull\*(C'\fR/\f(CW\*(C`clone\*(C'\fR then the \f(CW\*(C`branch\*(C'\fR command will fail.
 .Sp
 The \f(CW\*(C`branch\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR and \f(CW\*(C`\-\-force\*(C'\fR options.
 .ie n .IP """git subrepo commit <subdir> [<subrepo\-ref>]""" 4
@@ -290,28 +306,23 @@ Add subrepo branch to current history as a single commit.
 .Sp
 This command is generally used after a hand-merge. You have done a \f(CW\*(C`subrepo
 branch\*(C'\fR and merged (rebased) it with the upstream. This command takes the \s-1HEAD\s0
-of that branch and adds it to the top of your mainline history.
+of that branch, puts its content into the subrepo subdir and adds a new commit
+for it to the top of your mainline history.
 .Sp
 This command requires that the upstream \s-1HEAD\s0 be in the \f(CW\*(C`subrepo/<subdir>\*(C'\fR
 branch history. That way the same branch can push upstream. Use the \f(CW\*(C`\-\-force\*(C'\fR
 option to commit anyway.
-.Sp
-Note: You may \f(CW\*(C`commit\*(C'\fR any Git ref to the subrepo. This is not normally
-      done, but it is how you can do a \f(CW\*(C`pull\*(C'\fR by hand when the \f(CW\*(C`branch\*(C'\fR
-      fails because you have no local commits (by committing the remote ref).
-      The ref still needs to have the upstream \s-1HEAD \s0(unless, of course, you
-      force it).
 .Sp
 The \f(CW\*(C`commit\*(C'\fR command accepts the \f(CW\*(C`\-\-force\*(C'\fR option.
 .ie n .IP """git subrepo status [<subdir>]""" 4
 .el .IP "\f(CWgit subrepo status [<subdir>]\fR" 4
 .IX Item "git subrepo status [<subdir>]"
 Get the status of a subrepo. Show the status of all subrepos by default. If
-the \f(CW\*(C`\-\-quiet\*(C'\fR flag is used, print less info, and on 1 line per subrepo.
+the \f(CW\*(C`\-\-quiet\*(C'\fR flag is used, just print the subrepo names, one per line.
 .Sp
 The \f(CW\*(C`\-\-verbose\*(C'\fR option will show all the recent local and upstream commits.
 .Sp
-The \f(CW\*(C`status\*(C'\fR command takes the \f(CW\*(C`\-\-fetch\*(C'\fR option.
+The \f(CW\*(C`status\*(C'\fR command accepts the \f(CW\*(C`\-\-fetch\*(C'\fR option.
 .ie n .IP """git subrepo clean <subdir>|\-\-all""" 4
 .el .IP "\f(CWgit subrepo clean <subdir>|\-\-all\fR" 4
 .IX Item "git subrepo clean <subdir>|--all"
@@ -322,7 +333,11 @@ create temporary things like refs, branches and remotes. This command removes
 all those things.
 .Sp
 Use \f(CW\*(C`\-\-force\*(C'\fR to remove refs. Refs are not removed by default because they
-are sometimes needed between commands.
+are sometimes needed between commands. To remove all subrepo artifacts:
+.Sp
+.Vb 1
+\&    git subrepo clean \-\-all \-\-force
+.Ve
 .Sp
 The \f(CW\*(C`clean\*(C'\fR command takes the \f(CW\*(C`\-\-all\*(C'\fR and \f(CW\*(C`\-\-force\*(C'\fR options.
 .ie n .IP """git subrepo help""" 4

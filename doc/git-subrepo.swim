@@ -56,7 +56,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Moving/renaming/deleting a subrepo subdir JustWorks™.
 * Your git history is kept squeaky clean.
 * Upstream history (clone/pull) is condensed into a single commit.
-* You can see the subrepo history by using `git log subrepo/remote/<subdir>`.
+* You can see the subrepo history with `git log subrepo/<subdir>/upstream`.
 * Commits pushed back upstream are *not* condensed.
 * Trivial to try any subrepo operations and then reset back.
 * No configuration required.
@@ -124,26 +124,40 @@ the same arguments. Keep reading…
 
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
-  clean. You can easily see the subrepo's history with the `git log` command.
+  clean. You can easily see the subrepo's history with the `git log` command:
 
-  The above commands are described in detail below.
+    git log refs/subrepo/<subdir>/upstream
+
+  The set of commands used above are described in detail below.
 
   The `pull` command accepts the `--all`, `--branch=`, `--remote=` and
   `--update` options.
 
 - `git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]`
 
-  Merge local changes onto upstream branch, and push upstream.
+  Push a properly merged subrepo branch back upstream.
 
-  Fetch the upstream remote, rebase or merge on top of that head, and push
-  back to the remote. Effectively, do these commands:
+  The `push` command requires that you have a subrepo branch that has been
+  merged/rebased with the upstream HEAD. That means the upstream HEAD is one
+  of the commits in the subrepo branch. Normally you get a branch in this
+  state with a `pull` command:
 
-  * `git subrepo pull <subdir>`
-  * `git push subrepo/<subdir> subrepo/<subdir>`
+    # Commit changes to subrepo's subdir
+    git subrepo pull <subdir>
+    git subrepo push <subdir>
 
-  Like with the `pull` command, if this fails, you can do these steps by hand.
+  Under the hood, the `push` command does very little. It just checks a couple
+  things and then does a `git push`. It is basically a sugar command the lets
+  you run:
 
-  The `--force` option will do a force push.
+    git subrepo push <subdir>
+
+  Instead of:
+
+    git push subrepo/<subdir> subrepo/<subdir>:<upstream_branch>
+
+  The `--force` option will do a force push. Force pushes are typically
+  discouraged. Only use this option if you fully understand it.
 
   The `push` command accepts the `--all`, `--branch=`, `--force`, `--remote=`
   and `--update` options.
@@ -152,10 +166,10 @@ the same arguments. Keep reading…
 
   Fetch the remote/upstream content for a subrepo.
 
-  It will create a Git reference called `subrepo/remote/<subdir>` that points
-  at the same commit as `FETCH_HEAD`. It will also create a remote called
-  `subrepo/<subdir>`. These are temporary and you can remove them easily with
-  the subrepo `clean` command.
+  It will create a Git reference called `subrepo/<subdir>/upstream` that
+  points at the same commit as `FETCH_HEAD`. It will also create a remote
+  called `subrepo/<subdir>`. These are temporary and you can remove them
+  easily with the subrepo `clean` command.
 
   The `fetch` command accepts the `--all`, `--branch=` and `--remote=`
   options.
@@ -174,8 +188,7 @@ the same arguments. Keep reading…
   branch.
 
   Note: if no commits have been made to the subdir since the last
-  `pull`/`clone` then the `branch` will fail saying "No new commit to
-  `<subdir>`.
+  `pull`/`clone` then the `branch` command will fail.
 
   The `branch` command accepts the `--all` and `--force` options.
 
@@ -185,27 +198,23 @@ the same arguments. Keep reading…
 
   This command is generally used after a hand-merge. You have done a `subrepo
   branch` and merged (rebased) it with the upstream. This command takes the
-  HEAD of that branch and adds it to the top of your mainline history.
+  HEAD of that branch, puts its content into the subrepo subdir and adds a new
+  commit for it to the top of your mainline history.
 
   This command requires that the upstream HEAD be in the `subrepo/<subdir>`
   branch history. That way the same branch can push upstream. Use the
   `--force` option to commit anyway.
-
-  Note: You may `commit` any Git ref to the subrepo. This is not normally
-  done, but it is how you can do a `pull` by hand when the `branch` fails
-  because you have no local commits (by committing the remote ref). The ref
-  still needs to have the upstream HEAD (unless, of course, you force it).
 
   The `commit` command accepts the `--force` option.
 
 - `git subrepo status [<subdir>]`
 
   Get the status of a subrepo. Show the status of all subrepos by default. If
-  the `--quiet` flag is used, print less info, and on 1 line per subrepo.
+  the `--quiet` flag is used, just print the subrepo names, one per line.
 
   The `--verbose` option will show all the recent local and upstream commits.
 
-  The `status` command takes the `--fetch` option.
+  The `status` command accepts the `--fetch` option.
 
 - `git subrepo clean <subdir>|--all`
 
@@ -216,7 +225,9 @@ the same arguments. Keep reading…
   removes all those things.
 
   Use `--force` to remove refs. Refs are not removed by default because they
-  are sometimes needed between commands.
+  are sometimes needed between commands. To remove all subrepo artifacts:
+
+    git subrepo clean --all --force
 
   The `clean` command takes the `--all` and `--force` options.
 
