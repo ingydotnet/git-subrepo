@@ -9,7 +9,7 @@ use Test::More
 {
   output="$(git subrepo status)"
 
-  like "$output" "Status for 2 subrepos:" \
+  like "$output" "2 subrepos:" \
     "Status intro ok"
 
   like "$output" "Git subrepo 'ext/bashplus':" \
