@@ -163,8 +163,15 @@ command:pull() {
 
 # `git subrepo push <subdir>` command:
 command:push() {
-  command-setup +subdir subrepo_push_ref
-  subrepo:push
+  command-setup +subdir
+
+  local branch_name="subrepo/$subdir"
+  git:branch-exists "$branch_name" ||
+    error "No subrepo branch '$branch_name' to push."
+
+  o "Push branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
+  RUN git push "$subrepo_remote" "$branch_name":"$subrepo_branch"
+
   say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
@@ -400,12 +407,12 @@ subrepo:pull() {
     if ! OK; then
       o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
       RUN git rebase --abort
-      RUN git checkout "$original_head_branch"
+      RUN git checkout --quiet "$original_head_branch"
       RUN git reset --hard "$original_head_commit"
       OK=false; ERR=2; return
     fi
     o "Checkout '$original_head_branch'."
-    git checkout "$original_head_branch"
+    git checkout --quiet "$original_head_branch"
   else
     o "Subrepo branch failed. No local subrepo commits to merge."
     o "Create branch '$branch_name' from the fetched upstream instead."
@@ -419,12 +426,6 @@ subrepo:pull() {
   local ref="refs/subrepo/pull/$subdir"
   o "Create ref '$ref' for branch '$branch_name'."
   RUN git update-ref "$ref" "$branch_name"
-}
-
-subrepo:push() {
-  local branch_name="subrepo/$subdir"
-  o "Push branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push --dry-run "$subrepo_remote" "$branch_name":"$subrepo_branch"
 }
 
 # Fetch the subrepo's remote branch content:
