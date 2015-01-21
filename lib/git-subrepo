@@ -694,10 +694,10 @@ get-params() {
       fi
       printf -v ${arg#+} "${command_arguments[i]}"
     # Look for function name after ':' to provide a default value
-    elif [[ "$arg" =~ : ]]; then
+    else
       if [ $i -lt $num ]; then
         printf -v ${arg%:*} "${command_arguments[i]}"
-      else
+      elif [[ "$arg" =~ : ]]; then
         "${arg#*:}"
       fi
     fi
