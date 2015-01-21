@@ -265,6 +265,9 @@ command:status() {
     subrepo_remote=
     subrepo_branch=
     read-gitrepo-file
+    if $fetch_wanted; then
+      subrepo:fetch
+    fi
 
     if $quiet_wanted; then
       echo "$subdir"
@@ -661,6 +664,7 @@ options_commit='force'
 options_fetch='all branch remote'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
+options_status='fetch'
 check_option() {
   local var="options_$command"
   [[ ${!var} =~ $1 ]] ||
