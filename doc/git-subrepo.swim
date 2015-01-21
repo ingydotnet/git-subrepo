@@ -111,7 +111,7 @@ the same arguments. Keep reading…
 
   * `git subrepo fetch <subdir>`
   * `git subrepo branch <subdir>`
-  * `git rebase subrepo/remote/<subdir> subrepo/<subdir>`
+  * `git rebase refs/subrepo/<subdir>/upstream subrepo/<subdir>`
   * `git checkout ORIG_HEAD`
   * `git subrepo commit <subdir>`
 
@@ -139,7 +139,7 @@ the same arguments. Keep reading…
   back to the remote. Effectively, do these commands:
 
   * `git subrepo pull <subdir>`
-  * `git push subrepo/<subdir> subrepo/remote/<subdir>`
+  * `git push subrepo/<subdir> subrepo/<subdir>`
 
   Like with the `pull` command, if this fails, you can do these steps by hand.
 

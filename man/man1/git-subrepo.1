@@ -208,7 +208,7 @@ The \f(CW\*(C`pull\*(C'\fR command will attempt to do the following commands in 
 .IP "\(bu" 4
 \&\f(CW\*(C`git subrepo branch <subdir>\*(C'\fR
 .IP "\(bu" 4
-\&\f(CW\*(C`git rebase subrepo/remote/<subdir> subrepo/<subdir>\*(C'\fR
+\&\f(CW\*(C`git rebase refs/subrepo/<subdir>/upstream subrepo/<subdir>\*(C'\fR
 .IP "\(bu" 4
 \&\f(CW\*(C`git checkout ORIG_HEAD\*(C'\fR
 .IP "\(bu" 4
@@ -242,7 +242,7 @@ to the remote. Effectively, do these commands:
 .IP "\(bu" 4
 \&\f(CW\*(C`git subrepo pull <subdir>\*(C'\fR
 .IP "\(bu" 4
-\&\f(CW\*(C`git push subrepo/<subdir> subrepo/remote/<subdir>\*(C'\fR
+\&\f(CW\*(C`git push subrepo/<subdir> subrepo/<subdir>\*(C'\fR
 .RE
 .RS 4
 .Sp

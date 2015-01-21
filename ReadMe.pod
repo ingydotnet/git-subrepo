@@ -153,7 +153,7 @@ The C<pull> command will attempt to do the following commands in one go:
 
 =item * C<< git subrepo branch <subdir> >>
 
-=item * C<< git rebase subrepo/remote/<subdir> subrepo/<subdir> >>
+=item * C<< git rebase refs/subrepo/<subdir>/upstream subrepo/<subdir> >>
 
 =item * C<git checkout ORIG_HEAD>
 
@@ -187,7 +187,7 @@ to the remote. Effectively, do these commands:
 
 =item * C<< git subrepo pull <subdir> >>
 
-=item * C<< git push subrepo/<subdir> subrepo/remote/<subdir> >>
+=item * C<< git push subrepo/<subdir> subrepo/<subdir> >>
 
 =back
 
