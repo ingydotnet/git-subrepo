@@ -58,7 +58,7 @@ install-lib:
 
 install-doc:
 	install -C -d -m 0755 $(INSTALL_MAN)
-	install -C -m 0644 doc/$(NAME).1 $(INSTALL_MAN)
+	install -C -m 0644 $(MAN1)/$(NAME).1 $(INSTALL_MAN)
 
 
 
