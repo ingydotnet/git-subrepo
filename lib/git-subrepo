@@ -169,8 +169,11 @@ command:push() {
   git:branch-exists "$branch_name" ||
     error "No subrepo branch '$branch_name' to push."
 
+  local force=
+  "$force_wanted" && force=--force
+
   o "Push branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push "$subrepo_remote" "$branch_name":"$subrepo_branch"
+  RUN git push $force "$subrepo_remote" "$branch_name":"$subrepo_branch"
 
   say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
