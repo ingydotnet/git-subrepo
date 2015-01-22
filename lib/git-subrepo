@@ -435,11 +435,10 @@ subrepo:pull() {
 
 # Push a properly merged subrepo branch upstream:
 subrepo:push() {
-set -x
   if [ -z "$branch" ]; then
-    branch="subrepo-pull/$subdir"
+    branch="subrepo-push/$subdir"
     if git:branch-exists "$branch"; then
-      error "There is a previous pull branch '$branch'. Delete it first."
+      error "There is a previous push branch '$branch'. Delete it first."
     fi
     o "Create subrepo branch '$branch':"
     CALL subrepo:branch "$branch"
@@ -472,7 +471,7 @@ set -x
   o "Push branch '$branch' to '$subrepo_remote' ($subrepo_branch)."
   RUN git push $force "$subrepo_remote" "$branch":"$subrepo_branch"
 
-  if [ "$branch" == "subrepo-pull/$subdir" ]; then
+  if [ "$branch" == "subrepo-push/$subdir" ]; then
     o "Remove branch '$branch' and ref '$upstream_ref'"
     RUN git branch -D "$branch"
     RUN git update-ref -d "$upstream_ref"
