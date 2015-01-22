@@ -26,6 +26,8 @@ subrepo-clone-bar-into-foo
     'subrepo pull command output is correct'
 }
 
+# XXX Test subrepo-pull/bar not exist
+
 # Test subrepo file content:
 gitrepo=$OWNER/foo/bar/.gitrepo
 {

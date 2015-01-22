@@ -153,7 +153,7 @@ The C<pull> command will attempt to do the following commands in one go:
 
 =item * C<< git subrepo branch <subdir> >>
 
-=item * C<< git rebase refs/subrepo/<subdir>/upstream subrepo/<subdir> >>
+=item * C<< git rebase subrepo/<subdir>{/upstream,} >>
 
 =item * C<git checkout ORIG_HEAD>
 
@@ -178,31 +178,24 @@ The set of commands used above are described in detail below.
 The C<pull> command accepts the C<--all>, C<--branch=>, C<--remote=> and C<--
 update> options.
 
-=item C<< git subrepo push <subdir>|--all [-r <remote>] [-b <branch>] >>
+=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] >>
 
 Push a properly merged subrepo branch back upstream.
 
-The C<push> command requires that you have a subrepo branch that has been
-merged/rebased with the upstream HEAD. That means the upstream HEAD is one of
-the commits in the subrepo branch. Normally you get a branch in this state
-with a C<pull> command:
+The C<push> command requires a branch that has been properly merged/rebased
+with the upstream HEAD. That means the upstream HEAD is one of the commits in
+the branch. If you don't specify a branch to push, one will be created for you
+using the same techniques as a pull (except it won't be committed locally).
+Otherwise you can name a properly merged branch. Often times you can use the
+branch commit from the last pull, which is saved as C<<
+refs/subrepo/<subdir>/pull >>.
 
-    # Commit changes to subrepo's subdir
-    git subrepo pull <subdir>
-    git subrepo push <subdir>
-
-Under the hood, the C<push> command does very little. It just checks a
-couple things and then does a C<git push>. It is basically a sugar command
-the lets you run:
-
-    git subrepo push <subdir>
-
-Instead of:
-
-    git push subrepo/<subdir> subrepo/<subdir>:<upstream_branch>
+After that, the C<push> command just checks that the branch contains the
+upstream HEAD and then pushes it upstream.
 
 The C<--force> option will do a force push. Force pushes are typically
-discouraged. Only use this option if you fully understand it.
+discouraged. Only use this option if you fully understand it. (The C<--force>
+option will NOT check for a proper merge. ANY branch will be force pushed!)
 
 The C<push> command accepts the C<--all>, C<--branch=>, C<--force>, C<--
 remote=> and C<--update> options.

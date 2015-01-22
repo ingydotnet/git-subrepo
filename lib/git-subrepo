@@ -163,18 +163,9 @@ command:pull() {
 
 # `git subrepo push <subdir>` command:
 command:push() {
-  command-setup +subdir
-
-  local branch_name="subrepo/$subdir"
-  git:branch-exists "$branch_name" ||
-    error "No subrepo branch '$branch_name' to push."
-
-  local force=
-  "$force_wanted" && force=--force
-
-  o "Push branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push $force "$subrepo_remote" "$branch_name":"$subrepo_branch"
-
+  local branch=
+  command-setup +subdir branch
+  subrepo:push
   say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
 }
 
@@ -390,6 +381,7 @@ subrepo:clone() {
   CALL subrepo:commit
 }
 
+# Properly merge a local subrepo branch with upstream and commit to mainline:
 subrepo:pull() {
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
   CALL subrepo:fetch
@@ -441,6 +433,52 @@ subrepo:pull() {
   RUN git update-ref "$ref" "$branch_name"
 }
 
+# Push a properly merged subrepo branch upstream:
+subrepo:push() {
+set -x
+  if [ -z "$branch" ]; then
+    branch="subrepo-pull/$subdir"
+    if git:branch-exists "$branch"; then
+      error "There is a previous pull branch '$branch'. Delete it first."
+    fi
+    o "Create subrepo branch '$branch':"
+    CALL subrepo:branch "$branch"
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    CALL subrepo:fetch
+    local upstream_ref="refs/subrepo/$subdir/upstream"
+    o "git rebase $upstream_ref $branch"
+    FAIL=false OUT=true RUN git rebase "$upstream_ref" "$branch"
+    RUN git checkout "$original_head_branch"
+  else
+    if ! git:rev-exists "$branch"; then
+      error "'$branch' is not a valid commit."
+    fi
+  fi
+
+  o "Make sure that '$branch' exists."
+  git:branch-exists "$branch" ||
+    error "No subrepo branch '$branch' to push."
+
+  if ! "$force_wanted"; then
+    o "Make sure '$branch' contains the '$upstream_ref' HEAD."
+    if ! git:commit-in-rev-list "$upstream_head" "$branch"; then
+      error "Can't commit: '$branch' doesn't contain upstream HEAD."
+    fi
+  fi
+
+  local force=
+  "$force_wanted" && force=--force
+
+  o "Push branch '$branch' to '$subrepo_remote' ($subrepo_branch)."
+  RUN git push $force "$subrepo_remote" "$branch":"$subrepo_branch"
+
+  if [ "$branch" == "subrepo-pull/$subdir" ]; then
+    o "Remove branch '$branch' and ref '$upstream_ref'"
+    RUN git branch -D "$branch"
+    RUN git update-ref -d "$upstream_ref"
+  fi
+}
+
 # Fetch the subrepo's remote branch content:
 subrepo:fetch() {
   o "Fetch '$subrepo_remote' ($subrepo_branch)"
@@ -468,8 +506,8 @@ subrepo:fetch() {
 
 # Create a subrepo branch of changes since last pull:
 subrepo:branch() {
-  o "Check if the 'subrepo/$branch' branch already exists."
-  local branch="subrepo/$subdir"
+  local branch="${1:-"subrepo/$subdir"}"
+  o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
   o "Make sure there is at least one commit after the last pull."
@@ -529,7 +567,7 @@ subrepo:commit() {
     error "Commit ref '$subrepo_commit_ref' does not exist."
 
   if ! "$force_wanted"; then
-    o "Make sure '$subrepo_commit_ref' contains the upstream_head HEAD."
+    o "Make sure '$subrepo_commit_ref' contains the '$upstream_head' HEAD."
     if ! git:commit-in-rev-list "$upstream_head" "$subrepo_commit_ref"; then
       error \
         "Can't commit: '$subrepo_commit_ref' doesn't contain upstream HEAD."
