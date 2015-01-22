@@ -53,7 +53,7 @@ cd "$TMP"
 
 # Make a change to the main1 subrepo and push it:
 msg_main1="main1 initial add to subrepo"
-(
+( set -x
   cd main1
   echo "$msg_main1" >> share/readme
   git add share/readme
@@ -77,7 +77,7 @@ msg_main1="main1 initial add to subrepo"
 # Pull in the subrepo changes from above into main2.
 # Make a local change to the main2 subrepo and push it:
 msg_main2="main2 initial add to subrepo"
-(
+( set -x
   cd main2
   git subrepo pull share
   echo "$msg_main2" >> share/readme
@@ -96,7 +96,7 @@ msg_main2="main2 initial add to subrepo"
   git rebase --continue
   git checkout master
 
-  git subrepo push share
+  git subrepo push share subrepo/share
 ) &> /dev/null
 
 # Go back into main1 and pull the subrepo updates:

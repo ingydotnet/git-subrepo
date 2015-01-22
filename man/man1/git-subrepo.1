@@ -71,7 +71,7 @@
 .\" ========================================================================
 .\"
 .IX Title "README 1"
-.TH README 1 "2015-01-20" "perl v5.18.1" "User Contributed Perl Documentation"
+.TH README 1 "2015-01-22" "perl v5.18.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -208,7 +208,7 @@ The \f(CW\*(C`pull\*(C'\fR command will attempt to do the following commands in 
 .IP "\(bu" 4
 \&\f(CW\*(C`git subrepo branch <subdir>\*(C'\fR
 .IP "\(bu" 4
-\&\f(CW\*(C`git rebase refs/subrepo/<subdir>/upstream subrepo/<subdir>\*(C'\fR
+\&\f(CW\*(C`git rebase subrepo/<subdir>{/upstream,}\*(C'\fR
 .IP "\(bu" 4
 \&\f(CW\*(C`git checkout ORIG_HEAD\*(C'\fR
 .IP "\(bu" 4
@@ -235,38 +235,24 @@ The set of commands used above are described in detail below.
 The \f(CW\*(C`pull\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-remote=\*(C'\fR and \f(CW\*(C`\-\-
 update\*(C'\fR options.
 .RE
-.ie n .IP """git subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]""" 4
-.el .IP "\f(CWgit subrepo push <subdir>|\-\-all [\-r <remote>] [\-b <branch>]\fR" 4
-.IX Item "git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]"
+.ie n .IP """git subrepo push <subdir>|\-\-all [<branch>] [\-r <remote>] [\-b <branch>]""" 4
+.el .IP "\f(CWgit subrepo push <subdir>|\-\-all [<branch>] [\-r <remote>] [\-b <branch>]\fR" 4
+.IX Item "git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>]"
 Push a properly merged subrepo branch back upstream.
 .Sp
-The \f(CW\*(C`push\*(C'\fR command requires that you have a subrepo branch that has been
-merged/rebased with the upstream \s-1HEAD.\s0 That means the upstream \s-1HEAD\s0 is one of
-the commits in the subrepo branch. Normally you get a branch in this state
-with a \f(CW\*(C`pull\*(C'\fR command:
+The \f(CW\*(C`push\*(C'\fR command requires a branch that has been properly merged/rebased
+with the upstream \s-1HEAD.\s0 That means the upstream \s-1HEAD\s0 is one of the commits in
+the branch. If you don't specify a branch to push, one will be created for you
+using the same techniques as a pull (except it won't be committed locally).
+Otherwise you can name a properly merged branch. Often times you can use the
+branch commit from the last pull, which is saved as \f(CW\*(C`refs/subrepo/<subdir>/pull\*(C'\fR.
 .Sp
-.Vb 3
-\&    # Commit changes to subrepo\*(Aqs subdir
-\&    git subrepo pull <subdir>
-\&    git subrepo push <subdir>
-.Ve
-.Sp
-Under the hood, the \f(CW\*(C`push\*(C'\fR command does very little. It just checks a
-couple things and then does a \f(CW\*(C`git push\*(C'\fR. It is basically a sugar command
-the lets you run:
-.Sp
-.Vb 1
-\&    git subrepo push <subdir>
-.Ve
-.Sp
-Instead of:
-.Sp
-.Vb 1
-\&    git push subrepo/<subdir> subrepo/<subdir>:<upstream_branch>
-.Ve
+After that, the \f(CW\*(C`push\*(C'\fR command just checks that the branch contains the
+upstream \s-1HEAD\s0 and then pushes it upstream.
 .Sp
 The \f(CW\*(C`\-\-force\*(C'\fR option will do a force push. Force pushes are typically
-discouraged. Only use this option if you fully understand it.
+discouraged. Only use this option if you fully understand it. (The \f(CW\*(C`\-\-force\*(C'\fR
+option will \s-1NOT\s0 check for a proper merge. \s-1ANY\s0 branch will be force pushed!)
 .Sp
 The \f(CW\*(C`push\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-force\*(C'\fR, \f(CW\*(C`\-\-
 remote=\*(C'\fR and \f(CW\*(C`\-\-update\*(C'\fR options.

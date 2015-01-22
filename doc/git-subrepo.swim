@@ -111,7 +111,7 @@ the same arguments. Keep reading…
 
   * `git subrepo fetch <subdir>`
   * `git subrepo branch <subdir>`
-  * `git rebase refs/subrepo/<subdir>/upstream subrepo/<subdir>`
+  * `git rebase subrepo/<subdir>{/upstream,}`
   * `git checkout ORIG_HEAD`
   * `git subrepo commit <subdir>`
 
@@ -133,31 +133,24 @@ the same arguments. Keep reading…
   The `pull` command accepts the `--all`, `--branch=`, `--remote=` and
   `--update` options.
 
-- `git subrepo push <subdir>|--all [-r <remote>] [-b <branch>]`
+- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>]`
 
   Push a properly merged subrepo branch back upstream.
 
-  The `push` command requires that you have a subrepo branch that has been
+  The `push` command requires a branch that has been properly
   merged/rebased with the upstream HEAD. That means the upstream HEAD is one
-  of the commits in the subrepo branch. Normally you get a branch in this
-  state with a `pull` command:
+  of the commits in the branch. If you don't specify a branch to push,
+  one will be created for you using the same techniques as a pull (except it
+  won't be committed locally). Otherwise you can name a properly merged
+  branch. Often times you can use the branch commit from the last pull, which
+  is saved as `refs/subrepo/<subdir>/pull`.
 
-    # Commit changes to subrepo's subdir
-    git subrepo pull <subdir>
-    git subrepo push <subdir>
-
-  Under the hood, the `push` command does very little. It just checks a couple
-  things and then does a `git push`. It is basically a sugar command the lets
-  you run:
-
-    git subrepo push <subdir>
-
-  Instead of:
-
-    git push subrepo/<subdir> subrepo/<subdir>:<upstream_branch>
+  After that, the `push` command just checks that the branch contains the
+  upstream HEAD and then pushes it upstream.
 
   The `--force` option will do a force push. Force pushes are typically
-  discouraged. Only use this option if you fully understand it.
+  discouraged. Only use this option if you fully understand it. (The `--force`
+  option will NOT check for a proper merge. ANY branch will be force pushed!)
 
   The `push` command accepts the `--all`, `--branch=`, `--force`, `--remote=`
   and `--update` options.
