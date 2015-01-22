@@ -38,7 +38,7 @@ echo;echo;echo
   message="$(
     cd $OWNER/foo
     git subrepo pull --quiet bar
-    git subrepo push bar
+    git subrepo push bar subrepo/bar
   )"
 
   # Test the output:
