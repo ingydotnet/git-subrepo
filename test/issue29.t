@@ -64,7 +64,7 @@ msg_main1="main1 initial add to subrepo"
   # do these steps. It could also cleanup afterwards.
 
   git subrepo branch share
-  git rebase refs/subrepo/share/upstream subrepo/share
+  git rebase subrepo/share{/upstream,}
   git checkout master
 
   git subrepo push share
@@ -88,7 +88,7 @@ msg_main2="main2 initial add to subrepo"
 
   # Prepare for a by-hand merge
   git subrepo branch -f -F share
-  git rebase refs/subrepo/share/upstream subrepo/share || true
+  git rebase subrepo/share{/upstream,} || true
 
   # We have a rebase conflict. Resolve it:
   git checkout --theirs readme
@@ -101,14 +101,12 @@ msg_main2="main2 initial add to subrepo"
 
 # Go back into main1 and pull the subrepo updates:
 (
-  set -x
-
   cd main1
   # git subrepo pull share
 
   # Prepare for a by-hand merge
   git subrepo branch -f -F share
-  git rebase refs/subrepo/share/upstream subrepo/share || true
+  git rebase subrepo/share{/upstream,} || true
 
   # XXX When this fails we end up needing a skip because the change has
   # already been applied. Need to find out how to detect this so we can not
