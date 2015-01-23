@@ -109,11 +109,11 @@ the same arguments. Keep reading…
 
   The `pull` command will attempt to do the following commands in one go:
 
-  * `git subrepo fetch <subdir>`
-  * `git subrepo branch <subdir>`
-  * `git rebase subrepo/<subdir>{/upstream,}`
-  * `git checkout ORIG_HEAD`
-  * `git subrepo commit <subdir>`
+    git subrepo fetch <subdir>
+    git subrepo branch <subdir>
+    git rebase subrepo/<subdir>{/upstream,}
+    git checkout ORIG_HEAD
+    git subrepo commit <subdir>
 
   In other words, you could do all the above commands yourself, for the same
   effect. If any of the commands fail, subrepo will stop and tell you to

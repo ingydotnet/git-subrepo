@@ -202,19 +202,14 @@ The \f(CW\*(C`clone\*(C'\fR command accepts the \f(CW\*(C`\-\-branch=\*(C'\fR an
 Update the subrepo subdir with the latest upstream changes.
 .Sp
 The \f(CW\*(C`pull\*(C'\fR command will attempt to do the following commands in one go:
-.RS 4
-.IP "\(bu" 4
-\&\f(CW\*(C`git subrepo fetch <subdir>\*(C'\fR
-.IP "\(bu" 4
-\&\f(CW\*(C`git subrepo branch <subdir>\*(C'\fR
-.IP "\(bu" 4
-\&\f(CW\*(C`git rebase subrepo/<subdir>{/upstream,}\*(C'\fR
-.IP "\(bu" 4
-\&\f(CW\*(C`git checkout ORIG_HEAD\*(C'\fR
-.IP "\(bu" 4
-\&\f(CW\*(C`git subrepo commit <subdir>\*(C'\fR
-.RE
-.RS 4
+.Sp
+.Vb 5
+\&    git subrepo fetch <subdir>
+\&    git subrepo branch <subdir>
+\&    git rebase subrepo/<subdir>{/upstream,}
+\&    git checkout ORIG_HEAD
+\&    git subrepo commit <subdir>
+.Ve
 .Sp
 In other words, you could do all the above commands yourself, for the same
 effect. If any of the commands fail, subrepo will stop and tell you to finish
@@ -234,7 +229,6 @@ The set of commands used above are described in detail below.
 .Sp
 The \f(CW\*(C`pull\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW\*(C`\-\-branch=\*(C'\fR, \f(CW\*(C`\-\-remote=\*(C'\fR and \f(CW\*(C`\-\-
 update\*(C'\fR options.
-.RE
 .ie n .IP """git subrepo push <subdir>|\-\-all [<branch>] [\-r <remote>] [\-b <branch>]""" 4
 .el .IP "\f(CWgit subrepo push <subdir>|\-\-all [<branch>] [\-r <remote>] [\-b <branch>]\fR" 4
 .IX Item "git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>]"

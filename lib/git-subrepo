@@ -156,9 +156,11 @@ command:pull() {
     say "Subrepo '$subdir' is up to date"
   elif [[ "$ERR" -eq 2 ]]; then
     error-pull-rebase
+    return "$ERR"
   else
-    die
+    die "Unknown pull error code: '$ERR'"
   fi
+  return 0
 }
 
 # `git subrepo push <subdir>` command:
@@ -404,12 +406,6 @@ subrepo:pull() {
     FAIL=false OUT=true RUN git rebase "$upstream_ref" "$branch_name"
     if ! OK; then
       o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
-      local ref="refs/subrepo/$subdir/upstream"
-      o "Reset everything to state before this pull."
-      RUN git update-ref -d "$ref"
-      RUN git rebase --abort
-      RUN git checkout --quiet "$original_head_branch"
-      RUN git reset --hard "$original_head_commit"
       OK=false; ERR=2; return
     fi
     o "Checkout '$original_head_branch'."
@@ -435,6 +431,7 @@ subrepo:pull() {
 
 # Push a properly merged subrepo branch upstream:
 subrepo:push() {
+  local upstream_ref="refs/subrepo/$subdir/upstream"
   if [ -z "$branch" ]; then
     branch="subrepo-push/$subdir"
     if git:branch-exists "$branch"; then
@@ -444,7 +441,6 @@ subrepo:push() {
     CALL subrepo:branch "$branch"
     o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
     CALL subrepo:fetch
-    local upstream_ref="refs/subrepo/$subdir/upstream"
     o "git rebase $upstream_ref $branch"
     FAIL=false OUT=true RUN git rebase "$upstream_ref" "$branch"
     RUN git checkout "$original_head_branch"
@@ -1051,12 +1047,9 @@ get-command-info() {
 error-pull-rebase() {
   cat <<...
 The 'git rebase' command failed during your pull.
-You will need to pull by hand. Follow these steps:
+You will need to finish the pull by hand. Follow these steps:
 
-  git subrepo fetch $subdir
-  git subrepo branch $subdir
-  git rebase refs/subrepo/$subdir/upstream subrepo/$subdir
-  # Resolve the conflicts
+  # Resolve the rebase conflicts
   git checkout $original_head_branch
   git subrepo commit $subdir
 
