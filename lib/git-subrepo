@@ -592,7 +592,17 @@ subrepo:commit() {
   GIT_WORK_TREE="$subdir" RUN git reset --hard "$subrepo_commit_ref"
 
   o "Reset index to original commit"
-  RUN git reset --mixed "$original_head_commit"
+  if [[ -n "$original_head_commit" ]]; then
+    RUN git reset --mixed "$original_head_commit"
+  else
+    RUN git reset --mixed
+    # index currently considers $subdir content as deleted.
+    # Delete the index
+    local indexfile="$GIT_INDEX_FILE"
+    [[ -n "$indexfile" ]] ||
+      indexfile="$(git rev-parse --git-dir)/index"
+    RUN rm "$indexfile"
+  fi
 
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
@@ -893,8 +903,11 @@ assert-repo-is-ready() {
   # Get the original branch and commit:
   git:get-head-branch-name
   original_head_branch="$output"
-  git:get-head-branch-commit
-  original_head_commit="$output"
+
+  if [[ `git rev-parse -q --verify HEAD` ]]; then
+    git:get-head-branch-commit
+    original_head_commit="$output"
+  fi
 
   # If a subrepo branch is currently checked out, then note it:
   if [[ "$original_head_branch" =~ ^subrepo/(.*) ]]; then
@@ -911,17 +924,25 @@ assert-repo-is-ready() {
     error "Can't 'subrepo $command' outside a working tree."
 
   # HEAD exists:
-  RUN git rev-parse --verify HEAD
+  [[ "$command" == "clone" ]] ||
+    RUN git rev-parse --verify HEAD
 
   # Repo is in a clean state:
   if [[ "$command" =~ ^(clone|pull|push)$ ]]; then
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
       error "Can't $command subrepo. Unstaged changes."
-    git diff-index --quiet --ignore-submodules HEAD ||
-      error "Can't $command subrepo. Working tree has changes."
-    git diff-index --quiet --cached --ignore-submodules HEAD ||
-      error "Can't $command subrepo. Index has changes."
+    if [[ ! "$command" == "clone" || `git rev-parse -q --verify HEAD` ]]; then
+      git diff-index --quiet --ignore-submodules HEAD ||
+        error "Can't $command subrepo. Working tree has changes."
+      git diff-index --quiet --cached --ignore-submodules HEAD ||
+        error "Can't $command subrepo. Index has changes."
+    else
+      # Repo has no commits and we're cloning a subrepo. Working tree won't
+      #  possibly have changes as there was nothing initial to change.
+      [[ -z $(git diff --cached) ]] ||
+        error "Can't $command subrepo. Index has changes."
+    fi
   fi
 
   # For now, only support actions from top of repo:
@@ -1123,7 +1144,7 @@ git:ref-exists() {
 
 git:get-head-branch-name() {
   output=
-  local name="$(git rev-parse --abbrev-ref HEAD)"
+  local name="$(git symbolic-ref --short --quiet HEAD)"
   [ "$name" == HEAD ] && return
   output="$name"
 }
