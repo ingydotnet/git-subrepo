@@ -8,6 +8,11 @@ use Test::More
 
 clone-foo-and-bar
 
+(
+  mkdir -p "$OWNER/empty"
+  git init "$OWNER/empty"
+)
+
 # Test that the repos look ok:
 {
   test-exists \
@@ -15,7 +20,8 @@ clone-foo-and-bar
     "$OWNER/foo/Foo" \
     "!$OWNER/foo/bar/" \
     "$OWNER/bar/.git/" \
-    "$OWNER/bar/Bar"
+    "$OWNER/bar/Bar" \
+    "$OWNER/empty/.git/"
 }
 
 # Do the subrepo clone and test the output:
@@ -29,6 +35,16 @@ clone-foo-and-bar
   is "$clone_output" \
     "Subrepo '../../../tmp/upstream/bar' (master) cloned into 'bar'." \
     'subrepo clone command output is correct'
+
+  clone_output_empty="$(
+    cd $OWNER/empty
+    git subrepo clone ../../../$UPSTREAM/bar
+  )"
+
+  # Check output is correct:
+  is "$clone_output_empty" \
+    "Subrepo '../../../tmp/upstream/bar' (master) cloned into 'bar'." \
+    'subrepo clone command output is correct'
 }
 
 # Check that subrepo files look ok:
@@ -37,7 +53,10 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   test-exists \
     "$OWNER/foo/bar/" \
     "$OWNER/foo/bar/Bar" \
-    "$gitrepo"
+    "$gitrepo" \
+    "$OWNER/empty/bar/" \
+    "$OWNER/empty/bar/Bar" \
+    "$OWNER/empty/bar/.gitrepo"
 }
 
 # Test foo/bar/.gitrepo file contents:
@@ -89,8 +108,17 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   is "$git_status" \
     "" \
     'status is clean'
+
+  git_status_empty="$(
+    cd $OWNER/empty
+    git status -s
+  )"
+
+  is "$git_status_empty" \
+    "" \
+    'status is clean'
 }
 
-done_testing 16
+done_testing 22
 
 teardown
