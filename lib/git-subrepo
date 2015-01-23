@@ -59,6 +59,7 @@ main() {
   # Define global variables:
   local command=                # Subrepo subcommand to run
   local command_arguments=()    # Command args after getopt parsing
+  local commit_msg_args=()      # Arguments to show in the commit msg
   local subrepos=()             # List of multiple subrepos
   local quiet_wanted=false      # Output should be quiet
   local verbose_wanted=false    # Output should be verbose
@@ -661,13 +662,17 @@ get-command-options() {
       -a) all_wanted=true ;;
       -b) subrepo_branch="$1"
           override_branch="$1"
+          commit_msg_args+=("--branch=$1")
           shift ;;
-      -f) force_wanted=true ;;
+      -f) force_wanted=true
+          commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
       -r) subrepo_remote="$1"
           override_remote="$1"
+          commit_msg_args+=("--remote=$1")
           shift ;;
-      -u) update_wanted=true ;;
+      -u) update_wanted=true
+          commit_msg_args+=("--update") ;;
       -q) quiet_wanted=true ;;
       -v) verbose_wanted=true ;;
       -d) debug_wanted=true ;;
@@ -687,6 +692,7 @@ get-command-options() {
     error "'$command' is not a command. See 'git subrepo help'."
 
   command_arguments=("$@")
+  commit_msg_args+=("$@")
 
   if $all_wanted; then
     check_option all
@@ -989,7 +995,7 @@ get-commit-message() {
   if $all_wanted; then
     args+=("$subdir")
   fi
-  args+=(${command_arguments[@]})
+  args+=(${commit_msg_args[@]})
 
   # Find the specific git-subrepo code used:
   local command_remote='???'
@@ -1000,17 +1006,15 @@ get-commit-message() {
   cat <<...
 git subrepo $command ${args[@]}
 
-{"local":
-  {"subdir":  "$subdir"
-  ,"action":  "$command"}
-,"remote":
-  {"url":     "$subrepo_remote"
-  ,"branch":  "$subrepo_branch"
-  ,"commit":  "$commit"}
-,"git-subrepo":
-  {"version": "$VERSION"
-  ,"commit":  "$command_commit"
-  ,"origin":  "$command_remote"}}
+subrepo:    "$subdir"
+upstream:
+  origin:   "$subrepo_remote"
+  branch:   "$subrepo_branch"
+  commit:   "$commit"
+git-subrepo:
+  version:  "$VERSION"
+  origin:   "$command_remote"
+  commit:   "$command_commit"
 ...
 }
 
