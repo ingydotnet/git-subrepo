@@ -152,15 +152,16 @@ command:pull() {
   subrepo:pull
   if OK; then
     say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
+    return 0
   elif [[ "$ERR" -eq 1 ]]; then
     say "Subrepo '$subdir' is up to date"
+    return 0
   elif [[ "$ERR" -eq 2 ]]; then
     error-pull-rebase
     return "$ERR"
   else
     die "Unknown pull error code: '$ERR'"
   fi
-  return 0
 }
 
 # `git subrepo push <subdir>` command:
@@ -168,7 +169,13 @@ command:push() {
   local branch=
   command-setup +subdir branch
   subrepo:push
-  say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
+  if OK; then
+    say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
+    return 0
+  else
+    error-push-rebase
+    return 1
+  fi
 }
 
 # `git subrepo fetch <subdir>` command
@@ -443,6 +450,10 @@ subrepo:push() {
     CALL subrepo:fetch
     o "git rebase $upstream_ref $branch"
     FAIL=false OUT=true RUN git rebase "$upstream_ref" "$branch"
+    if ! OK; then
+      o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
+      OK=false; ERR=2; return
+    fi
     RUN git checkout "$original_head_branch"
   else
     if ! git:rev-exists "$branch"; then
@@ -1052,6 +1063,31 @@ You will need to finish the pull by hand. Follow these steps:
   # Resolve the rebase conflicts
   git checkout $original_head_branch
   git subrepo commit $subdir
+
+...
+  error-reset-message pull
+}
+
+error-push-rebase() {
+  cat <<...
+The 'git rebase' command failed during your push.
+You will need to finish the push by hand. Follow these steps:
+
+  # Resolve the rebase conflicts
+  git checkout $original_head_branch
+  git subrepo push $subdir subrepo-push/$subdir
+
+...
+  error-reset-message push
+}
+
+error-reset-message() {
+  cat <<...
+To abort the $1 and reset back to where you started:
+
+  git rebase --abort
+  git checkout ORIG_HEAD
+  git subrepo clean $subdir
 
 See 'git help subrepo' for more help.
 
