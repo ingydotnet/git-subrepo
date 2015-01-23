@@ -324,7 +324,11 @@ Git subrepo '$subdir':
 # `git subrepo clean <subdir>` command
 command:clean() {
   command-setup +subdir
+  local clean_list=()
   subrepo:clean
+  for item in "${clean_list[@]}"; do
+    say "Removed $item."
+  done
 }
 
 # Launch the manpage viewer:
@@ -606,6 +610,7 @@ subrepo:clean() {
   if [ -e ".git/$ref" ]; then
     o "Remove branch '$branch'."
     RUN git update-ref -d "$ref"
+    clean_list+=("branch '$branch'")
   fi
 
   local remote="subrepo/$subdir"
@@ -613,6 +618,7 @@ subrepo:clean() {
   if [ -n "$output" ]; then
     o "Remove remote '$remote'."
     RUN git remote rm "$remote"
+    clean_list+=("remote '$remote'")
   fi
 
   if "$force_wanted"; then
