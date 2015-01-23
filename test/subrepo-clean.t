@@ -22,10 +22,10 @@ test-exists \
 
 is "$(
   cd $OWNER/foo
-  git subrepo --verbose clean bar
+  git subrepo clean bar
 )" \
-  "* Remove branch 'subrepo/bar'.
-* Remove remote 'subrepo/bar'." \
+  "Removed branch 'subrepo/bar'.
+Removed remote 'subrepo/bar'." \
   "subrepo clean command output is correct"
 
 test-exists \
