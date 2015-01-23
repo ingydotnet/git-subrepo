@@ -59,20 +59,11 @@ msg_main1="main1 initial add to subrepo"
   git add share/readme
   git commit -m "$msg_main1"
 
-  # XXX These 3 commands need to be a part of push. Push needs a pushable
-  # branch. It looks for 'subrepo/<subdir>' branch. If none is found, it could
-  # do these steps. It could also cleanup afterwards.
-
-  git subrepo branch share
-  git rebase subrepo/share{/upstream,}
-  git checkout master
-
   git subrepo push share
-
-  # As noted above, this can be part of push too.
-
-  git subrepo clean share
 ) &> /dev/null
+
+# TODO Test that subrepo/ branches are gone
+# TODO Check the state of refs made
 
 # Pull in the subrepo changes from above into main2.
 # Make a local change to the main2 subrepo and push it:
@@ -84,38 +75,31 @@ msg_main2="main2 initial add to subrepo"
   git add share/readme
   git commit -m "$msg_main2"
 
-  # XXX This can start with a pull command instead of these 2 commands:
+  git subrepo push share || {
+    # We have a rebase conflict. Resolve it:
+    git checkout --theirs readme
+    git add readme
+    git rebase --continue
+    git checkout master
+  }
 
-  # Prepare for a by-hand merge
-  git subrepo branch -f -F share
-  git rebase subrepo/share{/upstream,} || true
+  git subrepo push share subrepo-push/share
 
-  # We have a rebase conflict. Resolve it:
-  git checkout --theirs readme
-  git add readme
-  git rebase --continue
-  git checkout master
-
-  git subrepo push share subrepo/share
 ) &> /dev/null
 
 # Go back into main1 and pull the subrepo updates:
-(
+( set -x
   cd main1
-  # git subrepo pull share
+  git subrepo pull share || {
+    # XXX When this fails we end up needing a skip because the change has
+    # already been applied. Need to find out how to detect this so we can not
+    # bail out of the pull.
 
-  # Prepare for a by-hand merge
-  git subrepo branch -f -F share
-  git rebase subrepo/share{/upstream,} || true
-
-  # XXX When this fails we end up needing a skip because the change has
-  # already been applied. Need to find out how to detect this so we can not
-  # bail out of the pull.
-
-  # We have a rebase conflict. Resolve it:
-  git rebase --skip
-  git checkout master
-  git subrepo commit share
+    # We have a rebase conflict. Resolve it:
+    git rebase --skip
+    git checkout master
+    git subrepo commit share
+  }
 ) &> /dev/null
 
 # The readme file should have both changes:
