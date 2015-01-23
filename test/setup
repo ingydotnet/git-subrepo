@@ -10,6 +10,8 @@ export BASHLIB="`
 export PATH="$BASHLIB:$PATH"
 source bash+ :std
 
+source 'lib/git-subrepo'
+
 # TODO: Move to test/tmp
 TMP="tmp"
 rm -fr $TMP

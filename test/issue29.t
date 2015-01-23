@@ -62,7 +62,9 @@ msg_main1="main1 initial add to subrepo"
   git subrepo push share
 ) &> /dev/null
 
-# TODO Test that subrepo/ branches are gone
+ok "`! git:branch-exists "subrepo-push/share"`" \
+  "The subrepo-push/share branch was deleted after push"
+
 # TODO Check the state of refs made
 
 # Pull in the subrepo changes from above into main2.
@@ -105,7 +107,7 @@ msg_main2="main2 initial add to subrepo"
 # The readme file should have both changes:
 is "$(cat main1/share/readme)" \
   "$msg_main1"$'\n'"$msg_main2" \
-  "readme has both commits"
+  "The readme file in the share repo has both subrepo commits"
 
 done_testing
 
