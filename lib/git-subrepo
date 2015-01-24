@@ -10,7 +10,7 @@ set -e
 source "${BASH_SOURCE%/*}/git-subrepo.d/bash+.bash"
 bash+:import :std can
 
-VERSION=0.1.0
+VERSION=0.2.0
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
