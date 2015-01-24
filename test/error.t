@@ -26,6 +26,20 @@ clone-foo-and-bar
   )
 }
 
+# Push when there is nothing to push, and verify push was ignored:
+{
+  is "$(
+    cd $OWNER/bar
+    catch git subrepo push foo
+  )" \
+    "git-subrepo: There is nothing new to push." \
+    "Error OK: check that 'push' requires changes to push"
+  (
+    cd $OWNER/bar
+    git subrepo --quiet clean foo
+  )
+}
+
 {
   like "$(catch git subrepo clone --foo)" \
     "error: unknown option \`foo" \
@@ -193,6 +207,6 @@ clone-foo-and-bar
     "Error OK: clone non-repo"
 }
 
-done_testing 29
+done_testing 30
 
 teardown

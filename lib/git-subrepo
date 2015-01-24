@@ -448,6 +448,9 @@ subrepo:push() {
     fi
     o "Create subrepo branch '$branch':"
     CALL subrepo:branch "$branch"
+    if ! OK; then
+      error "There is nothing new to push."
+    fi
     o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
     CALL subrepo:fetch
     o "git rebase $refs_subrepo_upstream $branch"
