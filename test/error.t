@@ -6,6 +6,8 @@ source test/setup
 
 use Test::More
 
+note "Test all error message conditions in git-subrepo"
+
 clone-foo-and-bar
 
 {
@@ -23,20 +25,6 @@ clone-foo-and-bar
     cd $OWNER/bar
     git subrepo --quiet clean foo
     git reset --quiet --hard HEAD^
-  )
-}
-
-# Push when there is nothing to push, and verify push was ignored:
-{
-  is "$(
-    cd $OWNER/bar
-    catch git subrepo push foo
-  )" \
-    "git-subrepo: There is nothing new to push." \
-    "Error OK: check that 'push' requires changes to push"
-  (
-    cd $OWNER/bar
-    git subrepo --quiet clean foo
   )
 }
 
@@ -207,6 +195,6 @@ clone-foo-and-bar
     "Error OK: clone non-repo"
 }
 
-done_testing 30
+done_testing 29
 
 teardown

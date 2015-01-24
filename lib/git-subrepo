@@ -93,7 +93,7 @@ main() {
   local SAY=true                # Flag for RUN: print command for verbose
   local EXEC=false              # Flag for RUN: run subprocess
   local OK=true                 # Flag that commands have succeeded
-  local ERR=0                   # Error code
+  local CODE=0                  # Failure reason code
   local INDENT=                 # Verbose indentation
 
   local git_version=            # Git version in use
@@ -156,16 +156,15 @@ command:pull() {
   subrepo:pull
   if OK; then
     say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
-    return 0
-  elif [[ "$ERR" -eq 1 ]]; then
+  elif [[ "$CODE" -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date"
-    return 0
-  elif [[ "$ERR" -eq 2 ]]; then
+  elif [[ "$CODE" -eq 1 ]]; then
     error-pull-rebase
-    return "$ERR"
+    return "$CODE"
   else
-    die "Unknown pull error code: '$ERR'"
+    die "Unknown pull error code: '$CODE'"
   fi
+  return 0
 }
 
 # `git subrepo push <subdir>` command:
@@ -175,11 +174,15 @@ command:push() {
   subrepo:push
   if OK; then
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
-    return 0
-  else
+  elif [[ "$CODE" -eq -1 ]]; then
+    say "Subrepo '$subdir' has no new commits to push"
+  elif [[ "$CODE" -eq 2 ]]; then
     error-push-rebase
-    return 1
+    return "$CODE"
+  else
+    die "Unknown push error code: '$CODE'"
   fi
+  return 0
 }
 
 # `git subrepo fetch <subdir>` command
@@ -403,7 +406,7 @@ subrepo:pull() {
 
   # Check if we already are up to date:
   if [ "$upstream_head_commit" == "$subrepo_commit" ]; then
-    OK=false; ERR=1; return
+    OK=false; CODE=-1; return
   fi
 
   local branch_name="subrepo/$subdir"
@@ -418,7 +421,7 @@ subrepo:pull() {
     FAIL=false OUT=true RUN git rebase "$refs_subrepo_upstream" "$branch_name"
     if ! OK; then
       o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
-      OK=false; ERR=2; return
+      CODE=1; return
     fi
     o "Checkout '$original_head_branch'."
     git checkout --quiet "$original_head_branch"
@@ -449,7 +452,7 @@ subrepo:push() {
     o "Create subrepo branch '$branch':"
     CALL subrepo:branch "$branch"
     if ! OK; then
-      error "There is nothing new to push."
+      CODE=-1; return
     fi
     o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
     CALL subrepo:fetch
@@ -457,7 +460,7 @@ subrepo:push() {
     FAIL=false OUT=true RUN git rebase "$refs_subrepo_upstream" "$branch"
     if ! OK; then
       o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
-      OK=false; ERR=2; return
+      CODE=2; return
     fi
     RUN git checkout "$original_head_branch"
   else
