@@ -1,7 +1,7 @@
-=meta: 0.0.1
+=meta: 0.0.2
 
 name: git-subrepo
-version: 0.1.0
+version: 0.2.0
 abstract: Git Submodule Alternative
 homepage: https://github.com/ingydotnet/git-subrepo#readme
 license: MIT
@@ -18,7 +18,7 @@ author:
 requires:
   bash: 3.2.0
   git: 1.7.0
-  bashplus: 0.0.1
+  bashplus: 0.0.6
 test:
   cmd: make test
   requires:
