@@ -519,8 +519,7 @@ subrepo:branch() {
 
   o "Make sure there is at least one commit after the last pull."
   # (That translates to 2 commits after the parent of last pull):
-  local count="$(git rev-list "$subrepo_parent"..HEAD -2 | wc -l)"
-  printf -v count "%s" $count    # Strip leading ws for OSX's wc
+  local count="$(git rev-list "$subrepo_parent"..HEAD -2 | grep -c $'\n')"
   if [ "$count" != 2 ]; then
     OK=false
     return
@@ -538,8 +537,7 @@ subrepo:branch() {
     HEAD
 
   o "Make sure there are *subrepo* commits after the last pull."
-  local count="$(git rev-list HEAD -2 | wc -l)"
-  printf -v count "%s" $count    # Strip leading ws for OSX's wc
+  local count="$(git rev-list HEAD -2 | grep -c $'\n')"
   if [ "$count" != 2 ]; then
     # Reset to the branch where we started:
     RUN git reset --hard "$original_head_commit"
