@@ -1,0 +1,61 @@
+Bash+(1)
+========
+
+Modern Bash Programming
+
+<badge travis ingydotnet/bashplus>
+
+= Synopsis
+
+  source bash+ :std :array
+
+  use Foo::Bar this that
+
+  Array.new args "$@"
+
+  if args.empty?; then
+    die "I need args!"
+  fi
+
+  Foo::Bar.new foo args
+
+  this is awesome     # <= this is a real command! (You just imported it)
+
+= Description
+
+Bash+ is just Bash... *plus* some libraries that can make Bash programming a
+lot nicer.
+
+## Installation
+
+Get the source code from GitHub:
+
+  git clone git@github.com:ingydotnet/bashplus
+
+Then run:
+
+  make test
+  make install        # Possibly with 'sudo'
+
+= Usage
+
+For now look at some libraries the use Bash+:
+
+* https://github.com/ingydotnet/git-hub
+* https://github.com/ingydotnet/json-bash
+* https://github.com/ingydotnet/test-more-bash
+
+= Status
+
+If you are interested in chatting about this, `/join #bpan` on
+irc.freenode.net.
+
+= Author
+
+Written by Ingy döt Net <ingy@ingy.net>
+
+= Copyright & License
+
+Copyright 2013-2015. Ingy döt Net.
+
+The MIT License (MIT).

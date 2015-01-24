@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # Bash+ - Modern Bash Programming
 #
-# Copyright (c) 2013 Ingy döt Net
+# Copyright (c) 2013-2015 Ingy döt Net
 #------------------------------------------------------------------------------
 
 set -e
@@ -21,7 +21,7 @@ if [ "${BASH_SOURCE[0]}" != "$0" ]; then
   return $?
 else
   if [ $# -eq 1 -a "$1" == --version ]; then
-    echo 'bash+   version 0.0.1'
+    echo 'bash+   version 0.0.6'
   else
   cat <<...
 
