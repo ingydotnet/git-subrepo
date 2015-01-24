@@ -26,7 +26,7 @@ is "$(
 
 (
   cd $OWNER/foo
-  git subrepo --quiet clone --force ../../../$UPSTREAM/bar --branch=A
+  git subrepo --quiet clone --force ../../../$UPSTREAM/bar --branch=refs/tags/A
 )
 
 test-exists \
