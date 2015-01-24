@@ -1,0 +1,30 @@
+=meta: 0.0.2
+
+name: test-more
+version: 0.0.2
+abstract: TAP Testing for Bash
+homepage: http://bpan.org/package/test-more/
+
+license: MIT
+copyright: 2013-2015
+author:
+  name: Ingy döt Net
+  email: ingy@ingy.net
+  github: ingydotnet
+  twitter: ingydotnet
+  freenode: ingy
+  homepage: http://ingy.net
+
+requires:
+  bash: 3.2.0
+  bashplus: 0.0.6
+  test-tap: 0.0.3
+test:
+  cmd: make test
+install:
+  cmd: make install
+
+devel:
+  git: git@github.org/ingydotnet/test-more-bash.git
+  irc: irc.freenode.net#bpan
+  bug: https://github.com/ingydotnet/test-more-bash/issues/
