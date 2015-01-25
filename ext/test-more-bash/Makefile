@@ -1,19 +1,20 @@
-NAME = test-more
-DOC = doc/$(NAME).swim
-MAN = $(MAN3)/$(NAME).3
-MAN3 = man/man3
+NAME := test-more
+DOC  := doc/$(NAME).swim
+MAN3 := man/man3
+
+default: help
+
+help:
+	@echo 'Rules: test, doc'
 
 .PHONY: test
 test:
 	prove $(PROVEOPT:%=% )test/
 
-doc: $(MAN) ReadMe.pod
+doc: ReadMe.pod $(MAN3)/$(NAME).3
 
-$(MAN3)/%.3: doc/%.swim swim-check
-	swim --to=man $< > $@
-
-ReadMe.pod: $(DOC) swim-check
+ReadMe.pod: $(DOC)
 	swim --to=pod --complete --wrap $< > $@
 
-swim-check:
-	@# Need to assert Swim and Swim::Plugin::badge are installed
+$(MAN3)/%.3: doc/%.swim
+	swim --to=man $< > $@
