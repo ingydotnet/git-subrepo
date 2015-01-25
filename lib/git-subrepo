@@ -273,8 +273,13 @@ command:status() {
       continue
     fi
 
+    refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
+    upstream_head_commit="$(
+      git rev-parse --short "$refs_subrepo_fetch" 2> /dev/null || true
+    )"
     subrepo_remote=
     subrepo_branch=
+
     read-gitrepo-file
     if $fetch_wanted; then
       subrepo:fetch
@@ -293,8 +298,8 @@ command:status() {
     [ -n "$output" ] &&
       echo "  Remote Name:     subrepo/$subdir"
     echo "  Remote URL:      $subrepo_remote"
-    git:ref-exists "$refs_subrepo_fetch" &&
-      echo "  Upstream Ref:    $refs_subrepo_fetch"
+    [ -n "$upstream_head_commit" ] &&
+      echo "  Upstream Ref:    $upstream_head_commit"
     echo "  Tracking Branch: $subrepo_branch"
     [ -z "$subrepo_commit" ] ||
       echo "  Pulled Commit:   $(git rev-parse --short $subrepo_commit)"
@@ -331,8 +336,6 @@ status-refs() {
       output+="    Pull Ref:      $sha1 ($ref)"$'\n'
     elif [ "$type" == push ]; then
       output+="    Push Ref:      $sha1 ($ref)"$'\n'
-    elif [ "$type" == upstream ]; then
-      output+="    Upstream Ref:  $sha1 ($ref)"$'\n'
     fi
   done < <(git show-ref)
   if [ -n "$output" ]; then
