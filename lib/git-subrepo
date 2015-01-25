@@ -458,17 +458,20 @@ subrepo:pull() {
 subrepo:push() {
   local branch_name="$branch"
   if [ -z "$branch_name" ]; then
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    CALL subrepo:fetch
+
     branch_name="subrepo-push/$subdir"
     if git:branch-exists "$branch_name"; then
       error "There is a previous push branch '$branch_name'. Delete it first."
     fi
+
     o "Create subrepo branch '$branch_name':"
     CALL subrepo:branch "$branch_name"
     if ! OK; then
       CODE=-1; return
     fi
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
-    CALL subrepo:fetch
+
     o "git rebase $refs_subrepo_fetch $branch_name"
     FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
     if ! OK; then
@@ -629,14 +632,16 @@ subrepo:commit() {
 }
 
 subrepo:clean() {
-  # Remove subrepo branch if exists:
-  local ref="refs/heads/subrepo/$subdir"
-  local branch="subrepo/$subdir"
-  if [ -e ".git/$ref" ]; then
-    o "Remove branch '$branch'."
-    RUN git update-ref -d "$ref"
-    clean_list+=("branch '$branch'")
-  fi
+  # Remove subrepo branches if exist:
+  for prefix in subrepo subrepo-push; do
+    local branch="$prefix/$subdir"
+    local ref="refs/heads/$branch"
+    if [ -e ".git/$ref" ]; then
+      o "Remove branch '$branch'."
+      RUN git update-ref -d "$ref"
+      clean_list+=("branch '$branch'")
+    fi
+  done
 
   local remote="subrepo/$subdir"
   FAIL=false OUT=true RUN git config "remote.$remote.url"
