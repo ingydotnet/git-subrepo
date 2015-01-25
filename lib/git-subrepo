@@ -228,15 +228,13 @@ No local subrepo commits since last pull/clone."
 command:commit() {
   command-setup +subdir subrepo_commit_ref
 
-  # Get the upstream head associated with the commit:
-  {
-    # XXX We need the fetch ref used for the rebase. This needs to be
-    # preserved better, since it could change between the rebase and the
-    # commit.
-    git:rev-exists "$refs_subrepo_fetch" ||
-      error "Can't find ref '$refs_subrepo_fetch'."
-    upstream_head_commit="$(git rev-parse "$refs_subrepo_fetch")"
-  }
+  if "$fetch_wanted"; then
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    CALL subrepo:fetch
+  fi
+  git:rev-exists "$refs_subrepo_fetch" ||
+    error "Can't find ref '$refs_subrepo_fetch'. Try using -F."
+  upstream_head_commit="$(git rev-parse "$refs_subrepo_fetch")"
 
   [ -n "$subrepo_commit_ref" ] ||
     subrepo_commit_ref="subrepo/$subdir"
@@ -515,7 +513,7 @@ subrepo:fetch() {
   o "Fetch '$subrepo_remote' ($subrepo_branch)"
   RUN git fetch --quiet "$subrepo_remote" "$subrepo_branch"
 
-  o "Get the remote subrepo HEAD commit."
+  o "Get the upstream subrepo HEAD commit."
   OUT=true RUN git rev-parse FETCH_HEAD
   upstream_head_commit="$output"
 
@@ -598,7 +596,7 @@ subrepo:commit() {
 
   if ! "$force_wanted"; then
     local upstream="$upstream_head_commit"
-    o "Make sure '$subrepo_commit_ref' contains the '$upstream' HEAD."
+    o "Make sure '$subrepo_commit_ref' contains the upstream HEAD."
     if ! git:commit-in-rev-list "$upstream" "$subrepo_commit_ref"; then
       error \
         "Can't commit: '$subrepo_commit_ref' doesn't contain upstream HEAD."
@@ -751,7 +749,7 @@ get-command-options() {
 options_branch='all fetch force'
 options_clean='all force'
 options_clone='branch force'
-options_commit='force'
+options_commit='fetch force'
 options_fetch='all branch remote'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
