@@ -18,7 +18,7 @@ subrepo-clone-bar-into-foo
 
 test-exists \
   "$OWNER/foo/.git/refs/heads/subrepo/bar" \
-  "$OWNER/foo/.git/refs/subrepo/bar/upstream"
+  "$OWNER/foo/.git/refs/subrepo/bar/fetch"
 
 is "$(
   cd $OWNER/foo
@@ -37,7 +37,7 @@ test-exists \
 )
 
 test-exists \
-  "!$OWNER/foo/.git/refs/subrepo/bar/upstream"
+  "!$OWNER/foo/.git/refs/subrepo/bar/fetch"
 
 done_testing
 

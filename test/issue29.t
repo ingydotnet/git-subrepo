@@ -51,6 +51,7 @@ cd "$TMP"
   git subrepo clone ../share share -b master
 ) > /dev/null
 
+
 # Make a change to the main1 subrepo and push it:
 msg_main1="main1 initial add to subrepo"
 ( set -x

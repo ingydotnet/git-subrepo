@@ -26,7 +26,7 @@ Commands:
   commit    Commit a merged subrepo branch into the mainline
 
   status    Get status of a subrepo (or all of them)
-  clean     Remove branches, remotes and grafts for a subrepo
+  clean     Remove branches, remotes and refs for a subrepo
 
   help      Documentation for git-subrepo (or specfic command)
   version   Display git-subrepo version info
@@ -82,8 +82,11 @@ main() {
   local subrepo_parent=         # Local commit from before previous clone/pull
   local subrepo_former=         # A retired gitrepo key that might still exist
 
-  local refs_subrepo_upstream=  # A subrepo ref pointing to upstream head
-  local refs_subrepo_pull=      # A subrepo ref pointing to branch after pull
+  local refs_subrepo_branch=    # A subrepo ref -> commit of branch command
+  local refs_subrepo_commit=    # A subrepo ref -> commit last merged
+  local refs_subrepo_fetch=     # A subrepo ref -> FETCH_HEAD after fetch
+  local refs_subrepo_pull=      # A subrepo ref -> branch after pull
+  local refs_subrepo_push=      # A subrepo ref -> branch after push
 
   local override_remote=        # Remote specified with -r
   local override_branch=        # Remote specified with -b
@@ -215,7 +218,10 @@ command:branch() {
 "Can't create subrepo branch for '$subdir'.
 No local subrepo commits since last pull/clone."
 
-  say "Created branch 'subrepo/$subdir'"
+  o "Create ref '$refs_subrepo_branch' for branch '$branch'."
+  git:make-ref "$refs_subrepo_branch" "$branch"
+
+  say "Created branch '$branch'"
 }
 
 # `git subrepo commit <subdir>` command
@@ -224,11 +230,12 @@ command:commit() {
 
   # Get the upstream head associated with the commit:
   {
-    # XXX We need the fetch ref used for the rebase. This needs to be preserved
-    # better, since it could change between the rebase and the commit.
-    git:rev-exists "$refs_subrepo_upstream" ||
-      error "Can't find ref '$refs_subrepo_upstream'."
-    upstream_head_commit="$(git rev-parse "$refs_subrepo_upstream")"
+    # XXX We need the fetch ref used for the rebase. This needs to be
+    # preserved better, since it could change between the rebase and the
+    # commit.
+    git:rev-exists "$refs_subrepo_fetch" ||
+      error "Can't find ref '$refs_subrepo_fetch'."
+    upstream_head_commit="$(git rev-parse "$refs_subrepo_fetch")"
   }
 
   [ -n "$subrepo_commit_ref" ] ||
@@ -247,10 +254,9 @@ command:status() {
     if ! "$quiet_wanted"; then
       if [ $count -eq 0 ]; then
         echo "No subrepos."
-        exit 1
+        return
       else
-        local s=
-        [ "$count" == 1 ] || s=s
+        local s=; [ "$count" -eq 1 ] || s=s
         echo "$count subrepo$s:"
         echo
       fi
@@ -258,6 +264,7 @@ command:status() {
   else
     subrepos=("${command_arguments[@]}")
   fi
+  
   for subdir in "${subrepos[@]}"; do
     subdir="${subdir#./}"
     subdir="${subdir%/}"
@@ -280,49 +287,59 @@ command:status() {
       continue
     fi
 
-    cat <<...
-Git subrepo '$subdir':
-...
-
-    git:branch-exists "subrepo/$subdir" && cat <<...
-  Subrepo Branch:  subrepo/$subdir
-...
-
+    echo "Git subrepo '$subdir':"
+    git:branch-exists "subrepo/$subdir" &&
+      echo "  Subrepo Branch:  subrepo/$subdir"
     local remote="subrepo/$subdir"
     FAIL=false OUT=true RUN git config "remote.$remote.url"
-    [ -z "$output" ] || cat <<...
-  Remote Name:     subrepo/$subdir
-...
-
-    cat <<...
-  Remote URL:      $subrepo_remote
-...
-
-    git:ref-exists "$refs_subrepo_upstream" && cat <<...
-  Upstream Ref:    $refs_subrepo_upstream
-...
-
-    cat <<...
-  Tracking Branch: $subrepo_branch
-...
-
-    [ -z "$subrepo_commit" ] || cat <<...
-  Pulled Commit:   $(git rev-parse --short $subrepo_commit)
-...
-
+    [ -n "$output" ] &&
+      echo "  Remote Name:     subrepo/$subdir"
+    echo "  Remote URL:      $subrepo_remote"
+    git:ref-exists "$refs_subrepo_fetch" &&
+      echo "  Upstream Ref:    $refs_subrepo_fetch"
+    echo "  Tracking Branch: $subrepo_branch"
+    [ -z "$subrepo_commit" ] ||
+      echo "  Pulled Commit:   $(git rev-parse --short $subrepo_commit)"
     if [ -n "$subrepo_parent" ]; then
-      cat <<...
-  Pull Parent:     $(git rev-parse --short $subrepo_parent)
-...
-
+      echo "  Pull Parent:     $(git rev-parse --short $subrepo_parent)"
     # TODO Remove this eventually:
     elif [ -n "$subrepo_former" ]; then
-      cat <<...
-  Former Commit:   $(git rev-parse --short $subrepo_former) *** DEPRECATED ***
-...
+      printf "  Former Commit:   $(git rev-parse --short $subrepo_former)"
+      echo " *** DEPRECATED ***"
     fi
+
+    if "$verbose_wanted"; then
+      status-refs
+    fi
+
     echo
   done
+}
+
+status-refs() {
+  local output=
+  while read line; do
+    [[ "$line" =~ ^([0-9a-f]+)\ refs/subrepo/$subdir/([a-z]+) ]] || continue
+    local sha1="$(git rev-parse --short "${BASH_REMATCH[1]}")"
+    local type="${BASH_REMATCH[2]}"
+    local ref="refs/subrepo/$subdir/$type"
+    if [ "$type" == branch ]; then
+      output+="    Branch Ref:    $sha1 ($ref)"$'\n'
+    elif [ "$type" == commit ]; then
+      output+="    Commit Ref:    $sha1 ($ref)"$'\n'
+    elif [ "$type" == fetch ]; then
+      output+="    Fetch Ref:     $sha1 ($ref)"$'\n'
+    elif [ "$type" == pull ]; then
+      output+="    Pull Ref:      $sha1 ($ref)"$'\n'
+    elif [ "$type" == push ]; then
+      output+="    Push Ref:      $sha1 ($ref)"$'\n'
+    elif [ "$type" == upstream ]; then
+      output+="    Upstream Ref:  $sha1 ($ref)"$'\n'
+    fi
+  done < <(git show-ref)
+  if [ -n "$output" ]; then
+    printf "  Refs:\n$output"
+  fi
 }
 
 # `git subrepo clean <subdir>` command
@@ -418,7 +435,7 @@ subrepo:pull() {
   CALL subrepo:branch
   if OK; then
     o "git rebase $upstream_ref $branch_name"
-    FAIL=false OUT=true RUN git rebase "$refs_subrepo_upstream" "$branch_name"
+    FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
     if ! OK; then
       o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
       CODE=1; return
@@ -428,68 +445,68 @@ subrepo:pull() {
   else
     o "Subrepo branch failed. No local subrepo commits to merge."
     o "Create branch '$branch_name' from the fetched upstream instead."
-    RUN git branch "$branch_name" "$refs_subrepo_upstream"
+    RUN git branch "$branch_name" "$refs_subrepo_fetch"
   fi
 
   o "Commit the new '$subdir/' content:"
   subrepo_commit_ref="$branch_name"
   CALL subrepo:commit
 
-  o "Remove fetched upstream ref '$refs_subrepo_upstream'."
-  RUN git update-ref -d "$refs_subrepo_upstream"
-
   o "Create ref '$refs_subrepo_pull' for branch '$branch_name'."
-  RUN git update-ref "$refs_subrepo_upstream" "$branch_name"
+  git:make-ref "$refs_subrepo_pull" "$branch_name"
 }
 
 # Push a properly merged subrepo branch upstream:
 subrepo:push() {
-  if [ -z "$branch" ]; then
-    branch="subrepo-push/$subdir"
-    if git:branch-exists "$branch"; then
-      error "There is a previous push branch '$branch'. Delete it first."
+  local branch_name="$branch"
+  if [ -z "$branch_name" ]; then
+    branch_name="subrepo-push/$subdir"
+    if git:branch-exists "$branch_name"; then
+      error "There is a previous push branch '$branch_name'. Delete it first."
     fi
-    o "Create subrepo branch '$branch':"
-    CALL subrepo:branch "$branch"
+    o "Create subrepo branch '$branch_name':"
+    CALL subrepo:branch "$branch_name"
     if ! OK; then
       CODE=-1; return
     fi
     o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
     CALL subrepo:fetch
-    o "git rebase $refs_subrepo_upstream $branch"
-    FAIL=false OUT=true RUN git rebase "$refs_subrepo_upstream" "$branch"
+    o "git rebase $refs_subrepo_fetch $branch_name"
+    FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
     if ! OK; then
       o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
       CODE=2; return
     fi
     RUN git checkout "$original_head_branch"
   else
-    if ! git:rev-exists "$branch"; then
-      error "'$branch' is not a valid commit."
+    if ! git:rev-exists "$branch_name"; then
+      error "'$branch_name' is not a valid commit."
     fi
   fi
 
-  o "Make sure that '$branch' exists."
-  git:branch-exists "$branch" ||
-    error "No subrepo branch '$branch' to push."
+  o "Make sure that '$branch_name' exists."
+  git:branch-exists "$branch_name" ||
+    error "No subrepo branch '$branch_name' to push."
 
   if ! "$force_wanted"; then
-    o "Make sure '$branch' contains the '$refs_subrepo_upstream' HEAD."
-    if ! git:commit-in-rev-list "$upstream_head_commit" "$branch"; then
-      error "Can't commit: '$branch' doesn't contain upstream HEAD."
+    o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
+    if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
+      error "Can't commit: '$branch_name' doesn't contain upstream HEAD."
     fi
   fi
 
   local force=
   "$force_wanted" && force=--force
 
-  o "Push branch '$branch' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push $force "$subrepo_remote" "$branch":"$subrepo_branch"
+  o "Push branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
+  RUN git push $force "$subrepo_remote" "$branch_name":"$subrepo_branch"
 
-  if [ "$branch" == "subrepo-push/$subdir" ]; then
-    o "Remove branch '$branch' and ref '$refs_subrepo_upstream'"
-    RUN git branch -D "$branch"
-    RUN git update-ref -d "$refs_subrepo_upstream"
+  o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
+  git:make-ref "$refs_subrepo_push" "$branch_name"
+
+  if [ "$branch_name" == "subrepo-push/$subdir" ]; then
+    o "Remove branch '$branch_name'"
+    RUN git branch -D "$branch_name"
   fi
 }
 
@@ -513,8 +530,8 @@ subrepo:fetch() {
     fi
   fi
 
-  o "Create ref '$refs_subrepo_upstream'."
-  RUN git update-ref "$refs_subrepo_upstream" "$upstream_head_commit"
+  o "Create ref '$refs_subrepo_fetch'."
+  git:make-ref "$refs_subrepo_fetch" FETCH_HEAD
 }
 
 # Create a subrepo branch of changes since last pull:
@@ -608,6 +625,9 @@ subrepo:commit() {
 
   o "Commit to the '$original_head_branch' branch."
   RUN git commit -m "$(get-commit-message)"
+
+  o "Create ref '$refs_subrepo_commit'."
+  git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
 }
 
 subrepo:clean() {
@@ -754,8 +774,11 @@ command-setup() {
   subdir="${subdir%/}"
 
   # Set refs_ variables:
-  refs_subrepo_upstream="refs/subrepo/$subdir/upstream"
+  refs_subrepo_branch="refs/subrepo/$subdir/branch"
+  refs_subrepo_commit="refs/subrepo/$subdir/commit"
+  refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
   refs_subrepo_pull="refs/subrepo/$subdir/pull"
+  refs_subrepo_push="refs/subrepo/$subdir/push"
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
   gitrepo="$subdir/.gitrepo"
@@ -920,7 +943,7 @@ assert-repo-is-ready() {
   RUN git rev-parse --verify HEAD
 
   # Repo is in a clean state:
-  if [[ "$command" =~ ^(clone|pull|push)$ ]]; then
+  if [[ "$command" =~ ^(clone|pull|push|branch|commit)$ ]]; then
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
       error "Can't $command subrepo. Unstaged changes."
@@ -1008,11 +1031,16 @@ get-commit-message() {
   local command_commit='???'
   get-command-info
 
+  OUT=true RUN git rev-parse --short "$subrepo_commit_ref"
+  local merged="$output"
+
   # Format subrepo commit message:
   cat <<...
 git subrepo $command ${args[@]}
 
-subrepo:    "$subdir"
+subrepo:
+  subdir:   "$subdir"
+  merged:   "$merged"
 upstream:
   origin:   "$subrepo_remote"
   branch:   "$subrepo_branch"
@@ -1142,6 +1170,12 @@ git:commit-in-rev-list() {
   local commit="$1"
   local list_head="$2"
   git rev-list "$list_head" | grep -q "^$commit"
+}
+
+git:make-ref() {
+  local ref_name="$1"
+  local commit="$(git rev-parse "$2")"
+  git update-ref "$ref_name" "$commit"
 }
 
 #------------------------------------------------------------------------------
