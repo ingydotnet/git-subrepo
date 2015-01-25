@@ -718,7 +718,12 @@ get-command-options() {
     error "'$command' is not a command. See 'git subrepo help'."
 
   command_arguments=("$@")
-  commit_msg_args+=("$@")
+  if [ ${#command_arguments} -gt 0 ]; then
+    local first="${command_arguments[0]}"
+    first="${first%/}"
+    command_arguments[0]="$first"
+  fi
+  commit_msg_args+=("${command_arguments[@]}")
 
   if $all_wanted; then
     check_option all
