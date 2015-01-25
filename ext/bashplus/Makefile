@@ -38,5 +38,8 @@ doc: ReadMe.pod $(MAN1)/$(NAME).1 $(MAN3)/$(NAME).3
 ReadMe.pod: $(DOC)
 	swim --to=pod --complete --wrap $< > $@
 
-$(MAN1)/%.1 $(MAN3)/%.3: doc/%.swim
+$(MAN1)/%.1: doc/%.swim
+	swim --to=man $< > $@
+
+$(MAN3)/%.3: doc/%.swim
 	swim --to=man $< > $@
