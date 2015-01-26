@@ -216,9 +216,10 @@ command:branch() {
 
   # Create the subrepo branch:
   subrepo:branch
-  OK || error \
-"Can't create subrepo branch for '$subdir'.
-No local subrepo commits since last pull/clone."
+  if ! OK; then
+    say "Can't create branch '$branch'. No new commits since last pull/clone"
+    return
+  fi
 
   o "Create ref '$refs_subrepo_branch' for branch '$branch'."
   git:make-ref "$refs_subrepo_branch" "$branch"
@@ -480,8 +481,7 @@ subrepo:branch() {
   # (That translates to 2 commits after the parent of last pull):
   local count="$(git rev-list "$subrepo_parent"..HEAD -2 | grep -c $'\n')"
   if [ "$count" != 2 ]; then
-    OK=false
-    return
+    OK=false; CODE=-1; return
   fi
 
   o "Remove the commits before last pull."
