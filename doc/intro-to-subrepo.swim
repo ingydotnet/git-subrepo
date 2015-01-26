@@ -212,6 +212,7 @@ the start.
 Let's review the Goods and Bads:
 
 Good:
+
 * Use an external repo in a dedicated subdir of your project.
 * Pin the external repo to a specific commit.
 * Users get everything with a normal clone command.
@@ -229,6 +230,7 @@ Good:
 <badge travis ingydotnet/git-subrepo>
 
 Bad:
+
 * --Subrepo is very new.-- (no longer true)
 * --Not well tested in the wild.-- (no longer true)
 
@@ -295,40 +297,50 @@ The pull command does these steps:
 === Clean History
 
 I've talked a bit about clean history but let me show you a comparison between
-subtree and subrepo. Let's say I run this command sequence using both methods:
+subrepo and subtree. Let's run this command sequence using both methods. Note
+the differences between /both/ the command syntax required, and the branch
+history produced.
 
-  $ git subxxxx add tree1 <remote> <commit1>
-  $ git subxxxx add tree2 <remote> <commit1>
-  $ git subxxxx pull tree1 <remote> <commit2>
-  $ git subxxxx pull tree2 <remote> <commit2>
+Subrepo first:
 
-The syntax above is pseudo, but you get the idea. The resulting history using
-subrepo is:
+  $ git subrepo clone git@github.com:user/abc
+  $ git subrepo clone git@github.com:user/def xyz
+  $ git subrepo pull abc
+  $ git subrepo pull xyz
 
-  * b1f60cc subrepo pull git@github.com:user/xyz tree2/
-  * 4fb0276 subrepo pull git@github.com:user/xyz tree1/
-  * bcef2a0 subrepo clone git@github.com:user/xyz tree2/
-  * bebf0db subrepo clone git@github.com:user/xyz tree1/
+The resulting history is:
+
+  * b1f60cc subrepo pull xyz
+  * 4fb0276 subrepo pull abc
+  * bcef2a0 subrepo clone git@github.com:user/def xyz
+  * bebf0db subrepo clone git@github.com:user/abc
   * 64eeaa6 (origin/master, origin/HEAD) O HAI FREND
 
-Compare that to this history using subtree:
+Compare that to *subtree*. This:
+
+  $ git subrepo add abc git@github.com:user/abc master
+  $ git subrepo add xyz git@github.com:user/def master
+  $ git subrepo pull abc git@github.com:user/abc master
+  $ git subrepo pull xyz git@github.com:user/def master
+
+Produces this:
 
   * 739e45a (HEAD, master) Merge commit '5f563469d886d53e19cb908b3a64e4229f88a2d1'
   |\
-  | * 5f56346 Squashed 'tree2/' changes from 08c7421..365409f
+  | * 5f56346 Squashed 'xyz/' changes from 08c7421..365409f
   * | 641f5e5 Merge commit '8d88e90ce5f653ed2e7608a71b8693a2174ea62a'
   |\ \
-  | * | 8d88e90 Squashed 'tree1/' changes from 08c7421..365409f
-  * | | 1703ed2 Merge commit '0e091b672c4bbbbf6bc4f6694c475d127ffa21eb' as 'tree2'
+  | * | 8d88e90 Squashed 'abc/' changes from 08c7421..365409f
+  * | | 1703ed2 Merge commit '0e091b672c4bbbbf6bc4f6694c475d127ffa21eb' as 'xyz'
   |\ \ \
   | | |/
   | |/|
-  | * | 0e091b6 Squashed 'tree2/' content from commit 08c7421
+  | * | 0e091b6 Squashed 'xyz/' content from commit 08c7421
   | /
-  * | 07b77e7 Merge commit 'cd2b30a0229d931979ed4436b995875ec563faea' as 'tree1'
+  * | 07b77e7 Merge commit 'cd2b30a0229d931979ed4436b995875ec563faea' as 'abc'
   |\ \
   | |/
-  | * cd2b30a Squashed 'tree1/' content from commit 08c7421
+  | * cd2b30a Squashed 'abc/' content from commit 08c7421
   * 64eeaa6 (origin/master, origin/HEAD) O HAI FREND
 
 This was from a minimal case. Subtree history (when viewed this way at least)
