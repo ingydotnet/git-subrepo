@@ -110,6 +110,8 @@ main() {
   # Make sure repo is in the proper state:
   assert-repo-is-ready
 
+  command-init
+
   # Run the command:
   if $all_wanted; then
     local args=( "${command_arguments[@]}" )
@@ -246,77 +248,7 @@ command:commit() {
 
 # `git subrepo status [<subdir>]` command:
 command:status() {
-  if [ ${#command_arguments[@]} -eq 0 ]; then
-    get-all-subrepos
-    local count=${#subrepos[@]}
-    if ! "$quiet_wanted"; then
-      if [ $count -eq 0 ]; then
-        echo "No subrepos."
-        return
-      else
-        local s=; [ "$count" -eq 1 ] || s=s
-        echo "$count subrepo$s:"
-        echo
-      fi
-    fi
-  else
-    subrepos=("${command_arguments[@]}")
-  fi
-  
-  for subdir in "${subrepos[@]}"; do
-    subdir="${subdir#./}"
-    subdir="${subdir%/}"
-
-    if [ ! -f "$subdir/.gitrepo" ]; then
-      echo "'$subdir' is not a subrepo"
-      echo
-      continue
-    fi
-
-    refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
-    upstream_head_commit="$(
-      git rev-parse --short "$refs_subrepo_fetch" 2> /dev/null || true
-    )"
-    subrepo_remote=
-    subrepo_branch=
-
-    read-gitrepo-file
-    if $fetch_wanted; then
-      subrepo:fetch
-    fi
-
-    if $quiet_wanted; then
-      echo "$subdir"
-      continue
-    fi
-
-    echo "Git subrepo '$subdir':"
-    git:branch-exists "subrepo/$subdir" &&
-      echo "  Subrepo Branch:  subrepo/$subdir"
-    local remote="subrepo/$subdir"
-    FAIL=false OUT=true RUN git config "remote.$remote.url"
-    [ -n "$output" ] &&
-      echo "  Remote Name:     subrepo/$subdir"
-    echo "  Remote URL:      $subrepo_remote"
-    [ -n "$upstream_head_commit" ] &&
-      echo "  Upstream Ref:    $upstream_head_commit"
-    echo "  Tracking Branch: $subrepo_branch"
-    [ -z "$subrepo_commit" ] ||
-      echo "  Pulled Commit:   $(git rev-parse --short $subrepo_commit)"
-    if [ -n "$subrepo_parent" ]; then
-      echo "  Pull Parent:     $(git rev-parse --short $subrepo_parent)"
-    # TODO Remove this eventually:
-    elif [ -n "$subrepo_former" ]; then
-      printf "  Former Commit:   $(git rev-parse --short $subrepo_former)"
-      echo " *** DEPRECATED ***"
-    fi
-
-    if "$verbose_wanted"; then
-      status-refs
-    fi
-
-    echo
-  done
+  subrepo:status | ${GIT_SUBREPO_PAGER}
 }
 
 status-refs() {
@@ -634,6 +566,80 @@ subrepo:commit() {
   git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
 }
 
+subrepo:status() {
+  if [ ${#command_arguments[@]} -eq 0 ]; then
+    get-all-subrepos
+    local count=${#subrepos[@]}
+    if ! "$quiet_wanted"; then
+      if [ $count -eq 0 ]; then
+        echo "No subrepos."
+        return
+      else
+        local s=; [ "$count" -eq 1 ] || s=s
+        echo "$count subrepo$s:"
+        echo
+      fi
+    fi
+  else
+    subrepos=("${command_arguments[@]}")
+  fi
+
+  for subdir in "${subrepos[@]}"; do
+    subdir="${subdir#./}"
+    subdir="${subdir%/}"
+
+    if [ ! -f "$subdir/.gitrepo" ]; then
+      echo "'$subdir' is not a subrepo"
+      echo
+      continue
+    fi
+
+    refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
+    upstream_head_commit="$(
+      git rev-parse --short "$refs_subrepo_fetch" 2> /dev/null || true
+    )"
+    subrepo_remote=
+    subrepo_branch=
+
+    read-gitrepo-file
+    if $fetch_wanted; then
+      subrepo:fetch
+    fi
+
+    if $quiet_wanted; then
+      echo "$subdir"
+      continue
+    fi
+
+    echo "Git subrepo '$subdir':"
+    git:branch-exists "subrepo/$subdir" &&
+      echo "  Subrepo Branch:  subrepo/$subdir"
+    local remote="subrepo/$subdir"
+    FAIL=false OUT=true RUN git config "remote.$remote.url"
+    [ -n "$output" ] &&
+      echo "  Remote Name:     subrepo/$subdir"
+    echo "  Remote URL:      $subrepo_remote"
+    [ -n "$upstream_head_commit" ] &&
+      echo "  Upstream Ref:    $upstream_head_commit"
+    echo "  Tracking Branch: $subrepo_branch"
+    [ -z "$subrepo_commit" ] ||
+      echo "  Pulled Commit:   $(git rev-parse --short $subrepo_commit)"
+    if [ -n "$subrepo_parent" ]; then
+      echo "  Pull Parent:     $(git rev-parse --short $subrepo_parent)"
+    # TODO Remove this eventually:
+    elif [ -n "$subrepo_former" ]; then
+      printf "  Former Commit:   $(git rev-parse --short $subrepo_former)"
+      echo " *** DEPRECATED ***"
+    fi
+
+    if "$verbose_wanted"; then
+      status-refs
+    fi
+
+    echo
+  done
+}
+
 subrepo:clean() {
   # Remove subrepo branches if exist:
   for prefix in subrepo subrepo-push; do
@@ -771,6 +777,13 @@ check_option() {
 #------------------------------------------------------------------------------
 # Command argument validation:
 #------------------------------------------------------------------------------
+
+command-init() {
+  : "${GIT_SUBREPO_PAGER:=${PAGER:-less}}"
+  if [ "$GIT_SUBREPO_PAGER" == less ]; then
+    GIT_SUBREPO_PAGER='less -FRX'
+  fi
+}
 
 # Do the setup steps needed by most of the subrepo subcommands:
 command-setup() {
