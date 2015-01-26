@@ -43,7 +43,7 @@ echo;echo;echo
 
   # Test the output:
   is "$message" \
-    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)" \
+    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)." \
     'push message is correct'
 }
 

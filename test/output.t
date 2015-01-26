@@ -16,7 +16,7 @@ clone-foo-and-bar
     git subrepo --quiet clone ../../../$UPSTREAM/foo
     catch git subrepo push foo
   )" \
-    "Subrepo 'foo' has no new commits to push" \
+    "Subrepo 'foo' has no new commits to push." \
     "Output OK: Check that 'push' requires changes to push"
   (
     cd $OWNER/bar

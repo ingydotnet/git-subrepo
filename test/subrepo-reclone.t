@@ -21,7 +21,7 @@ is "$(
   cd $OWNER/foo
   git subrepo --force clone ../../../$UPSTREAM/bar
 )" \
-  "Subrepo 'bar' is up to date" \
+  "Subrepo 'bar' is up to date." \
   "No reclone if same commit"
 
 (

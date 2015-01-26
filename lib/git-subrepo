@@ -144,14 +144,15 @@ command:clone() {
   local reclone_up_to_date=false
   subrepo:clone
   if "$reclone_up_to_date"; then
-    say "Subrepo '$subdir' is up to date"
+    say "Subrepo '$subdir' is up to date."
     return
   fi
 
   # Successful command output:
   local re=
   $force_wanted && re=re
-  say "Subrepo '$subrepo_remote' ($subrepo_branch) ${re}cloned into '$subdir'"
+  local remote="$subrepo_remote"
+  say "Subrepo '$remote' ($subrepo_branch) ${re}cloned into '$subdir'."
 }
 
 # `git subrepo pull <subdir>` command:
@@ -160,9 +161,9 @@ command:pull() {
 
   subrepo:pull
   if OK; then
-    say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)"
+    say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)."
   elif [[ "$CODE" -eq -1 ]]; then
-    say "Subrepo '$subdir' is up to date"
+    say "Subrepo '$subdir' is up to date."
   elif [[ "$CODE" -eq 1 ]]; then
     error-pull-rebase
     return "$CODE"
@@ -178,9 +179,9 @@ command:push() {
   command-setup +subdir branch
   subrepo:push
   if OK; then
-    say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)"
+    say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
   elif [[ "$CODE" -eq -1 ]]; then
-    say "Subrepo '$subdir' has no new commits to push"
+    say "Subrepo '$subdir' has no new commits to push."
   elif [[ "$CODE" -eq 2 ]]; then
     error-push-rebase
     return "$CODE"
@@ -194,7 +195,7 @@ command:push() {
 command:fetch() {
   command-setup +subdir
   subrepo:fetch
-  say "Fetched '$subrepo_remote' ($subrepo_branch)"
+  say "Fetched '$subrepo_remote' ($subrepo_branch)."
 }
 
 # `git subrepo branch <subdir>` command:
@@ -217,14 +218,14 @@ command:branch() {
   # Create the subrepo branch:
   subrepo:branch
   if ! OK; then
-    say "Can't create branch '$branch'. No new commits since last pull/clone"
+    say "Can't create branch '$branch'. No new commits since last pull/clone."
     return
   fi
 
   o "Create ref '$refs_subrepo_branch' for branch '$branch'."
   git:make-ref "$refs_subrepo_branch" "$branch"
 
-  say "Created branch '$branch'"
+  say "Created branch '$branch'."
 }
 
 # `git subrepo commit <subdir>` command
@@ -243,7 +244,7 @@ command:commit() {
     subrepo_commit_ref="subrepo/$subdir"
   subrepo:commit
 
-  say "Content of subrepo '$subrepo_commit_ref' committed as"
+  say "Subrepo commit '$subrepo_commit_ref' committed as"
   say "subdir '$subdir/' to branch '$original_head_branch'."
 }
 
@@ -718,7 +719,7 @@ get-command-options() {
       --version)
         echo "$VERSION"
         exit ;;
-      *) error "Unexpected option: $option" ;;
+      *) error "Unexpected option: '$option'." ;;
     esac
   done
 

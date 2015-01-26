@@ -22,7 +22,7 @@ subrepo-clone-bar-into-foo
     cd $OWNER/foo
     git subrepo pull bar
   )" \
-    "Subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)" \
+    "Subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)." \
     'subrepo pull command output is correct'
 }
 

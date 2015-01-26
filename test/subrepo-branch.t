@@ -15,7 +15,7 @@ is "$(
   add-new-files bar/file
   git subrepo branch bar
 )" \
-  "Created branch 'subrepo/bar'" \
+  "Created branch 'subrepo/bar'." \
   "subrepo branch command output is correct"
 
 # is "$(
