@@ -108,6 +108,10 @@ Bad:
 
 =item * Pulling a repo with submodules won't pull in the new submodule changes.
 
+=item * A submodule will break if the referenced repo goes away.
+
+=item * A submodule will break if a forced push removes the referenced commit.
+
 =item * Can't use different submodules/commits per main project branch.
 
 =item * Can't "try out" a submodule on alternate branch.

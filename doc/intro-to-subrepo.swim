@@ -77,6 +77,8 @@ Bad:
 * Users have to know a repo has submodules.
 * Users have to get the subrepos manually.
 * Pulling a repo with submodules won't pull in the new submodule changes.
+* A submodule will break if the referenced repo goes away.
+* A submodule will break if a forced push removes the referenced commit.
 * Can't use different submodules/commits per main project branch.
 * Can't "try out" a submodule on alternate branch.
 * Main repo can be pushed upstream pointing to unpushed submod commits.
