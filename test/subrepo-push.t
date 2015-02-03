@@ -22,6 +22,10 @@ clone-foo-and-bar
   modify-files bar/FooBar
   modify-files ./FooBar
   modify-files ./FooBar bar/FooBar
+
+  # Add untracked files:
+  touch bar/bart
+  touch bar/bard/bart
 ) &> /dev/null || die
 
 (
@@ -60,6 +64,8 @@ test-exists \
   "$OWNER/bar/bard/" \
   "$OWNER/bar/bargy" \
   "!$OWNER/bar/.gitrepo" \
+  "$OWNER/foo/bar/bart" \
+  "$OWNER/foo/bar/bard/bart" \
 
 # assert-original-state "$OWNER/foo" "bar"
 

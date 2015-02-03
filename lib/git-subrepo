@@ -545,8 +545,15 @@ subrepo:commit() {
   o "Remove old content of the subdir."
   (
     cd "./$subdir"
-    RUN rm -fr $(ls -A)
+    RUN rm -f $(git ls-files)
   )
+
+  # "Ignore untracked files during work."
+  OUT=true RUN git rev-parse --git-dir
+  local git_dir="$output"
+  RUN cp "$git_dir/info/exclude" "$git_dir/info/exclude.bak"
+  OUT=true RUN git ls-files -o
+  echo "$output" >> "$git_dir/info/exclude"
 
   o "Put remote subrepo content into '$subdir/'."
   GIT_WORK_TREE="$subdir" RUN git reset --hard "$subrepo_commit_ref"
@@ -558,7 +565,10 @@ subrepo:commit() {
   update-gitrepo-file
 
   o "Add '$subdir/' content to the index."
-  RUN git add -A "$subdir"
+  RUN git add -A -- "$subdir"
+
+  # Reset exclude file.
+  RUN mv "$git_dir/info/exclude.bak" "$git_dir/info/exclude"
 
   o "Commit to the '$original_head_branch' branch."
   RUN git commit -m "$(get-commit-message)"
