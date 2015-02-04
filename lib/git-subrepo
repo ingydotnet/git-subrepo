@@ -551,17 +551,15 @@ subrepo:commit() {
   o "Put remote subrepo content into '$subdir/'."
   GIT_WORK_TREE="$subdir" RUN git reset --hard "$subrepo_commit_ref"
 
-  o "Reset index to original commit"
-  if [[ -n "$original_head_commit" ]]; then
+  o "Reset index to original commit."
+  if [ "$original_head_commit" != none ]; then
     RUN git reset --mixed "$original_head_commit"
   else
     RUN git reset --mixed
     # index currently considers $subdir content as deleted at root.
-    # Delete the index
-    local indexfile="$GIT_INDEX_FILE"
-    [[ -n "$indexfile" ]] ||
-      indexfile="$(git rev-parse --git-dir)/index"
-    RUN rm "$indexfile"
+    o "Delete the index."
+    local indexfile="${GIT_INDEX_FILE:-$(git rev-parse --git-dir)/index}"
+    RUN rm -f "$indexfile"
   fi
 
   o "Put info into '$subdir/.gitrepo' file."
@@ -571,12 +569,12 @@ subrepo:commit() {
   RUN git add -A "$subdir"
 
   o "Commit to the '$original_head_branch' branch."
-  if [[ -n "$original_head_commit" ]]; then
+  if [ "$original_head_commit" != none ]; then
     RUN git commit -m "$(get-commit-message)"
   else
     # We had cloned into an empty repo, side effect of prior git reset --mixed
-    #  command is that subrepo's history is now part of the index. Commit
-    #  without that history.
+    # command is that subrepo's history is now part of the index. Commit
+    # without that history.
     OUT=true RUN git write-tree
     OUT=true RUN git commit-tree -m "$(get-commit-message)" "$output"
     RUN git reset --hard "$output"
@@ -967,10 +965,11 @@ assert-repo-is-ready() {
   git:get-head-branch-name
   original_head_branch="$output"
 
-  if [[ `git rev-parse -q --verify HEAD` ]]; then
+  output=
+  if git:rev-exists HEAD; then
     git:get-head-branch-commit
-    original_head_commit="$output"
   fi
+  original_head_commit="${output:-none}"
 
   # If a subrepo branch is currently checked out, then note it:
   if [[ "$original_head_branch" =~ ^subrepo/(.*) ]]; then
@@ -995,7 +994,7 @@ assert-repo-is-ready() {
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
       error "Can't $command subrepo. Unstaged changes."
-    if [[ ! "$command" == "clone" || `git rev-parse -q --verify HEAD` ]]; then
+    if [ "$command" != clone ] || git:rev-exists HEAD; then
       git diff-index --quiet --ignore-submodules HEAD ||
         error "Can't $command subrepo. Working tree has changes."
       git diff-index --quiet --cached --ignore-submodules HEAD ||
@@ -1003,7 +1002,7 @@ assert-repo-is-ready() {
     else
       # Repo has no commits and we're cloning a subrepo. Working tree won't
       #  possibly have changes as there was nothing initial to change.
-      [[ -z $(git ls-files) ]] ||
+      [[ -z "$(git ls-files)" ]] ||
         error "Can't $command subrepo. Index has changes."
     fi
   fi
