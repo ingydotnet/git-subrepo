@@ -1,13 +1,15 @@
-# Work in progress, removed from intro-to-subrepo.swim
+= Comparing `submodule` and `subrepo`
 
-In this final section I'll compare/contrast common usage of working with
-external repos, using these commands.
+This document compares Git's `submodule` command to the new `subrepo` command,
+with examples and discussion of all the common operations. I'll use the term
+"External" to mean the general concept of an external repo that might be used
+as a submodule or a subrepo.
 
-To keep the lingo clear, I'll use the term "External" to mean the general
-concept of an external repo that might e used as a submodule, subtree or
-subrepo.
+= Overview
 
-=== Adding a new External
+
+
+= Adding a new External
 
 As an owner or collaborator, you have decided to add a new External to your
 repo:
@@ -18,14 +20,16 @@ repo:
 
 /…to be completed…/
 
-=== Updating from a changed External
+= Updating from a changed External
 
-=== Pushing External changes upstream
+= Pushing External changes upstream
 
-=== Moving/Renaming an External
+= Moving/Renaming an External
 
-=== Making an External on a branch
+= Making an External on a branch
 
-=== Changing the tracking branch of an External
+= Changing the tracking branch of an External
 
-=== Removing an External
+= Removing an External
+
+= Migration from One to the Other

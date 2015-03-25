@@ -72,6 +72,18 @@ The best short answer is:
 
 The complete "Installation Instructions" can be found below.
 
+= How it Works
+
+A `subrepo` is an external repository whose content of a particular branch is
+physically stored in a subdirectory of your repository.
+
+
+
+
+
+
+
+
 = Commands
 
 All the *subrepo* commands use names of actual Git commands and try to do
@@ -299,6 +311,20 @@ the same arguments. Keep reading…
   VERY noisy, but extremely useful in deep debugging. Applicable to all
   commands.
 
+
+
+
+
+
+
+= Migrating from `submodule` or `subtree`
+
+
+
+
+
+            XXX Move to external Install doc
+
 = Installation Instructions
 
 There are currently 3 ways to install `git-subrepo`. For all of them you need
@@ -407,6 +433,15 @@ If you want to chat about the `git-subrepo` command, join `#git-commands` on
 * This command currently only works on POSIX systems.
 * The `git-subrepo` repo itself has 2 subrepos under the `ext/` subdirectory.
 * Written in (very modern) Bash, with full test suite. Take a look.
+
+= See Also
+
+
+
+
+
+
+
 
 = Author
 
