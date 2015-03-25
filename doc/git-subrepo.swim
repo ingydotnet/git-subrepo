@@ -37,7 +37,7 @@ other git commands with similar goals, but various problems.
 It assumes there are 3 main roles of people interacting with a repo, and
 attempts to serve them all well:
 
-* *owner* - The person who authors/owns/maintains a repo.
+* *owner* - The person who authors\/owns\/maintains a repo.
 * *users* - People who are just using/installing the repo.
 * *collaborators* - People who commit code to the repo and subrepos.
 
@@ -53,7 +53,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Subrepo repositories can contain subrepos themselves.
 * Branching with subrepos JustWorks™.
 * Different branches can have different subrepos in different states, etc.
-* Moving/renaming/deleting a subrepo subdir JustWorks™.
+* Moving\/renaming\/deleting a subrepo subdir JustWorks™.
 * Your git history is kept squeaky clean.
 * Upstream history (clone/pull) is condensed into a single commit.
 * You can see the subrepo history with `git log subrepo/<subdir>/upstream`.
@@ -71,18 +71,6 @@ The best short answer is:
   echo 'source /path/to/git-subrepo/init' >> ~/.bashrc
 
 The complete "Installation Instructions" can be found below.
-
-= How it Works
-
-A `subrepo` is an external repository whose content of a particular branch is
-physically stored in a subdirectory of your repository.
-
-
-
-
-
-
-
 
 = Commands
 
@@ -311,20 +299,6 @@ the same arguments. Keep reading…
   VERY noisy, but extremely useful in deep debugging. Applicable to all
   commands.
 
-
-
-
-
-
-
-= Migrating from `submodule` or `subtree`
-
-
-
-
-
-            XXX Move to external Install doc
-
 = Installation Instructions
 
 There are currently 3 ways to install `git-subrepo`. For all of them you need
@@ -433,15 +407,6 @@ If you want to chat about the `git-subrepo` command, join `#git-commands` on
 * This command currently only works on POSIX systems.
 * The `git-subrepo` repo itself has 2 subrepos under the `ext/` subdirectory.
 * Written in (very modern) Bash, with full test suite. Take a look.
-
-= See Also
-
-
-
-
-
-
-
 
 = Author
 
