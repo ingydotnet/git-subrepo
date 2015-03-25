@@ -47,7 +47,7 @@ attempts to serve them all well:
 
 =over
 
-=item * B<owner> - The person who authorsI<owns>maintains a repo.
+=item * B<owner> - The person who authors/owns/maintains a repo.
 
 =item * B<users> - People who are just using/installing the repo.
 
