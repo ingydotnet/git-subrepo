@@ -1,4 +1,12 @@
 ---
+version: 0.2.1
+date:    Sat Mar 28 07:52:22 PDT 2015
+changes:
+- Allows subrepo clone to clone to an empty branch; fixes #26.
+- Refs in status
+- Empty parent set to 'none' in .gitrepo file.
+- Bug fixes
+---
 version: 0.2.0
 date:    Sat Jan 24 06:22:05 PST 2015
 changes:
