@@ -7,7 +7,14 @@
 set -e
 
 # Import Bash+ helper functions:
-source "${BASH_SOURCE%/*}/git-subrepo.d/bash+.bash"
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SOURCE_DIR="$(dirname "$SOURCE")"
+source "${SOURCE_DIR}/git-subrepo.d/bash+.bash"
 bash+:import :std can
 
 VERSION=0.2.1
