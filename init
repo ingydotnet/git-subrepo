@@ -75,3 +75,4 @@ if [[ "$GIT_SUBREPO_ROOT" =~ ^/ ]]; then
 else
   echo "source the absolute path of '$GIT_SUBREPO_ROOT'"
 fi
+
