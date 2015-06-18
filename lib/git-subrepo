@@ -28,7 +28,7 @@ Commands:
   status    Get status of a subrepo (or all of them)
   clean     Remove branches, remotes and refs for a subrepo
 
-  help      Documentation for git-subrepo (or specfic command)
+  help      Documentation for git-subrepo (or specific command)
   version   Display git-subrepo version info
 
 See 'git help subrepo' for complete documentation and usage of each command.
