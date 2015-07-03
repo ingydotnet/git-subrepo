@@ -63,8 +63,8 @@ ReadMe.pod: $(DOC)
 Intro.pod: doc/intro-to-subrepo.swim
 	swim --to=pod --wrap --complete $< > $@
 
-$(MAN1)/%.1: doc/%.1
-	swim --to=man $< > $@
+$(MAN1)/%.1: doc/%.swim Makefile
+	swim --to=man --wrap $< > $@
 
 compgen:
 	perl pkg/bin/generate-completion.pl $(DOC) > \
