@@ -10,6 +10,7 @@ Git Submodule Alternative
   git subrepo -h    # Help Overview
 
   git subrepo clone <remote-url> [<subdir>]
+  git subrepo init <subdir>
   git subrepo pull <subdir>
   git subrepo push <subdir>
 
@@ -102,6 +103,26 @@ the same arguments. Keep reading…
   The `--force` option will "reclone" (completely replace) an existing subdir.
 
   The `clone` command accepts the `--branch=` and `--force` options.
+
+- `git subrepo init <subdir> [-r <remote>] [-b <branch>]`
+
+  Turn an existing subdirectory into a subrepo.
+
+  If you want to expose a subdirectory of your project as a published subrepo,
+  this command will do that. It will split out the content of a normal
+  subdrirectory into a branch and start tracking it as a subrepo. Afterwards
+  your original repo will look exactly the same except that there will be a
+  `<subdir>/.gitrepo` file.
+
+  If you specify the `--remote` (and optionally the `--branch`) option, the
+  values will be added to the `<subdir>/.gitrepo` file. The `--remote` option
+  is the upstream URL, and the `--branch` option is the upstream branch to
+  push to. These values will be needed to do a `git subrepo push` command, but
+  they can be provided on the `push` command later (and saved to
+  `<subdir>/.gitrepo` if you also specify the `--update` option).
+
+  Note: You will need to create the empty upstream repo to push to on your
+  own.
 
 - `git subrepo pull <subdir>|--all [-b <branch>] [-r <remote>] [-u]`
 

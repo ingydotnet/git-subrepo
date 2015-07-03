@@ -70,8 +70,8 @@
 .rr rF
 .\" ========================================================================
 .\"
-.IX Title "IO::FILE=IO(0X193C3F0) 1"
-.TH IO::FILE=IO(0X193C3F0) 1 "2015-07-03" "perl v5.18.1" "User Contributed Perl Documentation"
+.IX Title "IO::FILE=IO(0X1B6A3F0) 1"
+.TH IO::FILE=IO(0X1B6A3F0) 1 "2015-07-03" "perl v5.18.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -85,6 +85,7 @@
 \&    git subrepo \-h    # Help Overview
 \&
 \&    git subrepo clone <remote\-url> [<subdir>]
+\&    git subrepo init <subdir>
 \&    git subrepo pull <subdir>
 \&    git subrepo push <subdir>
 \&
@@ -196,6 +197,23 @@ can be obtained.
 The \f(CW\*(C`\-\-force\*(C'\fR option will \*(L"reclone\*(R" (completely replace) an existing subdir.
 .Sp
 The \f(CW\*(C`clone\*(C'\fR command accepts the \f(CW\*(C`\-\-branch=\*(C'\fR and \f(CW\*(C`\-\-force\*(C'\fR options.
+.ie n .IP """git subrepo init <subdir> [\-r <remote>] [\-b <branch>]""" 4
+.el .IP "\f(CWgit subrepo init <subdir> [\-r <remote>] [\-b <branch>]\fR" 4
+.IX Item "git subrepo init <subdir> [-r <remote>] [-b <branch>]"
+Turn an existing subdirectory into a subrepo.
+.Sp
+If you want to expose a subdirectory of your project as a published subrepo,
+this command will do that. It will split out the content of a normal
+subdrirectory into a branch and start tracking it as a subrepo. Afterwards
+your original repo will look exactly the same except that there will be a \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR file.
+.Sp
+If you specify the \f(CW\*(C`\-\-remote\*(C'\fR (and optionally the \f(CW\*(C`\-\-branch\*(C'\fR) option, the
+values will be added to the \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR file. The \f(CW\*(C`\-\-remote\*(C'\fR
+option is the upstream \s-1URL,\s0 and the \f(CW\*(C`\-\-branch\*(C'\fR option is the upstream branch
+to push to. These values will be needed to do a \f(CW\*(C`git subrepo push\*(C'\fR command,
+but they can be provided on the \f(CW\*(C`push\*(C'\fR command later (and saved to \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR if you also specify the \f(CW\*(C`\-\-update\*(C'\fR option).
+.Sp
+Note: You will need to create the empty upstream repo to push to on your own.
 .ie n .IP """git subrepo pull <subdir>|\-\-all [\-b <branch>] [\-r <remote>] [\-u]""" 4
 .el .IP "\f(CWgit subrepo pull <subdir>|\-\-all [\-b <branch>] [\-r <remote>] [\-u]\fR" 4
 .IX Item "git subrepo pull <subdir>|--all [-b <branch>] [-r <remote>] [-u]"

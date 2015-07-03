@@ -10,14 +10,15 @@ set -e
 source "${BASH_SOURCE%/*}/git-subrepo.d/bash+.bash"
 bash+:import :std can
 
-VERSION=0.2.1
+VERSION=0.2.2
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
 git subrepo <command> <arguments> <options>
 
 Commands:
-  clone     Clone a remote repository into a local sub-directory
+  clone     Clone a remote repository into a local subdirectory
+  init      Turn a current subdirectory into a subrepo
   pull      Pull upstream changes to the subrepo
   push      Push local subrepo changes upstream
 
@@ -153,6 +154,18 @@ command:clone() {
   $force_wanted && re=re
   local remote="$subrepo_remote"
   say "Subrepo '$remote' ($subrepo_branch) ${re}cloned into '$subdir'."
+}
+
+# `git subrepo init <subdir>` command:
+command:init() {
+  command-setup +subdir
+  say "NOT REALLY IMPLEMENTED YET"
+  local remote="${subrepo_remote:-none}" branch="${subrepo_branch:-none}"
+
+  # Init new subrepo from the subdir:
+  subrepo:init
+
+  say "Subrepo created from '$subdir' with remote '$remote' ($branch)."
 }
 
 # `git subrepo pull <subdir>` command:
@@ -349,6 +362,20 @@ subrepo:clone() {
   o "Commit the new '$subdir/' content:"
   subrepo_commit_ref="$upstream_head_commit"
   CALL subrepo:commit
+}
+
+# Init a new subrepo from current repo:
+subrepo:init() {
+  # Check if subdir exists
+  # Check that subdir is not empty
+  # Check that subdir is not already a subrepo
+  # Check that subdir is part of the repo
+
+  # filter-branch out the subdir
+  # note the head commit
+  # checkout the repo to the state we were at
+  # write $subdir/.gitrepo with correct info
+  true
 }
 
 # Properly merge a local subrepo branch with upstream and commit to mainline:
@@ -783,6 +810,7 @@ options_clean='all force'
 options_clone='branch force'
 options_commit='fetch force'
 options_fetch='all branch remote'
+options_init='branch'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
 options_status='fetch'
@@ -824,7 +852,7 @@ command-setup() {
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
   gitrepo="$subdir/.gitrepo"
-  if [ "$command" != "clone" ]; then
+  if [[ ! "$command" =~ ^(clone|init)$ ]]; then
     read-gitrepo-file
   fi
 
@@ -990,7 +1018,7 @@ assert-repo-is-ready() {
     RUN git rev-parse --verify HEAD
 
   # Repo is in a clean state:
-  if [[ "$command" =~ ^(clone|pull|push|branch|commit)$ ]]; then
+  if [[ "$command" =~ ^(clone|init|pull|push|branch|commit)$ ]]; then
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
       error "Can't $command subrepo. Unstaged changes."
