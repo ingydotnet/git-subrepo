@@ -110,7 +110,7 @@ the same arguments. Keep reading…
 
   If you want to expose a subdirectory of your project as a published subrepo,
   this command will do that. It will split out the content of a normal
-  subdrirectory into a branch and start tracking it as a subrepo. Afterwards
+  subdirectory into a branch and start tracking it as a subrepo. Afterwards
   your original repo will look exactly the same except that there will be a
   `<subdir>/.gitrepo` file.
 
