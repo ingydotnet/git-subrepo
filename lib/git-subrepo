@@ -159,13 +159,20 @@ command:clone() {
 # `git subrepo init <subdir>` command:
 command:init() {
   command-setup +subdir
-  say "NOT REALLY IMPLEMENTED YET"
+say "NOT REALLY IMPLEMENTED YET"
   local remote="${subrepo_remote:-none}" branch="${subrepo_branch:-none}"
 
   # Init new subrepo from the subdir:
   subrepo:init
-
-  say "Subrepo created from '$subdir' with remote '$remote' ($branch)."
+  if OK; then
+    say "Subrepo created from '$subdir' with remote '$remote' ($branch)."
+  elif [[ "$CODE" -eq 1 ]]; then
+    error-pull-rebase
+    return "$CODE"
+  else
+    die "Unknown init error code: '$CODE'"
+  fi
+  return 0
 }
 
 # `git subrepo pull <subdir>` command:
@@ -366,6 +373,7 @@ subrepo:clone() {
 
 # Init a new subrepo from current repo:
 subrepo:init() {
+  local branch_name="subrepo/${subdir:??}"
   # Check if subdir exists
   # Check that subdir is not empty
   # Check that subdir is not already a subrepo
@@ -375,7 +383,9 @@ subrepo:init() {
   # note the head commit
   # checkout the repo to the state we were at
   # write $subdir/.gitrepo with correct info
-  true
+  o "Commit the new '$subdir/' content:"
+  subrepo_commit_ref="$branch_name"
+  CALL subrepo:commit
 }
 
 # Properly merge a local subrepo branch with upstream and commit to mainline:
