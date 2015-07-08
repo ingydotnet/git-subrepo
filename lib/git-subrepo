@@ -159,16 +159,16 @@ command:clone() {
 # `git subrepo init <subdir>` command:
 command:init() {
   command-setup +subdir
-say "NOT REALLY IMPLEMENTED YET"
-  local remote="${subrepo_remote:-none}" branch="${subrepo_branch:-none}"
+  local remote="${subrepo_remote:=none}" branch="${subrepo_branch:=none}"
 
   # Init new subrepo from the subdir:
   subrepo:init
   if OK; then
-    say "Subrepo created from '$subdir' with remote '$remote' ($branch)."
-  elif [[ "$CODE" -eq 1 ]]; then
-    error-pull-rebase
-    return "$CODE"
+    if [[ $remote == none ]]; then
+      say "Subrepo created from '$subdir' (with no remote)."
+    else
+      say "Subrepo created from '$subdir' with remote '$remote' ($branch)."
+    fi
   else
     die "Unknown init error code: '$CODE'"
   fi
@@ -374,18 +374,42 @@ subrepo:clone() {
 # Init a new subrepo from current repo:
 subrepo:init() {
   local branch_name="subrepo/${subdir:??}"
-  # Check if subdir exists
-  # Check that subdir is not empty
-  # Check that subdir is not already a subrepo
-  # Check that subdir is part of the repo
+  # Check if subdir is proper candidate for this init:
+  assert-subdir-ready-for-init
 
   # filter-branch out the subdir
-  # note the head commit
-  # checkout the repo to the state we were at
-  # write $subdir/.gitrepo with correct info
-  o "Commit the new '$subdir/' content:"
-  subrepo_commit_ref="$branch_name"
-  CALL subrepo:commit
+  o "Get commits specific to the subdir."
+  FAIL=false RUN git filter-branch -f \
+    --subdirectory-filter "$subdir" \
+    HEAD
+  if ! $OK; then
+    RUN git reset --hard "$original_head_commit"
+    error "Failed to get subrepo content from '$subdir'."
+  fi
+
+  o "Note the HEAD commit."
+  FAIL=false OUT=true RUN git rev-parse HEAD
+  if ! $OK || [[ ! $output =~ ^[0-9a-f]{40}$ ]]; then
+    RUN git reset --hard "$original_head_commit"
+    error "Failed to get commit for new 'subrepo': $output"
+  fi
+  local upstream_head_commit="$output"
+
+  o "Reset to the commit we started at."
+  RUN git reset --hard "$original_head_commit"
+
+  o "Put info into '$subdir/.gitrepo' file."
+  update-gitrepo-file
+
+  o "Add the new '$subdir/.gitrepo' file."
+  RUN git add "$subdir/.gitrepo"
+
+  o "Commit new subrepo to the '$original_head_branch' branch."
+  subrepo_commit_ref="$upstream_head_commit"
+  RUN git commit -m "$(get-commit-message)"
+
+  o "Create ref '$refs_subrepo_commit'."
+  git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
 }
 
 # Properly merge a local subrepo branch with upstream and commit to mainline:
@@ -487,6 +511,10 @@ subrepo:push() {
 
 # Fetch the subrepo's remote branch content:
 subrepo:fetch() {
+  if [[ $subrepo_remote == none ]]; then
+    error "Can't fetch subrepo. Remote is 'none' in '$subdir/.gitrepo'."
+  fi
+
   o "Fetch '$subrepo_remote' ($subrepo_branch)"
   RUN git fetch --quiet "$subrepo_remote" "$subrepo_branch"
 
@@ -809,7 +837,7 @@ get-command-options() {
   fi
   if $update_wanted; then
     check_option update
-    if [ -z "$subrepo_branch" -o -z "$subrepo_remote" ]; then
+    if [[ -z "$subrepo_branch" || -z "$subrepo_remote" ]]; then
       error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
@@ -963,11 +991,11 @@ update-gitrepo-file() {
 ...
 
   # TODO: only update remote and branch if supplied and $update_wanted
-  if $newfile || [ $update_wanted -a -n "$override_remote" ]; then
+  if $newfile || [[ $update_wanted && -n "$override_remote" ]]; then
     RUN git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
   fi
 
-  if $newfile || [ $update_wanted -a -n "$override_branch" ]; then
+  if $newfile || [[ $update_wanted && -n "$override_branch" ]]; then
     RUN git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
   fi
 
@@ -1015,7 +1043,7 @@ assert-repo-is-ready() {
   fi
 
   # Make sure we are on a branch:
-  [ "$original_head_branch" == HEAD -o -z "$original_head_branch" ] &&
+  [[ "$original_head_branch" == HEAD || -z "$original_head_branch" ]] &&
     error "Must be on a branch to run this command."
 
   # In a work-tree:
@@ -1048,6 +1076,20 @@ assert-repo-is-ready() {
   # For now, only support actions from top of repo:
   if [ "$(git rev-parse --git-dir)" != '.git' ]; then
     error "Need to run subrepo command from top level directory of the repo."
+  fi
+}
+
+# If subdir exists, make sure it is empty:
+assert-subdir-ready-for-init() {
+  if [[ ! -e $subdir ]]; then
+    error "The subdir '$subdir' does not exist."
+  fi
+  if [[ -e $subdir/.gitrepo ]]; then
+    error "The subdir '$subdir' is already a subrepo."
+  fi
+  # Check that subdir is part of the repo
+  if [[ -z "$(git log -- $subdir)" ]]; then
+    error "The subdir '$subdir' is not part of this repo."
   fi
 }
 
@@ -1112,7 +1154,7 @@ get-upstream-head-branch() {
 # Commit msg for an action commit:
 get-commit-message() {
   local commit="$(git rev-parse --short "$upstream_head_commit")"
-  local args=()
+  local args=() debug_wanted=false
   if $all_wanted; then
     args+=("$subdir")
   fi

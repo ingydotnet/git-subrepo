@@ -23,7 +23,7 @@ export COLLAB="$TMP/collab"
 
 mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 
-cp -r test/repo/{foo,bar} "$UPSTREAM/"
+cp -r test/repo/{foo,bar,init} "$UPSTREAM/"
 
 ###
 # Test helper functions:
