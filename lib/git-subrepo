@@ -373,6 +373,15 @@ subrepo:clone() {
 
 # Init a new subrepo from current repo:
 subrepo:init() {
+  if [[ $remote == none ]]; then
+    if [[ $branch != none ]]; then
+      error "Can't specify init --branch without --remote."
+    fi
+  elif [[ $branch == none ]]; then
+    branch=master
+    subrepo_branch=master
+  fi
+
   local branch_name="subrepo/${subdir:??}"
   # Check if subdir is proper candidate for this init:
   assert-subdir-ready-for-init
