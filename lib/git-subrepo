@@ -464,11 +464,21 @@ subrepo:pull() {
 # Push a properly merged subrepo branch upstream:
 subrepo:push() {
   local branch_name="$branch"
+  local new_upstream=false
   if [ -z "$branch_name" ]; then
     o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
-    CALL subrepo:fetch
+    FAIL=false OUT=false CALL subrepo:fetch
+
+    if ! OK; then
+      local re="^fatal: Couldn't find remote ref "
+      if [[ ! $output =~ $re ]]; then
+        error "Fetch failed: $output"
+      fi
+      new_upstream=true
+    fi
 
     branch_name="subrepo-push/$subdir"
+
     if git:branch-exists "$branch_name"; then
       error "There is a previous push branch '$branch_name'. Delete it first."
     fi
@@ -479,13 +489,15 @@ subrepo:push() {
       CODE=-1; return
     fi
 
-    o "git rebase $refs_subrepo_fetch $branch_name"
-    FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
-    if ! OK; then
-      o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
-      CODE=2; return
+    if ! $new_upstream; then
+      o "git rebase $refs_subrepo_fetch $branch_name"
+      FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
+      if ! OK; then
+        o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
+        CODE=2; return
+      fi
+      RUN git checkout "$original_head_branch"
     fi
-    RUN git checkout "$original_head_branch"
   else
     if ! git:rev-exists "$branch_name"; then
       error "'$branch_name' is not a valid commit."
@@ -496,7 +508,7 @@ subrepo:push() {
   git:branch-exists "$branch_name" ||
     error "No subrepo branch '$branch_name' to push."
 
-  if ! "$force_wanted"; then
+  if ! "$force_wanted" && ! "$new_upstream"; then
     o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
       error "Can't commit: '$branch_name' doesn't contain upstream HEAD."
@@ -526,6 +538,7 @@ subrepo:fetch() {
 
   o "Fetch '$subrepo_remote' ($subrepo_branch)"
   RUN git fetch --quiet "$subrepo_remote" "$subrepo_branch"
+  OK || return
 
   o "Get the upstream subrepo HEAD commit."
   OUT=true RUN git rev-parse FETCH_HEAD
@@ -1337,14 +1350,10 @@ RUN() {
   set +e
   local rc=
   local out=
-  if $debug_wanted; then
-    out="$("$@")"
+  if $OUT; then
+    out="$("$@" 2>/dev/null)"
   else
-    if $OUT; then
-      out="$("$@" 2>/dev/null)"
-    else
-      out="$("$@" 2>&1)"
-    fi
+    out="$("$@" 2>&1)"
   fi
   rc=$?
   set -e
@@ -1353,15 +1362,13 @@ RUN() {
     OK=false
     $FAIL && error "Command failed: '$*'."
   fi
-  if $OUT; then
-    output="$out"
-  fi
+  output="$out"
 }
 
 # Call a function with indent increased:
 CALL() {
   local INDENT="  $INDENT"
-  "$@"
+  "$@" || true
 }
 
 # Print verbose steps for commands with steps:
