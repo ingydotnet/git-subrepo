@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -ex
+cat $0    # Show this script in the output
+
+REPO=${1:-ingydotnet/djson-pm}
+REPODIR="${REPO#*/}"
+SUBDIR=${2:-test}
+SUBREPO=$REPO-$SUBDIR
+SUBREPODIR="${SUBREPO#*/}"
+
+git hub repo-delete "$SUBREPO" || true
+rm -fr "$REPODIR"
+git hub clone "$REPO"
+(
+  exit
+  cd "$REPODIR"
+  git subrepo init test -r "git@github.com:$SUBREPO" # -b foo
+  git hub repo-new "$SUBREPO"
+  git hub repo "$SUBREPO"
+  cat "$SUBDIR/.gitrepo"
+  git subrepo push "$SUBDIR"
+  git subrepo status "$SUBDIR"
+  git hub clone "$SUBREPO"
+  [[ -e "$SUBREPODIR/decode.t" ]] && echo PASS || echo FAIL
+)
+(
+  cd "$REPODIR"
+  git subrepo init test
+  git hub repo-new "$SUBREPO"
+  git hub repo "$SUBREPO"
+  cat "$SUBDIR/.gitrepo"
+  git subrepo push -u "$SUBDIR" -r "git@github.com:$SUBREPO" -b foo
+  git subrepo status "$SUBDIR"
+  git hub clone "$SUBREPO"
+  [[ -e "$SUBREPODIR/decode.t" ]] && echo PASS || echo FAIL
+  bash -i
+)
