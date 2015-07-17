@@ -82,6 +82,8 @@ The C<git-subrepo> command benefits these roles in the following ways:
 
 =item * Moving/renaming/deleting a subrepo subdir JustWorks™.
 
+=item * You can C<init> an existing subdirectory into a subrepo.
+
 =item * Your git history is kept squeaky clean.
 
 =item * Upstream history (clone/pull) is condensed into a single commit.
@@ -156,10 +158,13 @@ If you specify the C<--remote> (and optionally the C<--branch>) option, the
 values will be added to the C<< <subdir>/.gitrepo >> file. The C<--remote>
 option is the upstream URL, and the C<--branch> option is the upstream branch
 to push to. These values will be needed to do a C<git subrepo push> command,
-but they can be provided on the C<push> command later (and saved to C<<
+but they can be provided later on the C<push> command (and saved to C<<
 <subdir>/.gitrepo >> if you also specify the C<--update> option).
 
-Note: You will need to create the empty upstream repo to push to on your own.
+Note: You will need to create the empty upstream repo and push to it on your
+      own, using C<< git subrepo push <subdir> >>.
+
+The C<init> command accepts the C<--branch=> and C<--remote=> options.
 
 =item C<< git subrepo pull <subdir>|--all [-b <branch>] [-r <remote>] [-u] >>
 
@@ -169,7 +174,7 @@ The C<pull> command will attempt to do the following commands in one go:
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git rebase subrepo/<subdir>{/upstream,}
+    git rebase subrepo/<subdir>/upstream subrepo/<subdir>
     git checkout ORIG_HEAD
     git subrepo commit <subdir>
 
@@ -190,17 +195,18 @@ The set of commands used above are described in detail below.
 The C<pull> command accepts the C<--all>, C<--branch=>, C<--remote=> and C<--
 update> options.
 
-=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] >>
+=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] >>
 
 Push a properly merged subrepo branch back upstream.
 
 The C<push> command requires a branch that has been properly merged/rebased
-with the upstream HEAD. That means the upstream HEAD is one of the commits in
-the branch. If you don't specify a branch to push, one will be created for you
-using the same techniques as a pull (except it won't be committed locally).
-Otherwise you can name a properly merged branch. Often times you can use the
-branch commit from the last pull, which is saved as C<<
-refs/subrepo/<subdir>/pull >>.
+with the upstream HEAD (unless the upstream HEAD is empty, which is common
+when doing a first C<push> after an C<init>). That means the upstream HEAD is
+one of the commits in the branch. If you don't specify a branch to push, one
+will be created for you using the same techniques as a pull (except it won't
+be committed locally). Otherwise you can name a properly merged branch to
+push. Often times you can use the branch commit from the last pull, which is
+saved as C<< refs/subrepo/<subdir>/pull >>.
 
 After that, the C<push> command just checks that the branch contains the
 upstream HEAD and then pushes it upstream.
@@ -465,11 +471,12 @@ function is called:
 
 =head1 Status
 
-The git-subrepo command is coming together nicely, but some details are still
-being ironed out. I would not use it for important things yet, but playing
-around with it is cheap (this is not C<git submodule>), and not permanent (if
-you do not push to public remotes). ie You can always play around and reset
-back to the beginning without pain.
+The git-subrepo command has been in use for well over a year and seems to get
+the job done. Development is still ongoing but mostly just for fixing bugs.
+
+Trying subrepo out is simple and painless (this is not C<git submodule>).
+Nothing is permanent (if you do not push to shared remotes). ie You can always
+play around and reset back to the beginning without pain.
 
 This command has a test suite (run C<make test>), but surely has many bugs. If
 you have expertise with Git and subcommands, please review the code, and file
@@ -484,9 +491,17 @@ C<irc.freenode.net>.
 
 =item * This command currently only works on POSIX systems.
 
+=over
+
+=item * Windows support via msysgit is being looked into (works on cygwin).
+
+=back
+
 =item * The C<git-subrepo> repo itself has 2 subrepos under the C<ext/> subdirectory.
 
 =item * Written in (very modern) Bash, with full test suite. Take a look.
+
+=item * A C<.gitrepo> file never is in the top level dir (next to a C<.git/> dir).
 
 =back
 

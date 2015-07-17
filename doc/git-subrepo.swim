@@ -55,6 +55,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Branching with subrepos JustWorks™.
 * Different branches can have different subrepos in different states, etc.
 * Moving\/renaming\/deleting a subrepo subdir JustWorks™.
+* You can `init` an existing subdirectory into a subrepo.
 * Your git history is kept squeaky clean.
 * Upstream history (clone/pull) is condensed into a single commit.
 * You can see the subrepo history with `git log subrepo/<subdir>/upstream`.
@@ -118,11 +119,13 @@ the same arguments. Keep reading…
   values will be added to the `<subdir>/.gitrepo` file. The `--remote` option
   is the upstream URL, and the `--branch` option is the upstream branch to
   push to. These values will be needed to do a `git subrepo push` command, but
-  they can be provided on the `push` command later (and saved to
+  they can be provided later on the `push` command (and saved to
   `<subdir>/.gitrepo` if you also specify the `--update` option).
 
-  Note: You will need to create the empty upstream repo to push to on your
-  own.
+  Note: You will need to create the empty upstream repo and push to it on your
+  own, using `git subrepo push <subdir>`.
+
+  The `init` command accepts the `--branch=` and `--remote=` options.
 
 - `git subrepo pull <subdir>|--all [-b <branch>] [-r <remote>] [-u]`
 
@@ -132,7 +135,7 @@ the same arguments. Keep reading…
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git rebase subrepo/<subdir>{/upstream,}
+    git rebase subrepo/<subdir>/upstream subrepo/<subdir>
     git checkout ORIG_HEAD
     git subrepo commit <subdir>
 
@@ -154,17 +157,18 @@ the same arguments. Keep reading…
   The `pull` command accepts the `--all`, `--branch=`, `--remote=` and
   `--update` options.
 
-- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>]`
+- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u]`
 
   Push a properly merged subrepo branch back upstream.
 
-  The `push` command requires a branch that has been properly
-  merged/rebased with the upstream HEAD. That means the upstream HEAD is one
-  of the commits in the branch. If you don't specify a branch to push,
-  one will be created for you using the same techniques as a pull (except it
-  won't be committed locally). Otherwise you can name a properly merged
-  branch. Often times you can use the branch commit from the last pull, which
-  is saved as `refs/subrepo/<subdir>/pull`.
+  The `push` command requires a branch that has been properly merged/rebased
+  with the upstream HEAD (unless the upstream HEAD is empty, which is common
+  when doing a first `push` after an `init`). That means the upstream HEAD is
+  one of the commits in the branch. If you don't specify a branch to push, one
+  will be created for you using the same techniques as a pull (except it won't
+  be committed locally). Otherwise you can name a properly merged branch to
+  push. Often times you can use the branch commit from the last pull, which is
+  saved as `refs/subrepo/<subdir>/pull`.
 
   After that, the `push` command just checks that the branch contains the
   upstream HEAD and then pushes it upstream.
@@ -410,11 +414,12 @@ is called:
 
 = Status
 
-The git-subrepo command is coming together nicely, but some details are still
-being ironed out. I would not use it for important things yet, but playing
-around with it is cheap (this is not `git submodule`), and not permanent (if
-you do not push to public remotes). ie You can always play around and reset
-back to the beginning without pain.
+The git-subrepo command has been in use for well over a year and seems to get
+the job done. Development is still ongoing but mostly just for fixing bugs.
+
+Trying subrepo out is simple and painless (this is not `git submodule`).
+Nothing is permanent (if you do not push to shared remotes). ie You can always
+play around and reset back to the beginning without pain.
 
 This command has a test suite (run `make test`), but surely has many bugs. If
 you have expertise with Git and subcommands, please review the code, and file
@@ -426,8 +431,10 @@ If you want to chat about the `git-subrepo` command, join `#git-commands` on
 = Notes
 
 * This command currently only works on POSIX systems.
+  * Windows support via msysgit is being looked into (works on cygwin).
 * The `git-subrepo` repo itself has 2 subrepos under the `ext/` subdirectory.
 * Written in (very modern) Bash, with full test suite. Take a look.
+* A `.gitrepo` file never is in the top level dir (next to a `.git/` dir).
 
 = Author
 
