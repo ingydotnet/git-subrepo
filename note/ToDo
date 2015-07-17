@@ -1,3 +1,9 @@
+== Next
+- Write test for push after init
+  - With and without --remote
+  - With --update
+- Write tests for --update
+
 == Development
 
 - Add version commit id to cmdver in .gitrepo.

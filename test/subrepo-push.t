@@ -32,7 +32,6 @@ clone-foo-and-bar
 
 save-original-state "$OWNER/foo" "bar"
 
-echo;echo;echo
 # Do the subrepo push and test the output:
 {
   message="$(
