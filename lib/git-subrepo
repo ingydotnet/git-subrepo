@@ -159,7 +159,8 @@ command:clone() {
 # `git subrepo init <subdir>` command:
 command:init() {
   command-setup +subdir
-  local remote="${subrepo_remote:=none}" branch="${subrepo_branch:=none}"
+  local remote="${subrepo_remote:=none}"
+  local branch="${subrepo_branch:=master}"
 
   # Init new subrepo from the subdir:
   subrepo:init
@@ -200,7 +201,7 @@ command:push() {
   subrepo:push
   if OK; then
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
-  elif [[ "$CODE" -eq -1 ]]; then
+  elif [[ "$CODE" -eq -2 ]]; then
     say "Subrepo '$subdir' has no new commits to push."
   elif [[ "$CODE" -eq 2 ]]; then
     error-push-rebase
@@ -373,15 +374,6 @@ subrepo:clone() {
 
 # Init a new subrepo from current repo:
 subrepo:init() {
-  if [[ $remote == none ]]; then
-    if [[ $branch != none ]]; then
-      error "Can't specify init --branch without --remote."
-    fi
-  elif [[ $branch == none ]]; then
-    branch=master
-    subrepo_branch=master
-  fi
-
   local branch_name="subrepo/${subdir:??}"
   # Check if subdir is proper candidate for this init:
   assert-subdir-ready-for-init
@@ -488,9 +480,7 @@ subrepo:push() {
 
     o "Create subrepo branch '$branch_name':"
     CALL subrepo:branch "$branch_name"
-    if ! OK; then
-      CODE=-1; return
-    fi
+    if ! OK; then return; fi
 
     o "git rebase $refs_subrepo_fetch $branch_name"
     FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
@@ -570,7 +560,7 @@ subrepo:branch() {
   # (That translates to 2 commits after the parent of last pull):
   local count="$(git rev-list "$subrepo_parent"..HEAD -2 | grep -c $'\n')"
   if [ "$count" != 2 ]; then
-    OK=false; CODE=-1; return
+    OK=false; CODE=-2; return
   fi
 
   o "Remove the commits before last pull."
@@ -860,7 +850,7 @@ get-command-options() {
   fi
   if $update_wanted; then
     check_option update
-    if [[ -z "$subrepo_branch" || -z "$subrepo_remote" ]]; then
+    if [[ -z "$subrepo_branch" && -z "$subrepo_remote" ]]; then
       error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
