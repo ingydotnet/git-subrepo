@@ -478,17 +478,28 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
+  # We need a temp variable to contain $subrepo_parent
+  local subrepo_parent_marker="$subrepo_parent"
+
+  # Handle case where \$subrepo_parent is \"none\"."
+  if [ "$subrepo_parent_marker" == "none" ]; then
+    # Get first commit hash on the branch:
+    OUT=true RUN git rev-list --max-parents=0 HEAD
+    subrepo_parent_marker="$output"
+  fi
+
   o "Make sure there is at least one commit after the last pull."
-  # (That translates to 2 commits after the parent of last pull):
-  local count="$(git rev-list "$subrepo_parent"..HEAD -2 | grep -c $'\n')"
-  if [ "$count" != 2 ]; then
+  # (That translates to at least 2 commits after the parent of last pull):
+  local count="$(git rev-list "$subrepo_parent_marker"..HEAD -2 | grep -c $'\n')"
+  if [ "$count" -lt "2" -a "$subrepo_parent" != "none" -o \
+       "$count" -lt "1" -a "$subrepo_parent" == "none" ]; then
     OK=false; CODE=-1; return
   fi
 
   o "Remove the commits before last pull."
   FAIL=false RUN git filter-branch --force \
-    --parent-filter "grep -v $subrepo_parent || true" \
-    -- "$subrepo_parent"..HEAD
+    --parent-filter "grep -v $subrepo_parent_marker || true" \
+    -- "$subrepo_parent_marker"..HEAD
 
   # Note: We need to have the last pull commit or this next step can fail.
   o "Get commits specific to the subdir."
@@ -498,8 +509,9 @@ subrepo:branch() {
 
   o "Make sure there are *subrepo* commits after the last pull."
   local count="$(git rev-list HEAD -2 | grep -c $'\n')"
-  if [ "$count" != 2 ]; then
-    # Reset to the branch where we started:
+  if [ "$count" -lt "2" -a "$subrepo_parent" != "none" -o \
+       "$count" -lt "1" -a "$subrepo_parent" == "none" ]; then
+    o "Reset to the branch where we started."
     RUN git reset --hard "$original_head_commit"
     OK=false
     return
