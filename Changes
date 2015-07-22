@@ -1,4 +1,10 @@
 ---
+version: 0.2.2
+date:    Wed Jul 22 09:45:13 PDT 2015
+changes:
+- Added the `init` subcommand
+- Applied doc fixes
+---
 version: 0.2.1
 date:    Sat Mar 28 07:52:22 PDT 2015
 changes:
