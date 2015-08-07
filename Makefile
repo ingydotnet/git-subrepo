@@ -11,6 +11,7 @@ MAN1 := man/man1
 EXT  := $(LIB).d
 EXTS := $(shell find $(EXT) -type f) \
 	$(shell find $(EXT) -type l)
+SHARE = share
 
 # Install variables:
 PREFIX ?= /usr/local
@@ -67,8 +68,10 @@ $(MAN1)/%.1: doc/%.swim Makefile
 	swim --to=man --wrap $< > $@
 
 compgen:
-	perl pkg/bin/generate-completion.pl $(DOC) > \
-	  share/completion.bash
+	perl pkg/bin/generate-completion.pl bash $(DOC) $(LIB) > \
+	    $(SHARE)/completion.bash
+	perl pkg/bin/generate-completion.pl zsh $(DOC) $(LIB) > \
+	    $(SHARE)/zsh-completion/_git-subrepo
 
 clean purge:
 	rm -fr tmp
