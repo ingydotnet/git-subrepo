@@ -28,8 +28,7 @@ _git-subrepo() {
         '(-v --verbose)'{-v,--verbose}'[Show verbose output]' \
         '(-d --debug)'{-d,--debug}'[Show the actual commands used]' \
         '(-x --DEBUG)'{-x,--DEBUG}'[Turn on -x Bash debugging]' \
-
-            && ret=0
+ && ret=0
 
     case $state in
     subcmd)
