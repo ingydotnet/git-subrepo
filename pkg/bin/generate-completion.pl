@@ -113,8 +113,8 @@ $options_string && ret=0
                 '*: :->subdir' \\
                     && ret=0
                 case \$state in
-                subdir)
-                    _compadd_subdirs
+                subdir|repo)
+                    _files
                 ;;
                 esac
         ;;
