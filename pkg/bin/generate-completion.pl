@@ -96,8 +96,7 @@ _git-subrepo() {
         '*: :->args' \
 ...
     print <<"...";
-$options_string
-            && ret=0
+$options_string && ret=0
 
     case \$state in
     subcmd)
