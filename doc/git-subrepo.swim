@@ -135,13 +135,14 @@ the same arguments. Keep reading…
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git rebase subrepo/<subdir>/upstream subrepo/<subdir>
+    git checkout subrepo/<subdir>/upstream
+    git cherry-pick subrepo/<subdir>
     git checkout ORIG_HEAD
     git subrepo commit <subdir>
 
   In other words, you could do all the above commands yourself, for the same
   effect. If any of the commands fail, subrepo will stop and tell you to
-  finish this by hand. Generally a failure would be in the rebase, where
+  finish this by hand. Generally a failure would be in the cherry-pick, where
   conflicts can happen. Since Git has lots of ways to resolve conflicts to
   your personal tastes, the subrepo command defers to letting you do this by
   hand.
@@ -214,8 +215,8 @@ the same arguments. Keep reading…
 
   Add subrepo branch to current history as a single commit.
 
-  This command is generally used after a hand-merge. You have done a `subrepo
-  branch` and merged (rebased) it with the upstream. This command takes the
+  This command is generally used after a hand-made cherry-picking. You have done a `subrepo
+  branch` and cherry-picked the changes to the upstream. This command takes the
   HEAD of that branch, puts its content into the subrepo subdir and adds a new
   commit for it to the top of your mainline history.
 
