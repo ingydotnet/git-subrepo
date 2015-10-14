@@ -484,6 +484,8 @@ subrepo:push() {
         RUN git push \
           "$subrepo_remote" "$subrepo_commit:refs/heads/$subrepo_branch"
         new_upstream=true
+        upstream_head_commit=$(git rev-parse "$subrepo_commit")
+        o "Upstream head commit set to $upstream_head_commit"
       else
         error "Fetch for push failed: $output"
       fi

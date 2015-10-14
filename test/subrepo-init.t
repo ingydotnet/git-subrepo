@@ -39,7 +39,8 @@ is "$output" "Subrepo created from 'doc' (with no remote)." \
   test-gitrepo-comment-block
   test-gitrepo-field "remote" "none"
   test-gitrepo-field "branch" "master"
-  test-gitrepo-field "parent" "$init_clone_commit"
+  test-gitrepo-field "pull.parent" "$init_clone_commit"
+  test-gitrepo-field "push.parent" "$init_clone_commit"
   test-gitrepo-field "cmdver" "`git subrepo --version`"
 }
 
