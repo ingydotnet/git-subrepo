@@ -6,7 +6,6 @@ source test/setup
 
 use Test::More
 
-{
     cd "$TMP"
 
     # Make two new repos
@@ -65,7 +64,8 @@ use Test::More
         cd sub
         echo "another direct change in sub" >> subrepo
         git commit -a -m "another direct change in sub"
-    ) > /dev/null
+        git checkout -b temp # otherwise push to master will fail
+    ) &> /dev/null
 
     # Commit to host/sub
     (
@@ -75,18 +75,24 @@ use Test::More
         git commit -m "change from host"
     ) > /dev/null
 
-    # Pull subrepo changes
-    # expected: successful pull without conflicts
     (
+        # Pull subrepo changes
+        # expected: successful pull without conflicts
         is "$(
             cd host
             git subrepo pull sub
         )" \
         "Subrepo 'sub' pulled from '../sub' (master)."
+
+        # Push subrepo changes
+        # expected: successful push without conflicts
+        is "$(
+            cd host
+            git subrepo push sub -b master -u
+        )" \
+        "Subrepo 'sub' pushed to '../sub' (master)."
     )
 
-}
-
-done_testing 1
+done_testing 2
 
 teardown

@@ -505,7 +505,17 @@ subrepo:push() {
         --parent-filter "sed 's/^$/-p $subrepo_commit/'" \
         -- "$branch_name"
 
+      # If there were several pulls before this push, the squashed commit will contain changes
+      # but won't be cherry-picked to upstream as all the changes are already present there.
+      # To prevent a failure here we additionally check that this commit does contain real changes.
       local commit="$(git rev-parse "$branch_name")"
+      o "Check if cherry-pick contains non-processed changes"
+      FAIL=false RUN git diff --quiet "$commit" "$refs_subrepo_fetch"
+      if OK; then
+        o "Cherry-pick commit contains no changes, push aborted"
+        OK=false; CODE=-2; return
+      fi
+
       o "Cherry-pick the squashed changes from $commit to $upstream_ref"
       RUN git checkout "$branch_name"
       RUN git reset --hard "$refs_subrepo_fetch"
