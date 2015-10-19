@@ -641,14 +641,23 @@ subrepo:branch() {
   FAIL=false RUN git branch -D "$cherry_branch"
   RUN git branch "$cherry_branch"
 
-  o "Prepare the commit message for a squashed cherry-pick commit"
-  local commit_message="git-subrepo cherry-pick of the following commits:"$'\n\n'
-  commit_message+="$(git log "$cherry_branch" --first-parent)"
+  #if there are local changes, squash them and apply onto subrepo upstream
+  FAIL=false RUN git diff --quiet "$prev_pull_commit" "$cherry_branch"
+  if OK; then
+    o "No local changes found"
+    # Reset to the branch where we started:
+    RUN git reset --hard "$original_head_commit"
+    OK=false; CODE=-2; return
+  else
+    o "Prepare the commit message for a squashed cherry-pick commit"
+    local commit_message="git-subrepo cherry-pick of the following commits:"$'\n\n'
+    commit_message+="$(git log "$cherry_branch" --first-parent)"
 
-  o "Squash all changes since the last pull into one commit"
-  RUN git reset --hard "$prev_pull_commit"
-  RUN git merge --squash "$cherry_branch"
-  RUN git commit -m "$commit_message"
+    o "Squash all changes since the last pull into one commit"
+    RUN git reset --hard "$prev_pull_commit"
+    RUN git merge --squash "$cherry_branch"
+    RUN git commit -m "$commit_message"
+  fi
 
   o "Create branch '$branch' for this new commit set."
   RUN git branch "$branch"
@@ -677,7 +686,7 @@ subrepo:commit() {
 
   o "Remove old content of the subdir."
   (
-    cd "./$subdir"
+    cd "./$subdir" || die
     RUN rm -fr $(ls -A)
   )
 
