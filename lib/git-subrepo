@@ -488,13 +488,18 @@ subrepo:push() {
 
       o "Create subrepo branch '$branch_name':"
       CALL subrepo:branch "$branch_name"
-      if ! OK; then return; fi
+      if ! OK; then
+        o "Could not find anything to put on '$branch_name'"
+        CODE=-2;
+        return;
+      fi
 
       o "git rebase $refs_subrepo_fetch $branch_name"
       FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
       if ! OK; then
         o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
-        CODE=2; return
+        CODE=2;
+        return;
       fi
       RUN git checkout "$original_head_branch"
     fi
@@ -572,24 +577,6 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
-  o "Make sure there is at least one commit after the last pull."
-  # (That translates to 2 commits after the parent of last pull):
-  local count="$(git rev-list "$subrepo_parent"..HEAD -2 | grep -c $'\n')"
-  if [ "$count" != 2 ]; then
-    OK=false; CODE=-2; return
-  fi
-
-  o "Remove the commits before last pull."
-  FAIL=false RUN git filter-branch --force \
-    --parent-filter "grep -v $subrepo_parent || true" \
-    -- "$subrepo_parent"..HEAD
-
-  # Note: We need to have the last pull commit or this next step can fail.
-  o "Get commits specific to the subdir."
-  FAIL=false RUN git filter-branch -f \
-    --subdirectory-filter "$subdir" \
-    HEAD
-
   o "Make sure there are *subrepo* commits after the last pull."
   local count="$(git rev-list HEAD -2 | grep -c $'\n')"
   if [ "$count" != 2 ]; then
@@ -599,20 +586,37 @@ subrepo:branch() {
     return
   fi
 
-  # Now we can get rid of the previous pull commit.
-  # First get the final commit, which is the last pull one:
-  local prev_pull_commit="$(git rev-list HEAD | tail -1)"
-  [ -n "$prev_pull_commit" ] ||
-    die "Can't find previous clone/pull commit."
+  # Note: We need to have the last pull commit or this next step can fail.
+  o "Get commits specific to the subdir."
+  FAIL=false RUN git filter-branch -f \
+    --subdirectory-filter "$subdir" \
+    HEAD
 
-  o "Remove the previous pull commit."
-  FAIL=false RUN git filter-branch --force \
-    --parent-filter "grep -v $prev_pull_commit || true" \
-    -- "$prev_pull_commit"..HEAD
+  local previous_pull_commits="$(git log --pretty=format:%H .gitrepo)";
+  [ -n "$previous_pull_commits" ] ||
+    die "Can't find previous clone/pull commits."
+
+  o "Remove previous pull/clone commits."
+  FAIL=false RUN git filter-branch -f --commit-filter '
+        commits='$previous_pull_commits';
+	if [ "${commits/$GIT_COMMIT}" = "$commits" ] ; then
+          git commit-tree "$@";
+	else
+          skip_commit "$@";
+	fi' HEAD
 
   o "Remove the .gitrepo file from the history."
-  RUN git filter-branch -f \
+  FAIL=false RUN git filter-branch -f \
     --tree-filter "rm -f .gitrepo"
+
+  o "Do we have any commits left?"
+  FAIL=false RUN git rev-parse HEAD
+  if ! $OK ; then
+    # Reset to the branch where we started:
+    RUN git reset --hard "$original_head_commit"
+    OK=false
+    return
+  fi
 
   o "Create branch '$branch' for this new commit set."
   RUN git branch "$branch"
