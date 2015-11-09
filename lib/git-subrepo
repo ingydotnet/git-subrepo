@@ -17,7 +17,7 @@ SOURCE_DIR="$(dirname "$SOURCE")"
 source "${SOURCE_DIR}/git-subrepo.d/bash+.bash"
 bash+:import :std can
 
-VERSION=0.2.3
+VERSION=0.2.3-grimmySwe
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
