@@ -29,8 +29,8 @@ ok "$(
 
 ok "$(
   cd $OWNER/foo
-  ! (git:branch-exists subrepo/one)
-)" "The 'subrepo/one' branch does not exist"
+  git:branch-exists subrepo/one
+)" "The 'subrepo/one' branch exists"
 
 done_testing
 
