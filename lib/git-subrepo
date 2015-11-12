@@ -205,6 +205,7 @@ command:pull() {
 command:push() {
   local branch=
   command-setup +subdir branch
+
   subrepo:push
   if OK; then
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
@@ -438,6 +439,12 @@ subrepo:pull() {
   o "Create subrepo branch '$branch_name':"
   CALL subrepo:branch
   if OK; then
+    o "Find ancestor with same treehash"
+    CALL git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"
+
+    o "Set a common ancestor"
+    RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
+
     o "git rebase $upstream_ref $branch_name"
     FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
     if ! OK; then
@@ -481,6 +488,14 @@ subrepo:push() {
         error "Fetch for push failed: $output"
       fi
     else
+      # Check that we are up to date:
+      o "Check upstream head against .gitrepo commit"
+      if [ $force_wanted = false ] &&
+          [ "$upstream_head_commit" != "$subrepo_commit" ]; then 
+        error "Local branch is not updated, perform pull or use "\
+"'--force' to always trust local branch in conflicts"
+      fi
+
       branch_name="subrepo-push/$subdir"
       if git:branch-exists "$branch_name"; then
         error "There is a previous push branch '$branch_name'. Delete it first."
@@ -494,8 +509,17 @@ subrepo:push() {
         return;
       fi
 
-      o "git rebase $refs_subrepo_fetch $branch_name"
-      FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
+      o "Find ancestor with same treehash"
+      CALL git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"
+
+      o "Set a common ancestor"
+      RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
+
+      # Theirs in this case will ignore upstream and simply push our changes
+      # without conflict
+      o "git rebase -X theirs $refs_subrepo_fetch $branch_name"
+      FAIL=false OUT=true RUN git rebase -X theirs \
+          "$refs_subrepo_fetch" "$branch_name"
       if ! OK; then
         o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
         CODE=2;
@@ -577,33 +601,10 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
-  o "Make sure there are *subrepo* commits after the last pull."
-  local count="$(git rev-list HEAD -2 | grep -c $'\n')"
-  if [ "$count" != 2 ]; then
-    # Reset to the branch where we started:
-    RUN git reset --hard "$original_head_commit"
-    OK=false
-    return
-  fi
-
-  # Note: We need to have the last pull commit or this next step can fail.
   o "Get commits specific to the subdir."
   FAIL=false RUN git filter-branch -f \
     --subdirectory-filter "$subdir" \
     HEAD
-
-  local previous_pull_commits="$(git log --pretty=format:%H .gitrepo)";
-  [ -n "$previous_pull_commits" ] ||
-    die "Can't find previous clone/pull commits."
-
-  o "Remove previous pull/clone commits."
-  FAIL=false RUN git filter-branch -f --commit-filter '
-        commits='$previous_pull_commits';
-	if [ "${commits/$GIT_COMMIT}" = "$commits" ] ; then
-          git commit-tree "$@";
-	else
-          skip_commit "$@";
-	fi' HEAD
 
   o "Remove the .gitrepo file from the history."
   FAIL=false RUN git filter-branch -f \
@@ -1344,6 +1345,33 @@ git:make-ref() {
   local commit="$(git rev-parse "$2")"
   git update-ref "$ref_name" "$commit"
 }
+
+git:log-tree() {
+  git log --pretty=format:%H:%T "$1"
+}
+
+git:subrepo-merge-base() {
+  local first=$(git:log-tree "$1")
+  local second=$(git:log-tree "$2")
+
+  output=
+  for source in $first; do
+    local array=(${source//:/ })
+    local commit=${array[0]}
+    local tree=${array[1]}
+    for target in $second; do
+      local array2=(${target//:/ })
+      if [ $tree = ${array2[1]} ]; then
+        # We found a match, return commit hashes that point to same tree hash
+        new_parent=$commit
+        old_parent=${array2[0]}
+        return 0
+      fi
+    done
+  done
+  return 1
+}
+
 
 #------------------------------------------------------------------------------
 # Low level sugar commands:
