@@ -85,6 +85,29 @@ test-exists() {
   done
 }
 
+test-exists-in-index() {
+  for f in $*; do
+    if [[ "$f" =~ ^! ]]; then
+      f="${f#!}"
+      if [[ "$f" =~ /$ ]]; then
+        ok "`[ ! $(git ls-tree --full-tree --name-only -r HEAD "$f") ]`" \
+          "Directory '$f' does not exist in index"
+      else
+        ok "`[ ! $(git ls-tree --full-tree --name-only -r HEAD "$f") ]`" \
+          "File '$f' does not exist in index"
+      fi
+    else
+      if [[ "$f" =~ /$ ]]; then
+        ok "`[ $(git ls-tree --full-tree --name-only -r HEAD "$f") ]`" \
+          "Directory '$f' exists in index"
+      else
+        ok "`[ $(git ls-tree --full-tree --name-only -r HEAD "$f") ]`" \
+          "File '$f' exists in index"
+      fi
+    fi
+  done
+}
+
 test-gitrepo-comment-block() {
   is "$(grep -E '^;' $gitrepo)" "\
 ; DO NOT EDIT (unless you know what you are doing)
