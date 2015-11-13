@@ -502,16 +502,19 @@ subrepo:push() {
       o "Set a common ancestor"
       RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
 
-      # Theirs in this case will ignore upstream and simply push our changes
-      # without conflict
-      o "git rebase -X theirs $refs_subrepo_fetch $branch_name"
-      FAIL=false OUT=true RUN git rebase -X theirs \
-          "$refs_subrepo_fetch" "$branch_name"
-      if ! OK; then
-        o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
-        CODE=2;
-        return;
+      if [ $force_wanted = false ]; then
+        # Theirs in this case will ignore upstream and simply push our changes
+        # without conflict
+        o "git rebase -X theirs $refs_subrepo_fetch $branch_name"
+        FAIL=false OUT=true RUN git rebase -X theirs \
+            "$refs_subrepo_fetch" "$branch_name"
+        if ! OK; then
+          o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
+          CODE=2;
+          return;
+        fi
       fi
+
       RUN git checkout "$original_head_branch"
     fi
   else
@@ -532,8 +535,7 @@ subrepo:push() {
       fi
     fi
 
-    local force=
-    "$force_wanted" && force=--force
+    local force="$force_wanted" && force=--force
 
     o "Push branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
     RUN git push $force "$subrepo_remote" "$branch_name":"$subrepo_branch"
