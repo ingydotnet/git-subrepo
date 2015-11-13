@@ -52,8 +52,8 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
   "The readme file in the mainrepo is merged"
 
 (
+  set -x
   cd $OWNER/foo
-  cat bar/Bar2
   git subrepo push bar
 ) &> /dev/null || die
 
