@@ -25,7 +25,8 @@ subrepo-clone-bar-into-foo
 ( 
   cd $OWNER/foo
   git subrepo pull bar
-) &> /dev/null || die
+)
+# &> /dev/null || die
 
 test-exists \
   "$OWNER/foo/bar/Foo1" \
