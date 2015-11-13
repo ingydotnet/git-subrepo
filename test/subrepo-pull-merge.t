@@ -10,6 +10,8 @@ clone-foo-and-bar
 
 subrepo-clone-bar-into-foo
 
+note "Check that merge conflicts are handled correctly"
+
 (
   cd $OWNER/bar
   add-new-files Bar2
@@ -49,27 +51,16 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
   "Merged Bar2" \
   "The readme file in the mainrepo is merged"
 
-is "$(cat $OWNER/bar/Bar2)" \
-  "new file Bar2"$'\n'"Bar2" \
-  "The readme file in the subrepo is original"
-
-( set -x
+(
   cd $OWNER/foo
   cat bar/Bar2
-  git subrepo push bar || {
-      git status
-      git log
-      cat Bar2
-      git checkout --ours Bar2
-      git add Bar2
-      git rebase --continue || {
-          echo "Failed"
-      }
-      git checkout master
-      git subrepo push bar subrepo-push/bar
-  }
-)
-# &> /dev/null || die
+  git subrepo push bar
+) &> /dev/null || die
+
+(
+  cd $OWNER/bar
+  git pull
+) &> /dev/null || die
 
 test-exists \
   "$OWNER/foo/bar/Bar2" \
