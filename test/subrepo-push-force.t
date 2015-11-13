@@ -50,6 +50,7 @@ test-exists \
 
 test-exists \
   "$OWNER/newbar/Foo1" \
+  !"$OWNER/foo/bar/Bar2" \
 
 done_testing
 
