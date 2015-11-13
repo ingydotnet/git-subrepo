@@ -489,7 +489,8 @@ subrepo:push() {
 
       branch_name="subrepo-push/$subdir"
       if git:branch-exists "$branch_name"; then
-        error "There is a previous push branch '$branch_name'. Delete it first."
+        error "There is a previous push branch '$branch_name'. "\
+"Delete it first."
       fi
 
       o "Create subrepo branch '$branch_name':"
