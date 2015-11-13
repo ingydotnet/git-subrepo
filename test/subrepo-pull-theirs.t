@@ -10,7 +10,7 @@ clone-foo-and-bar
 
 subrepo-clone-bar-into-foo
 
-note "Check that merge conflicts are handled correctly"
+note "Pull - Conflict - Use theirs - Push"
 
 (
   cd $OWNER/bar
