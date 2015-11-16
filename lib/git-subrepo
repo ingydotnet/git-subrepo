@@ -451,7 +451,11 @@ subrepo:pull() {
   CALL subrepo:branch
 
   o "Find ancestor with same treehash"
-  CALL git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"
+  if ! git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"; then
+    error "Can't find any common ancestor between $refs_subrepo_fetch "\
+"and $branch_name. This might be the case if someone used push --force on "\
+"the subrepo. You need to find out why and probably reclone the subrepo."
+  fi
   
   if ! $first_on_both; then
     subrepo_commit_ref="$branch_name"
@@ -472,8 +476,7 @@ subrepo:pull() {
   o "Checkout '$original_head_branch'."
   git checkout --quiet "$original_head_branch"
 
-  o "Commit the new '$subdir/' content:"
-  #subrepo_commit_ref="$branch_name"
+  o "Commit the new '$subrepo_commit_ref' content:"
   CALL subrepo:commit
 
   o "Create ref '$refs_subrepo_pull' for branch '$branch_name'."
@@ -519,11 +522,14 @@ subrepo:push() {
       CALL subrepo:branch "$branch_name"
 
       o "Find ancestor with same treehash"
-      CALL git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"
+      if ! git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"; then
+        error "Can't find any common ancestor between $refs_subrepo_fetch "\
+"and $branch_name. This might be the case if someone used push --force on "\
+"the subrepo. You need to find out why and probably reclone the subrepo."
+      fi
 
       if $first_on_both ; then
         o "git:subrepo-merge-base reports same location"
-        # TODO: Refactor this, currently it's performed on many location!
         RUN git branch -D "$branch_name"
         RUN git checkout "$original_head_branch"
         OK=false
