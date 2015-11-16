@@ -278,6 +278,21 @@ command:status() {
   subrepo:status | ${GIT_SUBREPO_PAGER}
 }
 
+# `git subrepo merge-base branch1 [branch2]`
+command:merge-base() {
+  get-params +branch1 +branch2
+  if git:subrepo-merge-base "$branch1" "$branch2"; then
+    say "Found common tree hash in these commits:"
+    say "$branch1: $new_parent"
+    say "$branch2: $old_parent"
+    if $first_on_both; then
+      say "Both are HEADs"
+    fi
+  else
+    say "No common tree hash found between $branch1 and $branch2"
+  fi
+}
+
 status-refs() {
   local output=
   while read line; do
@@ -438,7 +453,7 @@ subrepo:pull() {
   o "Find ancestor with same treehash"
   CALL git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"
   
-  if [ -n "$new_parent" ]; then
+  if ! $first_on_both; then
     subrepo_commit_ref="$branch_name"
     o "Set a common ancestor"
     RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
@@ -506,7 +521,7 @@ subrepo:push() {
       o "Find ancestor with same treehash"
       CALL git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"
 
-      if [ -z "$new_parent" ]; then
+      if $first_on_both ; then
         o "git:subrepo-merge-base reports same location"
         # TODO: Refactor this, currently it's performed on many location!
         RUN git branch -D "$branch_name"
@@ -1350,8 +1365,7 @@ git:log-tree() {
 git:subrepo-merge-base() {
   local first=$(git:log-tree "$1")
   local second=$(git:log-tree "$2")
-  local nothing_to_do=true
-
+  first_on_both=true
   new_parent=
   old_parent=
   for source in $first; do
@@ -1361,18 +1375,12 @@ git:subrepo-merge-base() {
     for target in $second; do
       local array2=(${target//:/ })
       if [ "$tree" = "${array2[1]}" ]; then
-        if [ $nothing_to_do = true ]; then
-          # We found same tree hash in first commit on both sides
-          # Then we don't have to do anything
-          return 0
-        fi
-
         # We found a match, return commit hashes that point to same tree hash
         new_parent="$commit"
         old_parent="${array2[0]}"
         return 0
       fi
-      nothing_to_do=false
+      first_on_both=false
     done
   done
 
