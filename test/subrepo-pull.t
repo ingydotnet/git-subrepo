@@ -46,6 +46,31 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   test-gitrepo-field "cmdver" "`git subrepo --version`"
 }
 
+# Test pull if we have rebased the original subrepo so that our clone
+# commit is no longer present in the history
+(
+  cd $OWNER/bar
+  git reset --hard master^^
+  add-new-files Bar3
+  git push --force
+) &> /dev/null || die
+
+{
+  test-exists \
+    !"$OWNER/foo/pull_failed"
+}
+
+(
+  cd $OWNER/foo
+  git subrepo pull bar --debug || touch pull_failed
+) &> /dev/null || die
+
+# We check that the control file was created
+{
+  test-exists \
+    "$OWNER/foo/pull_failed"
+}
+
 done_testing # 9
 
 teardown
