@@ -226,7 +226,7 @@ the same arguments. Keep reading…
 
 - `git subrepo merge-base <branch1> <branch2>`
 
-  Find a common ancestor between two branches. This command will look at the 
+  Find a common ancestor between two branches. This command will look at the
   referenced tree hash in the commits to see if it can locate a common one.
 
   This is used for pull and push before the rebase step. In this case we look
@@ -234,7 +234,7 @@ the same arguments. Keep reading…
   in the subrepo.
 
   Note: This is different from the regular merge-base that looks at the object
-  structure. 
+  structure.
 
 - `git subrepo status [<subdir>]`
 
