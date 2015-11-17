@@ -456,7 +456,7 @@ subrepo:pull() {
 "and $branch_name. This might be the case if someone used push --force on "\
 "the subrepo. You need to find out why and probably reclone the subrepo."
   fi
-  
+
   if ! $first_on_both; then
     subrepo_commit_ref="$branch_name"
     o "Set a common ancestor"
@@ -507,7 +507,7 @@ subrepo:push() {
       # Check that we are up to date:
       o "Check upstream head against .gitrepo commit"
       if [ $force_wanted = false ] &&
-          [ "$upstream_head_commit" != "$subrepo_commit" ]; then 
+          [ "$upstream_head_commit" != "$subrepo_commit" ]; then
         error "Local branch is not updated, perform pull or use "\
 "'--force' to always trust local branch in conflicts"
       fi
