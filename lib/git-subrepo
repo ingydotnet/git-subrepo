@@ -46,14 +46,14 @@ Options:
 h           Show the command summary
 help        Help overview
 version     Print the git-subrepo version number
-
+ 
 a,all       Perform command on all current subrepos
 b,branch=   Specify an upstream branch
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
 r,remote=   Specify an upstream remote
 u,update    Add the --branch and/or --remote overrides to .gitrepo
-
+ 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
 d,debug     Show the actual commands used
