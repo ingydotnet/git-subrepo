@@ -78,13 +78,13 @@ msg_main2="main2 initial add to subrepo"
   git add share/readme
   git commit -m "$msg_main2"
 
-  git subrepo push share 
+  git subrepo push share
 ) &> /dev/null || die
 
 # Go back into main1 and pull the subrepo updates:
 ( set -x
   cd main1
-  git subrepo pull share 
+  git subrepo pull share
 ) &> /dev/null || die
 
 # The readme file should have both changes:

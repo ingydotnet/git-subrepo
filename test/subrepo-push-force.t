@@ -22,7 +22,7 @@ subrepo-clone-bar-into-foo
   git subrepo push bar --force --debug
 ) &> /dev/null || die
 
-( 
+(
   cd $OWNER/foo
   git subrepo pull bar
 )
@@ -33,7 +33,7 @@ test-exists \
   !"$OWNER/foo/bar/Bar2" \
 
 # Pull here will actually merge the old master with the new one
-( 
+(
   set +x
   cd $OWNER/bar
   git pull
