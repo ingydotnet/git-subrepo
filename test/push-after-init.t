@@ -13,7 +13,8 @@ git clone $UPSTREAM/init $OWNER/init &>/dev/null || die
   git subrepo init doc || die
   mkdir ../upstream
   git init --bare ../upstream || die
-) &>/dev/null
+)
+# &> /dev/null
 
 output="$(
   cd $OWNER/init

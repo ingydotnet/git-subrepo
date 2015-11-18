@@ -62,6 +62,15 @@ modify-files() {
   git commit -m "modified file: $file"
 }
 
+modify-files-ex() {
+  local file
+  for file in $*; do
+    echo "$file" >> "$file"
+    git add "$file"
+  done
+  git commit -m "modified file: $file"
+}
+
 test-exists() {
   for f in $*; do
     if [[ "$f" =~ ^! ]]; then

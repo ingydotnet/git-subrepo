@@ -78,32 +78,14 @@ msg_main2="main2 initial add to subrepo"
   git add share/readme
   git commit -m "$msg_main2"
 
-  git subrepo push share || {
-    # We have a rebase conflict. Resolve it:
-    git checkout --theirs readme
-    git add readme
-    git rebase --continue
-    git checkout master
-  }
-
-  git subrepo push share subrepo-push/share
-
-) &> /dev/null
+  git subrepo push share 
+) &> /dev/null || die
 
 # Go back into main1 and pull the subrepo updates:
 ( set -x
   cd main1
-  git subrepo pull share || {
-    # XXX When this fails we end up needing a skip because the change has
-    # already been applied. Need to find out how to detect this so we can not
-    # bail out of the pull.
-
-    # We have a rebase conflict. Resolve it:
-    git rebase --skip
-    git checkout master
-    git subrepo commit share
-  }
-) &> /dev/null
+  git subrepo pull share 
+) &> /dev/null || die
 
 # The readme file should have both changes:
 is "$(cat main1/share/readme)" \

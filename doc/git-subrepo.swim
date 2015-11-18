@@ -17,6 +17,7 @@ Git Submodule Alternative
   git subrepo fetch <subdir>
   git subrepo branch <subdir>
   git subrepo commit <subdir>
+  git subrepo merge-base <branch1> <branch2>
 
   git subrepo status [<subdir>]
   git subrepo clean <subdir>
@@ -135,6 +136,8 @@ the same arguments. Keep reading…
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
+    git subrepo merge-base subrepo/<subdir>/upstream subrepo/<subdir>
+    git rebase --onto <new_parent> <old_parent> subrepo/<subdir>
     git rebase subrepo/<subdir>/upstream subrepo/<subdir>
     git checkout ORIG_HEAD
     git subrepo commit <subdir>
@@ -194,19 +197,15 @@ the same arguments. Keep reading…
 
 - `git subrepo branch <subdir>|--all`
 
-  Create a branch with local subrepo commits since last pull.
+  Create a branch with local subrepo commits.
 
   Scan the history of the mainline for all the commits that affect the
-  `subdir` (since the last subrepo pull or clone) and create a new branch from
-  them called `subrepo/<subdir>`.
+  `subdir` and create a new branch from them called `subrepo/<subdir>`.
 
   This is useful for doing `pull` and `push` commands by hand.
 
   Use the `--force` option to write over an existing `subrepo/<subdir>`
   branch.
-
-  Note: if no commits have been made to the subdir since the last
-  `pull`/`clone` then the `branch` command will fail.
 
   The `branch` command accepts the `--all` and `--force` options.
 
@@ -224,6 +223,18 @@ the same arguments. Keep reading…
   `--force` option to commit anyway.
 
   The `commit` command accepts the `--force` option.
+
+- `git subrepo merge-base <branch1> <branch2>`
+
+  Find a common ancestor between two branches. This command will look at the 
+  referenced tree hash in the commits to see if it can locate a common one.
+
+  This is used for pull and push before the rebase step. In this case we look
+  at all the local commits and then try to find a tree hash that is available
+  in the subrepo.
+
+  Note: This is different from the regular merge-base that looks at the object
+  structure. 
 
 - `git subrepo status [<subdir>]`
 
