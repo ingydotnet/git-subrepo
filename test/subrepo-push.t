@@ -37,7 +37,7 @@ save-original-state "$OWNER/foo" "bar"
   message="$(
     cd $OWNER/foo
     git subrepo pull --quiet bar
-    git subrepo push bar subrepo/bar
+    git subrepo push bar
   )"
 
   # Test the output:
