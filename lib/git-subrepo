@@ -663,31 +663,17 @@ subrepo:commit() {
     fi
   fi
 
-  o "Remove old content of the subdir."
-  (
-    cd "./$subdir"
-    RUN rm -fr $(ls -A)
-  )
+  if git ls-files "$subdir" | grep -q .; then
+    o "Remove old content of the subdir."
+    RUN git rm -r "$subdir"
+  fi
 
   o "Put remote subrepo content into '$subdir/'."
-  GIT_WORK_TREE="$subdir" RUN git reset --hard "$subrepo_commit_ref"
-
-  o "Reset index to original commit."
-  if [ "$original_head_commit" != none ]; then
-    RUN git reset --mixed "$original_head_commit"
-  else
-    RUN git reset --mixed
-    # index currently considers $subdir content as deleted at root.
-    o "Delete the index."
-    local indexfile="${GIT_INDEX_FILE:-$(git rev-parse --git-dir)/index}"
-    RUN rm -f "$indexfile"
-  fi
+  RUN git read-tree --prefix="$subdir" -u "$subrepo_commit_ref"
 
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
-
-  o "Add '$subdir/' content to the index."
-  RUN git add -A "$subdir"
+  RUN git add "$gitrepo"
 
   o "Commit to the '$original_head_branch' branch."
   if [ "$original_head_commit" != none ]; then
