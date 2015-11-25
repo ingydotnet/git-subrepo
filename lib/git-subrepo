@@ -125,12 +125,14 @@ main() {
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
+      command-prepare
       subrepo_remote=
       subrepo_branch=
       command_arguments=( "$subdir" "${args[@]}" )
       "command:$command"
     done
   else
+    command-prepare
     "command:$command"
   fi
 }
@@ -898,6 +900,14 @@ command-init() {
   fi
 }
 
+command-prepare() {
+  local output=
+  if git:rev-exists HEAD; then
+    git:get-head-branch-commit
+  fi
+  original_head_commit="${output:-none}"
+}
+
 # Do the setup steps needed by most of the subrepo subcommands:
 command-setup() {
   get-params "$@"
@@ -1059,12 +1069,6 @@ assert-repo-is-ready() {
   # Get the original branch and commit:
   git:get-head-branch-name
   original_head_branch="$output"
-
-  output=
-  if git:rev-exists HEAD; then
-    git:get-head-branch-commit
-  fi
-  original_head_commit="${output:-none}"
 
   # If a subrepo branch is currently checked out, then note it:
   if [[ "$original_head_branch" =~ ^subrepo/(.*) ]]; then
