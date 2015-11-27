@@ -32,7 +32,7 @@ _git-subrepo() {
 
     case $state in
     subcmd)
-        compadd branch clean clone commit fetch help init pull push status version
+        compadd branch clean clone commit fetch help init merge-base pull push status version
     ;;
 
     args)
@@ -56,7 +56,7 @@ _git-subrepo() {
         ;;
 
         help)
-            compadd branch clean clone commit fetch help init pull push status version
+            compadd branch clean clone commit fetch help init merge-base pull push status version
         ;;
         esac
     ;;
