@@ -292,8 +292,8 @@ The pull command does these steps:
 * Fetch the upstream content
 * Check if anything needs pulling
 * Create a branch of local subrepo commits since last pull
-* Rebase this branch onto the upstream commits
-* Commit the HEAD of the rebased content
+* Squashes all local commits into one and cherry-picks the results onto upstream HEAD
+* Commit the HEAD of the branch with a cherry-pick
 * Update/amend the .gitrepo file
 
 === Clean History
@@ -349,7 +349,7 @@ This was from a minimal case. Subtree history (when viewed this way at least)
 gets unreasonably ugly fast. Subrepo history, by contrast, always looks as
 clean as shown.
 
-The final command, push, bascially just does the pull/rebase dance above
+The final command, push, bascially just does the pull/cherry-pick dance above
 described, and pushes the resulting history back. It does not squash the
 commits made locally, because it assumed that when you changed the local
 subrepo, you made messages that were intended to eventually be published back

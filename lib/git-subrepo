@@ -87,8 +87,10 @@ main() {
   local subrepo_remote=         # Remote url for subrepo's upstream repo
   local subrepo_branch=         # Upstream branch to clone/push/pull
   local subrepo_commit=         # Upstream HEAD from previous clone/pull
-  local subrepo_parent=         # Local commit from before previous clone/pull
-  local subrepo_former=         # A retired gitrepo key that might still exist
+
+  local subrepo_pull_parent=    # Parent of a local commit created during the previous subrepo pull
+  local subrepo_push_parent=    # Parent of a local commit created during the previous subrepo push
+  local subrepo_current_parent= # Either subrepo_pull_parent or subrepo_push_parent, depending on current operation
 
   local refs_subrepo_branch=    # A subrepo ref -> commit of branch command
   local refs_subrepo_commit=    # A subrepo ref -> commit last merged
@@ -193,7 +195,7 @@ command:pull() {
   elif [[ "$CODE" -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date."
   elif [[ "$CODE" -eq 1 ]]; then
-    error-pull-rebase
+    error-pull-cherry-pick
     return "$CODE"
   else
     die "Unknown pull error code: '$CODE'"
@@ -211,7 +213,7 @@ command:push() {
   elif [[ "$CODE" -eq -2 ]]; then
     say "Subrepo '$subdir' has no new commits to push."
   elif [[ "$CODE" -eq 2 ]]; then
-    error-push-rebase
+    error-push-cherry-pick
     return "$CODE"
   else
     die "Unknown push error code: '$CODE'"
@@ -244,6 +246,7 @@ command:branch() {
   fi
 
   # Create the subrepo branch:
+  subrepo_current_parent="$subrepo_pull_parent"
   subrepo:branch
   if ! OK; then
     say "Can't create branch '$branch'. No new commits since last pull/clone."
@@ -436,12 +439,16 @@ subrepo:pull() {
     RUN git branch -D "$branch_name"
   fi
   o "Create subrepo branch '$branch_name':"
+  subrepo_current_parent="$subrepo_pull_parent"
   CALL subrepo:branch
   if OK; then
-    o "git rebase $upstream_ref $branch_name"
-    FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
+    local commit="$(git rev-parse "$branch_name")"
+    o "Cherry-pick the squashed changes from $commit to $upstream_ref"
+    RUN git checkout "$branch_name"
+    RUN git reset --hard "$refs_subrepo_fetch"
+    FAIL=false OUT=true RUN git cherry-pick "$commit"
     if ! OK; then
-      o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
+      o "Cherry-picking failed"$'\n'----$'\n'"$output"$'\n'----
       CODE=1; return
     fi
     o "Checkout '$original_head_branch'."
@@ -477,6 +484,8 @@ subrepo:push() {
         RUN git push \
           "$subrepo_remote" "$subrepo_commit:refs/heads/$subrepo_branch"
         new_upstream=true
+        upstream_head_commit=$(git rev-parse "$subrepo_commit")
+        o "Upstream head commit set to $upstream_head_commit"
       else
         error "Fetch for push failed: $output"
       fi
@@ -487,13 +496,32 @@ subrepo:push() {
       fi
 
       o "Create subrepo branch '$branch_name':"
+      subrepo_current_parent="$subrepo_push_parent"
       CALL subrepo:branch "$branch_name"
       if ! OK; then return; fi
 
-      o "git rebase $refs_subrepo_fetch $branch_name"
-      FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
+      o "git filter-branch --force --parent-filter \"sed 's/^$/-p $subrepo_commit/'\" $branch_name"
+      FAIL=false RUN git filter-branch --force \
+        --parent-filter "sed 's/^$/-p $subrepo_commit/'" \
+        -- "$branch_name"
+
+      # If there were several pulls before this push, the squashed commit will contain changes
+      # but won't be cherry-picked to upstream as all the changes are already present there.
+      # To prevent a failure here we additionally check that this commit does contain real changes.
+      local commit="$(git rev-parse "$branch_name")"
+      o "Check if cherry-pick contains non-processed changes"
+      FAIL=false RUN git diff --quiet "$commit" "$refs_subrepo_fetch"
+      if OK; then
+        o "Cherry-pick commit contains no changes, push aborted"
+        OK=false; CODE=-2; return
+      fi
+
+      o "Cherry-pick the squashed changes from $commit to $upstream_ref"
+      RUN git checkout "$branch_name"
+      RUN git reset --hard "$refs_subrepo_fetch"
+      FAIL=false OUT=true RUN git cherry-pick "$commit"
       if ! OK; then
-        o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
+        o "Cherry-picking command failed:"$'\n'----$'\n'"$output"$'\n'----
         CODE=2; return
       fi
       RUN git checkout "$original_head_branch"
@@ -566,7 +594,7 @@ subrepo:fetch() {
   git:make-ref "$refs_subrepo_fetch" FETCH_HEAD
 }
 
-# Create a subrepo branch of changes since last pull:
+# Create a subrepo branch of changes since last pull or push:
 subrepo:branch() {
   local branch="${1:-"subrepo/$subdir"}"
   o "Check if the '$branch' branch already exists."
@@ -574,21 +602,25 @@ subrepo:branch() {
 
   o "Make sure there is at least one commit after the last pull."
   # (That translates to 2 commits after the parent of last pull):
-  local count="$(git rev-list "$subrepo_parent"..HEAD -2 | grep -c $'\n')"
+  local count="$(git rev-list "$subrepo_current_parent"..HEAD -2 | grep -c $'\n')"
   if [ "$count" != 2 ]; then
     OK=false; CODE=-2; return
   fi
 
   o "Remove the commits before last pull."
   FAIL=false RUN git filter-branch --force \
-    --parent-filter "grep -v $subrepo_parent || true" \
-    -- "$subrepo_parent"..HEAD
+    --parent-filter "grep -v $subrepo_current_parent || true" \
+    -- "$subrepo_current_parent"..HEAD
 
   # Note: We need to have the last pull commit or this next step can fail.
   o "Get commits specific to the subdir."
   FAIL=false RUN git filter-branch -f \
     --subdirectory-filter "$subdir" \
     HEAD
+
+  o "Remove the .gitrepo file from the history."
+  RUN git filter-branch -f \
+    --tree-filter "rm -f .gitrepo" --prune-empty
 
   o "Make sure there are *subrepo* commits after the last pull."
   local count="$(git rev-list HEAD -2 | grep -c $'\n')"
@@ -599,26 +631,42 @@ subrepo:branch() {
     return
   fi
 
-  # Now we can get rid of the previous pull commit.
-  # First get the final commit, which is the last pull one:
-  local prev_pull_commit="$(git rev-list HEAD | tail -1)"
+  o "Find the previous pull commit to use as a base revision for the local changes"
+  local prev_pull_commit="$(git rev-list --first-parent HEAD | tail -1)"
   [ -n "$prev_pull_commit" ] ||
     die "Can't find previous clone/pull commit."
 
-  o "Remove the previous pull commit."
-  FAIL=false RUN git filter-branch --force \
-    --parent-filter "grep -v $prev_pull_commit || true" \
-    -- "$prev_pull_commit"..HEAD
+  o "Create temporary branch subrepo-cherry/$subdir to squash local changes"
+  local cherry_branch="subrepo-cherry/$subdir"
+  FAIL=false RUN git branch -D "$cherry_branch"
+  RUN git branch "$cherry_branch"
 
-  o "Remove the .gitrepo file from the history."
-  RUN git filter-branch -f \
-    --tree-filter "rm -f .gitrepo"
+  #if there are local changes, squash them and apply onto subrepo upstream
+  FAIL=false RUN git diff --quiet "$prev_pull_commit" "$cherry_branch"
+  if OK; then
+    o "No local changes found"
+    # Reset to the branch where we started:
+    RUN git reset --hard "$original_head_commit"
+    OK=false; CODE=-2; return
+  else
+    o "Prepare the commit message for a squashed cherry-pick commit"
+    local commit_message="git-subrepo cherry-pick of the following commits:"$'\n\n'
+    commit_message+="$(git log "$cherry_branch" --first-parent)"
+
+    o "Squash all changes since the last pull into one commit"
+    RUN git reset --hard "$prev_pull_commit"
+    RUN git merge --squash "$cherry_branch"
+    RUN git commit -m "$commit_message"
+  fi
 
   o "Create branch '$branch' for this new commit set."
   RUN git branch "$branch"
 
   o "Reset to the '$original_head_branch' branch."
   RUN git reset --hard "$original_head_commit"
+
+  o "Remove temporary branch used for cherry-picking"
+  FAIL=false RUN git branch -D "$cherry_branch"
 }
 
 # Commit a merged subrepo branch:
@@ -638,7 +686,7 @@ subrepo:commit() {
 
   o "Remove old content of the subdir."
   (
-    cd "./$subdir"
+    cd "./$subdir" || die
     RUN rm -fr $(ls -A)
   )
 
@@ -736,13 +784,10 @@ subrepo:status() {
     echo "  Tracking Branch: $subrepo_branch"
     [ -z "$subrepo_commit" ] ||
       echo "  Pulled Commit:   $(git rev-parse --short $subrepo_commit)"
-    if [ -n "$subrepo_parent" ]; then
-      echo "  Pull Parent:     $(git rev-parse --short $subrepo_parent)"
-    # TODO Remove this eventually:
-    elif [ -n "$subrepo_former" ]; then
-      printf "  Former Commit:   $(git rev-parse --short $subrepo_former)"
-      echo " *** DEPRECATED ***"
-    fi
+    [ -n "$subrepo_pull_parent" ] &&
+      echo "  Pull Parent:     $(git rev-parse --short $subrepo_pull_parent)"
+    [ -n "$subrepo_push_parent" ] &&
+      echo "  Push Parent:     $(git rev-parse --short $subrepo_push_parent)"
 
     if "$verbose_wanted"; then
       status-refs
@@ -754,7 +799,7 @@ subrepo:status() {
 
 subrepo:clean() {
   # Remove subrepo branches if exist:
-  for prefix in subrepo subrepo-push; do
+  for prefix in subrepo subrepo-push subrepo-cherry; do
     local branch="$prefix/$subdir"
     local ref="refs/heads/$branch"
     if [ -e ".git/$ref" ]; then
@@ -994,13 +1039,12 @@ read-gitrepo-file() {
   subrepo_commit="$output"
 
   FAIL=false \
-  SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
-  subrepo_parent="$output"
+  SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.pull.parent
+  subrepo_pull_parent="$output"
 
-  if [ -z "$subrepo_parent" ]; then
-    SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.former
-    subrepo_former="$output"
-  fi
+  FAIL=false \
+  SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.push.parent
+  subrepo_push_parent="$output"
 }
 
 # Update the subdir/.gitrepo state file:
@@ -1029,7 +1073,22 @@ update-gitrepo-file() {
   fi
 
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
-  RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
+
+  if [ -n "$subrepo_current_parent" ] && [[ "$subrepo_current_parent" == "subrepo_push_parent" ]]; then
+    o "Update .girepo parents after a push"
+    RUN git config --file="$gitrepo" subrepo.pull.parent "$original_head_commit"
+    RUN git config --file="$gitrepo" subrepo.push.parent "$original_head_commit"
+  elif [ -n "$subrepo_current_parent" ] && [[ "$subrepo_current_parent" == "$subrepo_pull_parent" ]]; then
+    o "Update .girepo parents after a pull"
+    RUN git config --file="$gitrepo" subrepo.pull.parent "$original_head_commit"
+    RUN git config --file="$gitrepo" subrepo.push.parent "$subrepo_push_parent"
+  else
+    o "Update .girepo parents after init/clone/commit"
+    RUN git config --file="$gitrepo" subrepo.pull.parent "$original_head_commit"
+    RUN git config --file="$gitrepo" subrepo.push.parent "$original_head_commit"
+  fi
+
+
   RUN git config --file="$gitrepo" subrepo.cmdver "$VERSION"
 }
 
@@ -1263,12 +1322,12 @@ get-command-info() {
 #------------------------------------------------------------------------------
 # Instructional errors:
 #------------------------------------------------------------------------------
-error-pull-rebase() {
+error-pull-cherry-pick() {
   cat <<...
-The 'git rebase' command failed during your pull.
+The 'git cherry-pick' command failed during your pull.
 You will need to finish the pull by hand. Follow these steps:
 
-  # Resolve the rebase conflicts
+  # Resolve the cherry-pick conflicts
   git checkout $original_head_branch
   git subrepo commit $subdir
 
@@ -1276,12 +1335,12 @@ You will need to finish the pull by hand. Follow these steps:
   error-reset-message pull
 }
 
-error-push-rebase() {
+error-push-cherry-pick() {
   cat <<...
-The 'git rebase' command failed during your push.
+The 'git cherry-pick' command failed during your push.
 You will need to finish the push by hand. Follow these steps:
 
-  # Resolve the rebase conflicts
+  # Resolve the cherry-pick conflicts
   git checkout $original_head_branch
   git subrepo push $subdir subrepo-push/$subdir
 
@@ -1293,7 +1352,7 @@ error-reset-message() {
   cat <<...
 To abort the $1 and reset back to where you started:
 
-  git rebase --abort
+  git cherry-pick --abort
   git checkout ORIG_HEAD
   git subrepo clean $subdir
 

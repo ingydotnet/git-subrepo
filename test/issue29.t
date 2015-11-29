@@ -82,7 +82,8 @@ msg_main2="main2 initial add to subrepo"
     # We have a rebase conflict. Resolve it:
     git checkout --theirs readme
     git add readme
-    git rebase --continue
+    export GIT_EDITOR=/usr/bin/true
+    git cherry-pick --continue
     git checkout master
   }
 
@@ -99,7 +100,7 @@ msg_main2="main2 initial add to subrepo"
     # bail out of the pull.
 
     # We have a rebase conflict. Resolve it:
-    git rebase --skip
+    git cherry-pick --abort
     git checkout master
     git subrepo commit share
   }

@@ -67,7 +67,8 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
   test-gitrepo-field "branch" "master"
   test-gitrepo-field "commit" "$bar_head_commit"
-  test-gitrepo-field "parent" "$foo_clone_commit"
+  test-gitrepo-field "pull.parent" "$foo_clone_commit"
+  test-gitrepo-field "push.parent" "$foo_clone_commit"
   test-gitrepo-field "cmdver" "`git subrepo --version`"
 }
 
@@ -119,6 +120,6 @@ gitrepo=$OWNER/foo/bar/.gitrepo
     'status is clean'
 }
 
-done_testing 22
+done_testing 23
 
 teardown
