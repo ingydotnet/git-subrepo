@@ -595,8 +595,7 @@ subrepo:branch() {
   if [ "$count" != 2 ]; then
     # Reset to the branch where we started:
     RUN git reset --hard "$original_head_commit"
-    OK=false
-    return
+    OK=false; CODE=-2; return
   fi
 
   # Now we can get rid of the previous pull commit.
