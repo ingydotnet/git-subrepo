@@ -601,7 +601,7 @@ subrepo:branch() {
 
   # Now we can get rid of the previous pull commit.
   # First get the final commit, which is the last pull one:
-  local prev_pull_commit="$(git rev-list HEAD | tail -1)"
+  local prev_pull_commit="$(git rev-list --first-parent HEAD | tail -1)"
   [ -n "$prev_pull_commit" ] ||
     die "Can't find previous clone/pull commit."
 
