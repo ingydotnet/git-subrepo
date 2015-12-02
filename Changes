@@ -1,4 +1,12 @@
 ---
+version: 0.3.0
+date:    Tue Dec  1 22:20:31 PST 2015
+changes:
+- Fix issue #98 and host of others (89, 91, 95, 96)
+- Adds support for the merge-base command
+- Adds stability to many commands
+- @grimmySwe++ @dzzh++
+---
 version: 0.2.3
 date:    Sun Aug  9 13:44:22 PDT 2015
 changes:

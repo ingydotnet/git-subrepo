@@ -34,7 +34,7 @@ subrepo-clone-bar-into-foo
     cd $OWNER/foo
     git subrepo merge-base subrepo/bar/fetch master
   )" \
-    "No common tree hash found between subrepo/bar/fetch and master" \
+    "No common ancestor found between 'subrepo/bar/fetch' and 'master'." \
     'subrepo merge-base find no common commits'
 }
 
@@ -47,7 +47,10 @@ subrepo-clone-bar-into-foo
     cd $OWNER/foo
     git subrepo merge-base subrepo/bar/fetch subrepo/bar
   )" \
-    "Found common tree hash in these commits:"$'\n'"subrepo/bar/fetch: $fetch_head_commit"$'\n'"subrepo/bar: $bar_head_commit" \
+    "\
+Found common ancestor between these commits:
+  'subrepo/bar/fetch': '$fetch_head_commit'
+  'subrepo/bar': '$bar_head_commit'" \
     'subrepo merge-base finds a common node'
 }
 
@@ -73,7 +76,11 @@ subrepo-clone-bar-into-foo
     cd $OWNER/foo
     git subrepo merge-base subrepo/bar/fetch subrepo/bar
   )" \
-    "Found common tree hash in these commits:"$'\n'"subrepo/bar/fetch: $fetch_head_commit"$'\n'"subrepo/bar: $bar_head_commit"$'\n'"Both are HEADs" \
+    "\
+Found common ancestor between these commits:
+  'subrepo/bar/fetch': '$fetch_head_commit'
+  'subrepo/bar': '$bar_head_commit'
+Both commits are HEADs." \
     'subrepo merge-base finds a common node'
 }
 

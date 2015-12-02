@@ -17,7 +17,7 @@ SOURCE_DIR="$(dirname "$SOURCE")"
 source "${SOURCE_DIR}/git-subrepo.d/bash+.bash"
 bash+:import :std can
 
-VERSION=0.2.3-issue98
+VERSION=0.3.0
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
@@ -235,7 +235,7 @@ command:fetch() {
 command:branch() {
   command-setup +subdir
   if $fetch_wanted; then
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     CALL subrepo:fetch
   fi
 
@@ -262,7 +262,7 @@ command:commit() {
   command-setup +subdir subrepo_commit_ref
 
   if "$fetch_wanted"; then
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     CALL subrepo:fetch
   fi
   git:rev-exists "$refs_subrepo_fetch" ||
@@ -277,24 +277,24 @@ command:commit() {
   say "subdir '$subdir/' to branch '$original_head_branch'."
 }
 
-# `git subrepo status [<subdir>]` command:
-command:status() {
-  subrepo:status | ${GIT_SUBREPO_PAGER}
-}
-
 # `git subrepo merge-base branch1 [branch2]`
 command:merge-base() {
   get-params +branch1 +branch2
-  if git:subrepo-merge-base "$branch1" "$branch2"; then
-    say "Found common tree hash in these commits:"
-    say "$branch1: $new_parent"
-    say "$branch2: $old_parent"
+  if subrepo:merge-base "$branch1" "$branch2"; then
+    say "Found common ancestor between these commits:"
+    say "  '$branch1': '$new_parent'"
+    say "  '$branch2': '$old_parent'"
     if $first_on_both; then
-      say "Both are HEADs"
+      say "Both commits are HEADs."
     fi
   else
-    say "No common tree hash found between $branch1 and $branch2"
+    say "No common ancestor found between '$branch1' and '$branch2'."
   fi
+}
+
+# `git subrepo status [<subdir>]` command:
+command:status() {
+  subrepo:status | ${GIT_SUBREPO_PAGER}
 }
 
 status-refs() {
@@ -366,7 +366,7 @@ subrepo:clone() {
 
   if $force_wanted; then
     o "--force indicates a reclone."
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     CALL subrepo:fetch
     read-gitrepo-file
     o "Check if we already are up to date."
@@ -383,14 +383,14 @@ subrepo:clone() {
       get-upstream-head-branch
       subrepo_branch="$output"
     fi
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     CALL subrepo:fetch
   fi
 
   o "Make the directory '$subdir/' for the clone."
   RUN mkdir -p "$subdir"
 
-  o "Commit the new '$subdir/' content:"
+  o "Commit the new '$subdir/' content."
   subrepo_commit_ref="$upstream_head_commit"
   CALL subrepo:commit
 }
@@ -438,7 +438,7 @@ subrepo:init() {
 
 # Properly merge a local subrepo branch with upstream and commit to mainline:
 subrepo:pull() {
-  o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+  o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
   CALL subrepo:fetch
 
   # Check if we already are up to date:
@@ -451,36 +451,36 @@ subrepo:pull() {
     o "Deleting old '$branch_name' branch."
     RUN git branch -D "$branch_name"
   fi
-  o "Create subrepo branch '$branch_name':"
+  o "Create subrepo branch '$branch_name'."
   CALL subrepo:branch
 
-  o "Find ancestor with same treehash"
-  if ! git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"; then
-    error "Can't find any common ancestor between $refs_subrepo_fetch "\
+  o "Find common ancestor (with same treehash)."
+  if ! subrepo:merge-base "$refs_subrepo_fetch" "$branch_name"; then
+    error "Can't find a common ancestor between $refs_subrepo_fetch "\
 "and $branch_name. This might be the case if someone used push --force on "\
-"the subrepo. You need to find out why and probably reclone the subrepo."
+"the subrepo. You need to find out why and possibly reclone the subrepo."
   fi
 
   if ! $first_on_both; then
     subrepo_commit_ref="$branch_name"
-    o "Set a common ancestor"
+    o "Set a common ancestor."
     RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
 
-    o "git rebase $upstream_ref $branch_name"
+    o "Rebase $upstream_ref onto $branch_name."
     FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
     if ! OK; then
-      o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
+      say "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
       CODE=1; return
     fi
   else
-    o "We are already at the same tree hash, only update local .gitrepo"
+    o "We are already at the same tree hash, only update local '.gitrepo'."
     subrepo_commit_ref="$refs_subrepo_fetch"
   fi
 
   o "Checkout '$original_head_branch'."
   git checkout --quiet "$original_head_branch"
 
-  o "Commit the new '$subrepo_commit_ref' content:"
+  o "Commit the new '$subrepo_commit_ref' content."
   CALL subrepo:commit
 
   o "Create ref '$refs_subrepo_pull' for branch '$branch_name'."
@@ -492,7 +492,7 @@ subrepo:push() {
   local branch_name="$branch"
   local new_upstream=false
   if [ -z "$branch_name" ]; then
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch):"
+    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     FAIL=false OUT=false CALL subrepo:fetch
 
     if ! OK; then
@@ -500,7 +500,7 @@ subrepo:push() {
       # push the commit directly. This is common after a `git subrepo init`:
       local re="^fatal: Couldn't find remote ref "
       if [[ $output =~ $re ]]; then
-        o "Pushing to new upstream: $subrepo_remote ($subrepo_branch):"
+        o "Pushing to new upstream: $subrepo_remote ($subrepo_branch)."
         RUN git push \
           "$subrepo_remote" "$subrepo_commit:refs/heads/$subrepo_branch"
         new_upstream=true
@@ -509,7 +509,7 @@ subrepo:push() {
       fi
     else
       # Check that we are up to date:
-      o "Check upstream head against .gitrepo commit"
+      o "Check upstream head against .gitrepo commit."
       if [ $force_wanted = false ] &&
           [ "$upstream_head_commit" != "$subrepo_commit" ]; then
         error "Local branch is not updated, perform pull or use "\
@@ -522,18 +522,18 @@ subrepo:push() {
 "Delete it first."
       fi
 
-      o "Create subrepo branch '$branch_name':"
+      o "Create subrepo branch '$branch_name'."
       CALL subrepo:branch "$branch_name"
 
-      o "Find ancestor with same treehash"
-      if ! git:subrepo-merge-base "$refs_subrepo_fetch" "$branch_name"; then
-        error "Can't find any common ancestor between $refs_subrepo_fetch "\
+      o "Find ancestor with same treehash."
+      if ! subrepo:merge-base "$refs_subrepo_fetch" "$branch_name"; then
+        error "Can't find a common ancestor between $refs_subrepo_fetch "\
 "and $branch_name. This might be the case if someone used push --force on "\
-"the subrepo. You need to find out why and probably reclone the subrepo."
+"the subrepo. You need to find out why and possibly reclone the subrepo."
       fi
 
       if $first_on_both ; then
-        o "git:subrepo-merge-base reports same location"
+        o "The subrepo:merge-base function reports same location."
         RUN git branch -D "$branch_name"
         RUN git checkout "$original_head_branch"
         OK=false
@@ -541,17 +541,17 @@ subrepo:push() {
         return
       fi
 
-      o "Set a common ancestor"
+      o "Set a common ancestor."
       RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
 
       if [ $force_wanted = false ]; then
         # Theirs in this case will ignore upstream and simply push our changes
         # without conflict
-        o "git rebase -X theirs $refs_subrepo_fetch $branch_name"
+        o "Run 'git rebase -X theirs $refs_subrepo_fetch $branch_name'."
         FAIL=false OUT=true RUN git rebase -X theirs \
             "$refs_subrepo_fetch" "$branch_name"
         if ! OK; then
-          o "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
+          say "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
           CODE=2;
           return;
         fi
@@ -586,7 +586,7 @@ subrepo:push() {
     git:make-ref "$refs_subrepo_push" "$branch_name"
 
     if [ "$branch_name" == "subrepo-push/$subdir" ]; then
-      o "Remove branch '$branch_name'"
+      o "Remove branch '$branch_name'."
       RUN git branch -D "$branch_name"
     fi
   fi
@@ -603,7 +603,7 @@ subrepo:fetch() {
     error "Can't fetch subrepo. Remote is 'none' in '$subdir/.gitrepo'."
   fi
 
-  o "Fetch '$subrepo_remote' ($subrepo_branch)"
+  o "Fetch '$subrepo_remote' ($subrepo_branch)."
   RUN git fetch --quiet "$subrepo_remote" "$subrepo_branch"
   OK || return
 
@@ -650,7 +650,7 @@ subrepo:branch() {
 
 # Commit a merged subrepo branch:
 subrepo:commit() {
-  o "Check that '$subrepo_commit_ref' exists"
+  o "Check that '$subrepo_commit_ref' exists."
   git:rev-exists "$subrepo_commit_ref" ||
     error "Commit ref '$subrepo_commit_ref' does not exist."
 
@@ -689,6 +689,28 @@ subrepo:commit() {
 
   o "Create ref '$refs_subrepo_commit'."
   git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
+}
+
+subrepo:merge-base() {
+  local first=$(git:log-tree "$1")
+  local second=$(git:log-tree "$2")
+  for source in $first; do
+    local array=(${source//:/ })
+    local commit=${array[0]}
+    local tree=${array[1]}
+    for target in $second; do
+      local array2=(${target//:/ })
+      if [ "$tree" = "${array2[1]}" ]; then
+        # We found a match, return commit hashes that point to same tree hash
+        new_parent="$commit"
+        old_parent="${array2[0]}"
+        return 0
+      fi
+      first_on_both=false
+    done
+  done
+
+  return 1
 }
 
 subrepo:status() {
@@ -1356,28 +1378,6 @@ git:make-ref() {
 
 git:log-tree() {
   git log --pretty=format:%H:%T "$1"
-}
-
-git:subrepo-merge-base() {
-  local first=$(git:log-tree "$1")
-  local second=$(git:log-tree "$2")
-  for source in $first; do
-    local array=(${source//:/ })
-    local commit=${array[0]}
-    local tree=${array[1]}
-    for target in $second; do
-      local array2=(${target//:/ })
-      if [ "$tree" = "${array2[1]}" ]; then
-        # We found a match, return commit hashes that point to same tree hash
-        new_parent="$commit"
-        old_parent="${array2[0]}"
-        return 0
-      fi
-      first_on_both=false
-    done
-  done
-
-  return 1
 }
 
 
