@@ -32,6 +32,7 @@ Commands:
   fetch     Fetch a subrepo's remote branch (and create a ref for it)
   branch    Create a branch containing the local subrepo commits
   commit    Commit a merged subrepo branch into the mainline
+  merge-base  Find the common ancestor of 2 commits (plumbing command)
 
   status    Get status of a subrepo (or all of them)
   clean     Remove branches, remotes and refs for a subrepo
