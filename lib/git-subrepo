@@ -52,6 +52,7 @@ a,all       Perform command on all current subrepos
 b,branch=   Specify an upstream branch
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
+l,list      List all similar commit for merge-base
 r,remote=   Specify an upstream remote
 u,update    Add the --branch and/or --remote overrides to .gitrepo
  
@@ -77,6 +78,7 @@ main() {
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
+  local list_all_wanted=false   # merge-base can list all matches
 
   local old_parent=             # Old subrepo parent commit
   local new_parent=             # New subrepo parent commit
@@ -289,7 +291,9 @@ command:merge-base() {
       say "Both commits are HEADs."
     fi
   else
-    say "No common ancestor found between '$branch1' and '$branch2'."
+    if ! $list_all_wanted; then
+      say "No common ancestor found between '$branch1' and '$branch2'."
+    fi
   fi
 }
 
@@ -728,7 +732,11 @@ subrepo:merge-base() {
         # We found a match, return commit hashes that point to same tree hash
         new_parent="$commit"
         old_parent="${array2[0]}"
-        return 0
+        if $list_all_wanted; then
+          say "$new_parent = $old_parent"
+        else
+          return 0
+        fi
       fi
       first_on_both=false
     done
@@ -876,6 +884,7 @@ get-command-options() {
       -f) force_wanted=true
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
+      -l) list_all_wanted=true ;;
       -r) subrepo_remote="$1"
           override_remote="$1"
           commit_msg_args+=("--remote=$1")
