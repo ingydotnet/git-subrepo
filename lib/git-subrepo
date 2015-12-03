@@ -556,6 +556,10 @@ subrepo:push() {
       RUN git branch -D "$branch_name"
       RUN git checkout "$original_head_branch"
       if $new_upstream ; then
+        if $update_wanted; then
+          o "Put updates into '$subdir/.gitrepo' file."
+          update-gitrepo-file
+        fi
         OK=true
       else
         OK=false
