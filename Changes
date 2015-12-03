@@ -1,11 +1,12 @@
 ---
 version: 0.3.0
-date:    Tue Dec  1 22:20:31 PST 2015
+date:    Wed Dec  2 19:19:43 PST 2015
 changes:
 - Fix issue #98 and host of others (89, 91, 95, 96)
 - Adds support for the merge-base command
 - Adds stability to many commands
 - Command completion updates
+- Rename `init` to `.rc`
 - @grimmySwe++ @dzzh++ @jrosdahl++ @perlpunk++
 ---
 version: 0.2.3
