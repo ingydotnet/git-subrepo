@@ -71,7 +71,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 The best short answer is:
 
   git clone https://github.com/ingydotnet/git-subrepo /path/to/git-subrepo
-  echo 'source /path/to/git-subrepo/init' >> ~/.bashrc
+  echo 'source /path/to/git-subrepo/.rc' >> ~/.bashrc
 
 The complete "Installation Instructions" can be found below.
 
@@ -342,10 +342,10 @@ to get the source code from GitHub:
 
   git clone https://github.com/ingydotnet/git-subrepo /path/to/git-subrepo
 
-The first installation method is preferred: `source` the `init` file. Just add
-a line like this one to your shell startup script:
+The first installation method is preferred: `source` the `.rc` file. Just add a
+line like this one to your shell startup script:
 
-  source /path/to/git-subrepo/init
+  source /path/to/git-subrepo/.rc
 
 That will modify your `PATH` and `MANPATH`, and also enable command
 completion.
@@ -385,7 +385,7 @@ If you used `make install` method, then run this again (after `git pull`):
 = Command Completion
 
 The `git subrepo` command supports `<TAB>`-based command completion. If you
-don't use the `init` script (see Installation, above), you'll need to enable
+don't use the `.rc` script (see Installation, above), you'll need to enable
 this manually to use it.
 
 == In Bash

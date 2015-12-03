@@ -166,7 +166,7 @@ The best short answer is:
 .PP
 .Vb 2
 \&    git clone https://github.com/ingydotnet/git\-subrepo /path/to/git\-subrepo
-\&    echo \*(Aqsource /path/to/git\-subrepo/init\*(Aq >> ~/.bashrc
+\&    echo \*(Aqsource /path/to/git\-subrepo/.rc\*(Aq >> ~/.bashrc
 .Ve
 .PP
 The complete \*(L"Installation Instructions\*(R" can be found below.
@@ -440,11 +440,11 @@ to get the source code from GitHub:
 \&    git clone https://github.com/ingydotnet/git\-subrepo /path/to/git\-subrepo
 .Ve
 .PP
-The first installation method is preferred: \f(CW\*(C`source\*(C'\fR the \f(CW\*(C`init\*(C'\fR file. Just
+The first installation method is preferred: \f(CW\*(C`source\*(C'\fR the \f(CW\*(C`.rc\*(C'\fR file. Just
 add a line like this one to your shell startup script:
 .PP
 .Vb 1
-\&    source /path/to/git\-subrepo/init
+\&    source /path/to/git\-subrepo/.rc
 .Ve
 .PP
 That will modify your \f(CW\*(C`PATH\*(C'\fR and \f(CW\*(C`MANPATH\*(C'\fR, and also enable command
@@ -493,7 +493,7 @@ If you used \f(CW\*(C`make install\*(C'\fR method, then run this again (after \f
 .SH "Command Completion"
 .IX Header "Command Completion"
 The \f(CW\*(C`git subrepo\*(C'\fR command supports \f(CW\*(C`<TAB>\*(C'\fR\-based command completion. If
-you don't use the \f(CW\*(C`init\*(C'\fR script (see Installation, above), you'll need to
+you don't use the \f(CW\*(C`.rc\*(C'\fR script (see Installation, above), you'll need to
 enable this manually to use it.
 .SS "In Bash"
 .IX Subsection "In Bash"

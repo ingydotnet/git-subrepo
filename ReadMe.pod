@@ -108,7 +108,7 @@ The C<git-subrepo> command benefits these roles in the following ways:
 The best short answer is:
 
     git clone https://github.com/ingydotnet/git-subrepo /path/to/git-subrepo
-    echo 'source /path/to/git-subrepo/init' >> ~/.bashrc
+    echo 'source /path/to/git-subrepo/.rc' >> ~/.bashrc
 
 The complete "Installation Instructions" can be found below.
 
@@ -390,10 +390,10 @@ to get the source code from GitHub:
 
     git clone https://github.com/ingydotnet/git-subrepo /path/to/git-subrepo
 
-The first installation method is preferred: C<source> the C<init> file. Just
+The first installation method is preferred: C<source> the C<.rc> file. Just
 add a line like this one to your shell startup script:
 
-    source /path/to/git-subrepo/init
+    source /path/to/git-subrepo/.rc
 
 That will modify your C<PATH> and C<MANPATH>, and also enable command
 completion.
@@ -433,7 +433,7 @@ If you used C<make install> method, then run this again (after C<git pull>):
 =head1 Command Completion
 
 The C<git subrepo> command supports C<< <TAB> >>-based command completion. If
-you don't use the C<init> script (see Installation, above), you'll need to
+you don't use the C<.rc> script (see Installation, above), you'll need to
 enable this manually to use it.
 
 =head2 In Bash
