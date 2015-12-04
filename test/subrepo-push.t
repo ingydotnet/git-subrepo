@@ -46,6 +46,25 @@ save-original-state "$OWNER/foo" "bar"
     'push message is correct'
 }
 
+(
+  # In the main repo:
+  cd $OWNER/foo
+  add-new-files bar/FooBar2
+  modify-files bar/FooBar
+)
+
+{
+  message="$(
+    cd $OWNER/foo
+    git subrepo push bar
+  )"
+
+  # Test the output:
+  is "$message" \
+    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)." \
+    'push message is correct'
+}
+
 # Pull the changes from UPSTREAM/bar in OWNER/bar
 (
   cd $OWNER/bar
