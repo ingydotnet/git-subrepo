@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 #
+#
 # Copyright 2013-2015 - Ingy döt Net <ingy@ingy.net>
 #
+
 
 # Exit on any errors:
 set -e
@@ -82,7 +84,8 @@ main() {
 
   local old_parent=             # Old subrepo parent commit
   local new_parent=             # New subrepo parent commit
-  local first_on_both=true      # Both old and new are HEADs
+  local first_on_source="HEAD"  # Merge base source is HEAD
+  local first_on_target="HEAD"  # Merge base target is HEAD
 
   local subdir=                 # Subdirectory of the subrepo being used
   local gitrepo=                # Path to .gitrepo file
@@ -285,11 +288,8 @@ command:merge-base() {
   get-params +branch1 +branch2
   if subrepo:merge-base "$branch1" "$branch2"; then
     say "Found common ancestor between these commits:"
-    say "  '$branch1': '$new_parent'"
-    say "  '$branch2': '$old_parent'"
-    if $first_on_both; then
-      say "Both commits are HEADs."
-    fi
+    say "  '$branch1':$first_on_source '$new_parent'"
+    say "  '$branch2':$first_on_target '$old_parent'"
   else
     if ! $list_all_wanted; then
       say "No common ancestor found between '$branch1' and '$branch2'."
@@ -466,7 +466,10 @@ subrepo:pull() {
 "the subrepo. You need to find out why and possibly reclone the subrepo."
   fi
 
-  if ! $first_on_both; then
+  if [ -n "$first_on_source" ] && [ -n "$first_on_target" ]; then
+    o "We are already at the same tree hash, only update local '.gitrepo'."
+    subrepo_commit_ref="$refs_subrepo_fetch"
+  else
     subrepo_commit_ref="$branch_name"
     o "Set a common ancestor."
     RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
@@ -477,9 +480,6 @@ subrepo:pull() {
       say "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
       CODE=1; return
     fi
-  else
-    o "We are already at the same tree hash, only update local '.gitrepo'."
-    subrepo_commit_ref="$refs_subrepo_fetch"
   fi
 
   o "Checkout '$original_head_branch'."
@@ -496,6 +496,7 @@ subrepo:pull() {
 subrepo:push() {
   local branch_name="$branch"
   local new_upstream=false
+  local ready_to_push=$force_wanted
   if [ -z "$branch_name" ]; then
     o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     FAIL=false OUT=false CALL subrepo:fetch
@@ -512,16 +513,15 @@ subrepo:push() {
         o "We have pushed, now we need to fetch this information"
         OUT=false CALL subrepo:fetch
         new_upstream=true
+        ready_to_push=true
       else
         error "Fetch for push failed: $output"
       fi
     else
       # Check that we are up to date:
       o "Check upstream head against .gitrepo commit."
-      if [ $force_wanted = false ] &&
-          [ "$upstream_head_commit" != "$subrepo_commit" ]; then
-        error "Local branch is not updated, perform pull or use "\
-"'--force' to always trust local branch in conflicts"
+      if [ "$upstream_head_commit" == "$subrepo_commit" ]; then
+        ready_to_push=true
       fi
     fi
 
@@ -541,8 +541,9 @@ subrepo:push() {
 "the subrepo. You need to find out why and possibly reclone the subrepo."
     fi
 
-    if $first_on_both ; then
+    if [ -n "$first_on_source" ] && [ -n "$first_on_target" ]; then
       o "The subrepo:merge-base function reports same location."
+      o ":$first_on_source:$first_on_target:"
       RUN git branch -D "$branch_name"
       RUN git checkout "$original_head_branch"
       if $new_upstream ; then
@@ -556,6 +557,16 @@ subrepo:push() {
         CODE=-2
       fi
       return
+    fi
+
+    if [ -n "$first_on_source" ]; then
+      o "We have found a common ancestor with $refs_subrepo_fetch:HEAD"
+      ready_to_push=true
+    fi
+
+    if ! $ready_to_push; then
+      error "Local branch is not updated, perform pull or use "\
+"'--force' to always trust local branch in conflicts"
     fi
 
     o "Set a common ancestor."
@@ -708,26 +719,70 @@ subrepo:commit() {
 subrepo:merge-base() {
   local first=$(git:log-tree "$1")
   local second=$(git:log-tree "$2")
+  local ancestor_tree=""
   for source in $first; do
     local array=(${source//:/ })
     local commit=${array[0]}
     local tree=${array[1]}
+    first_on_target="HEAD"
     for target in $second; do
       local array2=(${target//:/ })
       if [ "$tree" = "${array2[1]}" ]; then
-        # We found a match, return commit hashes that point to same tree hash
-        new_parent="$commit"
-        old_parent="${array2[0]}"
-        if $list_all_wanted; then
-          say "$new_parent = $old_parent"
+        if [ -z "$ancestor_tree" ]; then
+          # We found a match in tree hashes,
+          # Store commit hashes that point to same tree hash
+          new_parent="$commit"
+          old_parent="${array2[0]}"
+          ancestor_tree="$tree"
         else
-          return 0
+          if $list_all_wanted; then
+            say "Multiple on $2: $new_parent = $old_parent"
+          fi
+          # We found another match!
+          # Reset and continue
+          ancestor_tree=""
+          break
         fi
       fi
-      first_on_both=false
+      if [ -z "$ancestor_tree" ]; then
+        # If we ever some here with an empty ancestor_tree
+        # we now that the the target found is not the first one
+        first_on_target=""
+      fi
     done
-  done
 
+    if [ -n "$ancestor_tree" ]; then
+      # We have a candidate, we need to check our own side as well
+      local count=0
+      for source_copy in $first; do
+        local array3=(${source_copy//:/ })
+        if [ "$ancestor_tree" = "${array3[1]}" ]; then
+          ((count++))
+        fi
+      done
+
+      if [ "$count" -eq "1" ]; then
+        # We only have one hit on source side, then we consider it a valid
+        # match that we can use
+        if $list_all_wanted; then
+          # If we list all, don't return
+          say "Valid: $new_parent = $old_parent"
+        else
+          return 0          
+        fi
+      else
+        if $list_all_wanted; then
+          say "Multiple $1: $new_parent = $old_parent"
+        fi
+      fi
+
+      # We found another match!
+      # Reset and continue
+      ancestor_tree=""
+    fi
+
+    first_on_source=""
+  done
   return 1
 }
 
@@ -1469,4 +1524,9 @@ error() {
 # Start at the end:
 [ "$BASH_SOURCE" != "$0" ] || main "$@"
 
+# Local Variables:
+# tab-width: 2
+# sh-indentation: 2
+# sh-basic-offset: 2
+# End:
 # vim: set ft=sh sw=2 lisp:

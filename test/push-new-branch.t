@@ -38,12 +38,12 @@ clone-foo-and-bar
 {
   message="$(
     cd $OWNER/foo
-    git subrepo push bar --branch newbar 2>&1 || true
+    git subrepo push bar --branch newbar
   )"
 
   # Test the output:
   is "$message" \
-    "git-subrepo: Local branch is not updated, perform pull or use '--force' to always trust local branch in conflicts" \
+    "Subrepo 'bar' has no new commits to push." \
     'Second push message is correct'
 }
 

@@ -53,6 +53,14 @@ add-new-files() {
   git commit --quiet -m "add new file: $file" &> /dev/null
 }
 
+remove-files() {
+  local file
+  for file in $*; do
+    git rm "$file"
+  done
+  git commit --quiet -m "Removed file: $file" &> /dev/null
+}
+
 modify-files() {
   local file
   for file in $*; do
