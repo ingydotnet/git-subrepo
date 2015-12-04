@@ -68,8 +68,7 @@ save-original-state "$OWNER/foo" "bar"
 # Pull the changes from UPSTREAM/bar in OWNER/bar
 (
   cd $OWNER/bar
-  git fetch
-  git rebase -p
+  git pull
 ) &> /dev/null || die
 
 test-exists \
@@ -101,6 +100,33 @@ test-exists \
   is "$message" \
     "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)." \
     'Seqential pushes are correct'
+}
+
+(
+  # In the subrepo
+  cd $OWNER/bar
+  git pull
+  add-new-files barBar2
+  git push
+) &> /dev/null || die
+
+(
+  # In the main repo:
+  cd $OWNER/foo
+  add-new-files bar/FooBar5
+  modify-files bar/FooBar3
+) &> /dev/null || die
+
+{
+  message="$(
+    cd $OWNER/foo
+    git subrepo push bar 2>&1 || true
+  )"
+
+  # Test the output:
+  is "$message" \
+    "git-subrepo: Local branch is not updated, perform pull or use '--force' to always trust local branch in conflicts" \
+    'Stopped by other push'
 }
 
 done_testing
