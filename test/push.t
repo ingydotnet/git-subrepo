@@ -51,7 +51,7 @@ save-original-state "$OWNER/foo" "bar"
   cd $OWNER/foo
   add-new-files bar/FooBar2
   modify-files bar/FooBar
-)
+) &> /dev/null || die
 
 {
   message="$(
@@ -80,6 +80,28 @@ test-exists \
   "!$OWNER/bar/.gitrepo" \
 
 # assert-original-state "$OWNER/foo" "bar"
+
+(
+  # In the main repo:
+  cd $OWNER/foo
+  add-new-files bar/FooBar3
+  modify-files bar/FooBar
+  git subrepo push bar
+  add-new-files bar/FooBar4
+  modify-files bar/FooBar3
+) &> /dev/null || die
+
+{
+  message="$(
+    cd $OWNER/foo
+    git subrepo push bar
+  )"
+
+  # Test the output:
+  is "$message" \
+    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)." \
+    'Seqential pushes are correct'
+}
 
 done_testing
 
