@@ -647,7 +647,7 @@ subrepo:fetch() {
   OK || return
 
   o "Get the upstream subrepo HEAD commit."
-  OUT=true RUN git rev-parse FETCH_HEAD
+  OUT=true RUN git rev-parse FETCH_HEAD^0
   upstream_head_commit="$output"
 
   local output=$(git config "remote.subrepo/$subdir.url")
@@ -662,7 +662,7 @@ subrepo:fetch() {
   fi
 
   o "Create ref '$refs_subrepo_fetch'."
-  git:make-ref "$refs_subrepo_fetch" FETCH_HEAD
+  git:make-ref "$refs_subrepo_fetch" FETCH_HEAD^0
 }
 
 # Create a subrepo branch containing all changes
