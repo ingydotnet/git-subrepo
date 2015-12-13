@@ -57,6 +57,8 @@ env:
 update: doc compgen
 
 doc: ReadMe.pod Intro.pod $(MAN1)/$(NAME).1
+	perl pkg/bin/generate-help-functions.pl $(DOC) > \
+	    $(EXT)/help-functions.bash
 
 ReadMe.pod: $(DOC)
 	swim --to=pod --wrap --complete $< > $@

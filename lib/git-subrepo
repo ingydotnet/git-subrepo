@@ -126,7 +126,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted; then
+  if $all_wanted && [[ "$command" -ne "help" ]] ; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -334,7 +334,21 @@ command:clean() {
 
 # Launch the manpage viewer:
 command:help() {
-  exec git help subrepo
+  source "${SOURCE_DIR}/git-subrepo.d/help-functions.bash"
+  local cmd="${command_arguments[0]}"
+  if [ -n "$cmd" ]; then
+    if can "help:$cmd"; then
+      "help:$cmd"
+      echo
+    else
+      err "No help found for '$cmd'"
+    fi
+  elif $all_wanted; then
+    help:all
+  else
+    exec git help subrepo
+  fi
+  msg_ok=0
 }
 
 # Print version info.
@@ -908,6 +922,7 @@ get-command-options() {
   fi
 }
 
+options_help='all'
 options_branch='all fetch force'
 options_clean='all force'
 options_clone='branch force'
