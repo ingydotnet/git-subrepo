@@ -11,7 +11,7 @@ note "Test all error message conditions in git-subrepo"
 clone-foo-and-bar
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       git subrepo --quiet clone ../../../$UPSTREAM/foo
       add-new-files foo/file
@@ -41,19 +41,19 @@ clone-foo-and-bar
 }
 
 {
-  is "$(catch git subrepo pull --update)" \
+  like "$(catch git subrepo pull --update)" \
     "git-subrepo: Can't use '--update' without '--branch' or '--remote'." \
     "Error OK: --update requires --branch or --remote options"
 }
 
 {
-  is "$(catch git subrepo clone --all)" \
+  like "$(catch git subrepo clone --all)" \
     "git-subrepo: Invalid option '--all' for 'clone'." \
     "Error OK: Invalid option '--all' for 'clone'"
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       catch git subrepo pull /home/user/bar/foo
     )" \
@@ -64,7 +64,7 @@ clone-foo-and-bar
 {
   # XXX add 'commit' to cmds here when implemented:
   for cmd in pull push fetch branch commit clean; do
-    is "$(
+    like "$(
         cd $OWNER/bar
         catch git subrepo $cmd
       )" \
@@ -74,7 +74,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       catch git subrepo clone foo bar baz quux
     )" \
@@ -83,7 +83,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       catch git subrepo clone .git
     )" \
@@ -92,7 +92,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       catch git subrepo pull lala
     )" \
@@ -114,7 +114,7 @@ clone-foo-and-bar
 
   # Test that certain commands don't run inside a subrepo branch:
   for cmd in clone pull push fetch branch commit status clean; do
-    is "$(
+    like "$(
         cd $OWNER/bar
         catch git subrepo $cmd
       )" \
@@ -131,7 +131,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       git checkout --quiet $(git rev-parse master)
       catch git subrepo status
@@ -145,7 +145,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd .git
       catch git subrepo status
     )" \
@@ -154,7 +154,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       touch me
       git add me
@@ -169,7 +169,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd lib
       catch git subrepo status
     )" \
@@ -178,7 +178,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       catch git subrepo clone dummy bard
     )" \
@@ -187,7 +187,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       catch git subrepo clone dummy-repo
     )" \
