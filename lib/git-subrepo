@@ -126,7 +126,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ "$command" -ne "help" ]] ; then
+  if $all_wanted && [[ "$command" != "help" ]] ; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
