@@ -880,7 +880,7 @@ get-command-options() {
       --version)
         echo "$VERSION"
         exit ;;
-      *) error "Unexpected option: '$option'." ;;
+      *) usage-error "Unexpected option: '$option'." ;;
     esac
   done
 
@@ -889,7 +889,7 @@ get-command-options() {
 
   # Make sure command exists:
   can "command:$command" ||
-    error "'$command' is not a command. See 'git subrepo help'."
+    usage-error "'$command' is not a command. See 'git subrepo help'."
 
   command_arguments=("$@")
   if [ ${#command_arguments} -gt 0 ]; then
@@ -917,7 +917,7 @@ get-command-options() {
   if $update_wanted; then
     check_option update
     if [[ -z "$subrepo_branch" && -z "$subrepo_remote" ]]; then
-      error "Can't use '--update' without '--branch' or '--remote'."
+      usage-error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
 }
@@ -935,7 +935,7 @@ options_status='fetch'
 check_option() {
   local var="options_$command"
   [[ ${!var} =~ $1 ]] ||
-    error "Invalid option '--$1' for '$command'."
+    usage-error "Invalid option '--$1' for '$command'."
 }
 
 #------------------------------------------------------------------------------
@@ -957,7 +957,7 @@ command-setup() {
   [ -n "$subdir" ] ||
     die "subdir not set"
   [[ "$subdir" =~ ^/ ]] &&
-    error "The subdir '$subdir' should not be absolute path."
+    usage-error "The subdir '$subdir' should not be absolute path."
   subdir="${subdir#./}"
   subdir="${subdir%/}"
 
@@ -985,7 +985,7 @@ get-params() {
     # If arg starts with '+' then it is required
     if [[ "$arg" =~ ^\+ ]]; then
       if [ $i -ge $num ]; then
-        error "Command '$command' requires arg '${arg#+}'."
+        usage-error "Command '$command' requires arg '${arg#+}'."
       fi
       printf -v ${arg#+} "${command_arguments[i]}"
     # Look for function name after ':' to provide a default value
@@ -1457,7 +1457,7 @@ OK() {
 }
 
 # Nicely report common error messages:
-error() {
+usage-error() {
   local msg="git-subrepo: $1" usage=
   if [[ $GIT_SUBREPO_TEST_ERRORS != true ]]; then
     source "${SOURCE_DIR}/git-subrepo.d/help-functions.bash"
@@ -1465,6 +1465,13 @@ error() {
       msg=$'\n'"$msg"$'\n'"$("help:$command")"$'\n'
     fi
   fi
+  echo "$msg" >&2
+  exit 1
+}
+
+# Nicely report common error messages:
+error() {
+  local msg="git-subrepo: $1" usage=
   echo "$msg" >&2
   exit 1
 }
