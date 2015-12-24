@@ -5,6 +5,7 @@ set -e
 source test/setup
 
 use Test::More
+export GIT_SUBREPO_TEST_ERRORS=true
 
 note "Test all error message conditions in git-subrepo"
 

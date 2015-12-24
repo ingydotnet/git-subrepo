@@ -1458,9 +1458,15 @@ OK() {
 
 # Nicely report common error messages:
 error() {
-  local msg=
-  printf -v msg "git-subrepo: %s\n" "$1"
-  die "$msg"
+  local msg="git-subrepo: $1" usage=
+  if [[ $GIT_SUBREPO_TEST_ERRORS != true ]]; then
+    source "${SOURCE_DIR}/git-subrepo.d/help-functions.bash"
+    if can "help:$command"; then
+      msg=$'\n'"$msg"$'\n'"$("help:$command")"$'\n'
+    fi
+  fi
+  echo "$msg" >&2
+  exit 1
 }
 
 # Start at the end:
