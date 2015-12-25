@@ -78,7 +78,7 @@ msg_main2="main2 initial add to subrepo"
   git add share/readme
   git commit -m "$msg_main2"
 
-  git subrepo -vd push share
+  git subrepo push share
 ) &> /dev/null || die
 
 # Go back into main1 and pull the subrepo updates:
