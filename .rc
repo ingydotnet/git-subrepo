@@ -17,7 +17,7 @@
   GIT_SUBREPO_ROOT="$0" ||
   GIT_SUBREPO_ROOT="$BASH_SOURCE"
 
-if [[ "$GIT_SUBREPO_ROOT" =~ ^/ ]]; then
+if [[ $GIT_SUBREPO_ROOT =~ ^/ ]]; then
   GIT_SUBREPO_ROOT="$(dirname $GIT_SUBREPO_ROOT)"
   export GIT_SUBREPO_ROOT
 
@@ -27,7 +27,7 @@ if [[ "$GIT_SUBREPO_ROOT" =~ ^/ ]]; then
   # Completion facilities
   if [[ -n ${BASH_VERSION-} ]]; then
     # Bash
-    if [ "$(type -t __gitcomp 2> /dev/null)" != function ]; then
+    if [[ $(type -t __gitcomp 2> /dev/null) != function ]]; then
       # The standard Git completion script for Bash does not seem to be
       # loaded, because its shell function `__gitcomp`, which our Bash
       # completion script uses, does not appear to exist.

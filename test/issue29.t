@@ -6,7 +6,7 @@ source test/setup
 
 use Test::More
 
-# if [ "$1" == ReRun ]; then
+# if [[ $1 == ReRun ]]; then
 #   set -x
 # else
 #   "$0" ReRun 2>&1 | tee log

@@ -81,9 +81,9 @@ modify-files-ex() {
 
 test-exists() {
   for f in $*; do
-    if [[ "$f" =~ ^! ]]; then
+    if [[ $f =~ ^! ]]; then
       f="${f#!}"
-      if [[ "$f" =~ /$ ]]; then
+      if [[ $f =~ /$ ]]; then
         ok "`[ ! -d "$f" ]`" \
           "Directory '$f' does not exist"
       else
@@ -91,7 +91,7 @@ test-exists() {
           "File '$f' does not exist"
       fi
     else
-      if [[ "$f" =~ /$ ]]; then
+      if [[ $f =~ /$ ]]; then
         ok "`[ -d "$f" ]`" \
           "Directory '$f' exists"
       else

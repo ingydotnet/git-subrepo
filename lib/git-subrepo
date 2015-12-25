@@ -10,7 +10,7 @@ set -e
 
 # Import Bash+ helper functions:
 SOURCE="$BASH_SOURCE"
-while [[ -h "$SOURCE" ]]; do
+while [[ -h $SOURCE ]]; do
   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
   SOURCE="$(readlink "$SOURCE")"
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
@@ -131,7 +131,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ "$command" != "help" ]] ; then
+  if $all_wanted && [[ $command != help ]]; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -200,9 +200,9 @@ command:pull() {
   subrepo:pull
   if OK; then
     say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)."
-  elif [[ "$CODE" -eq -1 ]]; then
+  elif [[ $CODE -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date."
-  elif [[ "$CODE" -eq 1 ]]; then
+  elif [[ $CODE -eq 1 ]]; then
     error-pull-rebase
     return "$CODE"
   else
@@ -219,9 +219,9 @@ command:push() {
   subrepo:push
   if OK; then
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
-  elif [[ "$CODE" -eq -2 ]]; then
+  elif [[ $CODE -eq -2 ]]; then
     say "Subrepo '$subdir' has no new commits to push."
-  elif [[ "$CODE" -eq 2 ]]; then
+  elif [[ $CODE -eq 2 ]]; then
     error-push-rebase
     return "$CODE"
   else
@@ -275,7 +275,7 @@ command:commit() {
     error "Can't find ref '$refs_subrepo_fetch'. Try using -F."
   upstream_head_commit="$(git rev-parse "$refs_subrepo_fetch")"
 
-  [ -n "$subrepo_commit_ref" ] ||
+  [[ -n $subrepo_commit_ref ]] ||
     subrepo_commit_ref="subrepo/$subdir"
   subrepo:commit
 
@@ -305,23 +305,23 @@ command:status() {
 status-refs() {
   local output=
   while read line; do
-    [[ "$line" =~ ^([0-9a-f]+)\ refs/subrepo/$subdir/([a-z]+) ]] || continue
+    [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subdir/([a-z]+) ]] || continue
     local sha1="$(git rev-parse --short "${BASH_REMATCH[1]}")"
     local type="${BASH_REMATCH[2]}"
     local ref="refs/subrepo/$subdir/$type"
-    if [ "$type" == branch ]; then
+    if [[ $type == branch ]]; then
       output+="    Branch Ref:    $sha1 ($ref)"$'\n'
-    elif [ "$type" == commit ]; then
+    elif [[ $type == commit ]]; then
       output+="    Commit Ref:    $sha1 ($ref)"$'\n'
-    elif [ "$type" == fetch ]; then
+    elif [[ $type == fetch ]]; then
       output+="    Fetch Ref:     $sha1 ($ref)"$'\n'
-    elif [ "$type" == pull ]; then
+    elif [[ $type == pull ]]; then
       output+="    Pull Ref:      $sha1 ($ref)"$'\n'
-    elif [ "$type" == push ]; then
+    elif [[ $type == push ]]; then
       output+="    Push Ref:      $sha1 ($ref)"$'\n'
     fi
   done < <(git show-ref)
-  if [ -n "$output" ]; then
+  if [[ -n $output ]]; then
     printf "  Refs:\n$output"
   fi
 }
@@ -340,7 +340,7 @@ command:clean() {
 command:help() {
   source "${SOURCE_DIR}/git-subrepo.d/help-functions.bash"
   local cmd="${command_arguments[0]}"
-  if [ -n "$cmd" ]; then
+  if [[ -n $cmd ]]; then
     if can "help:$cmd"; then
       "help:$cmd"
       echo
@@ -379,7 +379,7 @@ subrepo:clone() {
   re="$1"
 
   # Turn off force unless really a reclone:
-  if $force_wanted && [ ! -f "$gitrepo" ]; then
+  if $force_wanted && [[ ! -f $gitrepo ]]; then
     force_wanted=false
   fi
 
@@ -389,7 +389,7 @@ subrepo:clone() {
     CALL subrepo:fetch
     read-gitrepo-file
     o "Check if we already are up to date."
-    if [ "$upstream_head_commit" == "$subrepo_commit" ]; then
+    if [[ $upstream_head_commit == $subrepo_commit ]]; then
       reclone_up_to_date=true
       return
     fi
@@ -397,7 +397,7 @@ subrepo:clone() {
     RUN git rm -r "$subdir"
   else
     assert-subdir-empty
-    if [ -z "$subrepo_branch" ]; then
+    if [[ -z $subrepo_branch ]]; then
       o "Determine the upstream head branch."
       get-upstream-head-branch
       subrepo_branch="$output"
@@ -461,7 +461,7 @@ subrepo:pull() {
   CALL subrepo:fetch
 
   # Check if we already are up to date:
-  if [ "$upstream_head_commit" == "$subrepo_commit" ]; then
+  if [[ $upstream_head_commit == $subrepo_commit ]]; then
     OK=false; CODE=-1; return
   fi
 
@@ -480,7 +480,7 @@ subrepo:pull() {
 "the subrepo. You need to find out why and possibly reclone the subrepo."
   fi
 
-  if [ -n "$first_on_source" ] && [ -n "$first_on_target" ]; then
+  if [[ -n $first_on_source ]] && [[ -n $first_on_target ]]; then
     o "We are already at the same tree hash, only update local '.gitrepo'."
     subrepo_commit_ref="$refs_subrepo_fetch"
   else
@@ -511,7 +511,7 @@ subrepo:push() {
   local branch_name="$branch"
   local new_upstream=false
   local ready_to_push=$force_wanted
-  if [ -z "$branch_name" ]; then
+  if [[ -z $branch_name ]]; then
     o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     FAIL=false OUT=false CALL subrepo:fetch
 
@@ -534,7 +534,7 @@ subrepo:push() {
     else
       # Check that we are up to date:
       o "Check upstream head against .gitrepo commit."
-      if [ "$upstream_head_commit" == "$subrepo_commit" ]; then
+      if [[ $upstream_head_commit == $subrepo_commit ]]; then
         ready_to_push=true
       fi
     fi
@@ -555,7 +555,7 @@ subrepo:push() {
 "the subrepo. You need to find out why and possibly reclone the subrepo."
     fi
 
-    if [ -n "$first_on_source" ] && [ -n "$first_on_target" ]; then
+    if [[ -n $first_on_source ]] && [[ -n $first_on_target ]]; then
       o "The subrepo:merge-base function reports same location."
       o ":$first_on_source:$first_on_target:"
       RUN git branch -D "$branch_name"
@@ -573,7 +573,7 @@ subrepo:push() {
       return
     fi
 
-    if [ -n "$first_on_source" ]; then
+    if [[ -n $first_on_source ]]; then
       o "We have found a common ancestor with $refs_subrepo_fetch:HEAD"
       ready_to_push=true
     fi
@@ -586,7 +586,7 @@ subrepo:push() {
     o "Set a common ancestor."
     RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
 
-    if [ $force_wanted = false ]; then
+    if ! $force_wanted; then
       # Theirs in this case will ignore upstream and simply push our changes
       # without conflict
       o "Run 'git rebase -X theirs $refs_subrepo_fetch $branch_name'."
@@ -610,7 +610,7 @@ subrepo:push() {
   git:branch-exists "$branch_name" ||
     error "No subrepo branch '$branch_name' to push."
 
-  if ! "$force_wanted"; then
+  if ! $force_wanted; then
     o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
       error "Can't commit: '$branch_name' doesn't contain upstream HEAD."
@@ -625,7 +625,7 @@ subrepo:push() {
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
 
-  if [ "$branch_name" == "subrepo-push/$subdir" ]; then
+  if [[ $branch_name == subrepo-push/$subdir ]]; then
     o "Remove branch '$branch_name'."
     RUN git branch -D "$branch_name"
   fi
@@ -651,11 +651,11 @@ subrepo:fetch() {
   upstream_head_commit="$output"
 
   local output=$(git config "remote.subrepo/$subdir.url")
-  if [ -z "$output" ]; then
+  if [[ -z $output ]]; then
     o "Create subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
     RUN git remote add "subrepo/$subdir" "$subrepo_remote"
   else
-    if [ "$output" != "$subrepo_remote" ]; then
+    if [[ $output != $subrepo_remote ]]; then
       o "Change subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
       git remote set-url "subrepo/$subdir" "$subrepo_remote"
     fi
@@ -715,7 +715,7 @@ subrepo:commit() {
   RUN git add "$gitrepo"
 
   o "Commit to the '$original_head_branch' branch."
-  if [ "$original_head_commit" != none ]; then
+  if [[ $original_head_commit != none ]]; then
     RUN git commit -m "$(get-commit-message)"
   else
     # We had cloned into an empty repo, side effect of prior git reset --mixed
@@ -741,8 +741,8 @@ subrepo:merge-base() {
     first_on_target="HEAD"
     for target in $second; do
       local array2=(${target//:/ })
-      if [ "$tree" = "${array2[1]}" ]; then
-        if [ -z "$ancestor_tree" ]; then
+      if [[ $tree == ${array2[1]} ]]; then
+        if [[ -z $ancestor_tree ]]; then
           # We found a match in tree hashes,
           # Store commit hashes that point to same tree hash
           new_parent="$commit"
@@ -758,24 +758,24 @@ subrepo:merge-base() {
           break
         fi
       fi
-      if [ -z "$ancestor_tree" ]; then
+      if [[ -z $ancestor_tree ]]; then
         # If we ever some here with an empty ancestor_tree
         # we now that the the target found is not the first one
         first_on_target=""
       fi
     done
 
-    if [ -n "$ancestor_tree" ]; then
+    if [[ -n $ancestor_tree ]]; then
       # We have a candidate, we need to check our own side as well
       local count=0
       for source_copy in $first; do
         local array3=(${source_copy//:/ })
-        if [ "$ancestor_tree" = "${array3[1]}" ]; then
+        if [[ $ancestor_tree == ${array3[1]} ]]; then
           ((count++))
         fi
       done
 
-      if [ "$count" -eq "1" ]; then
+      if [[ $count -eq 1 ]]; then
         # We only have one hit on source side, then we consider it a valid
         # match that we can use
         if $list_all_wanted; then
@@ -801,15 +801,15 @@ subrepo:merge-base() {
 }
 
 subrepo:status() {
-  if [ ${#command_arguments[@]} -eq 0 ]; then
+  if [[ ${#command_arguments[@]} -eq 0 ]]; then
     get-all-subrepos
     local count=${#subrepos[@]}
     if ! "$quiet_wanted"; then
-      if [ $count -eq 0 ]; then
+      if [[ $count -eq 0 ]]; then
         echo "No subrepos."
         return
       else
-        local s=; [ "$count" -eq 1 ] || s=s
+        local s=; [[ $count -eq 1 ]] || s=s
         echo "$count subrepo$s:"
         echo
       fi
@@ -822,7 +822,7 @@ subrepo:status() {
     subdir="${subdir#./}"
     subdir="${subdir%/}"
 
-    if [ ! -f "$subdir/.gitrepo" ]; then
+    if [[ ! -f $subdir/.gitrepo ]]; then
       echo "'$subdir' is not a subrepo"
       echo
       continue
@@ -850,18 +850,18 @@ subrepo:status() {
       echo "  Subrepo Branch:  subrepo/$subdir"
     local remote="subrepo/$subdir"
     FAIL=false OUT=true RUN git config "remote.$remote.url"
-    [ -n "$output" ] &&
+    [[ -n $output ]] &&
       echo "  Remote Name:     subrepo/$subdir"
     echo "  Remote URL:      $subrepo_remote"
-    [ -n "$upstream_head_commit" ] &&
+    [[ -n $upstream_head_commit ]] &&
       echo "  Upstream Ref:    $upstream_head_commit"
     echo "  Tracking Branch: $subrepo_branch"
-    [ -z "$subrepo_commit" ] ||
+    [[ -z $subrepo_commit ]] ||
       echo "  Pulled Commit:   $(git rev-parse --short $subrepo_commit)"
-    if [ -n "$subrepo_parent" ]; then
+    if [[ -n $subrepo_parent ]]; then
       echo "  Pull Parent:     $(git rev-parse --short $subrepo_parent)"
     # TODO Remove this eventually:
-    elif [ -n "$subrepo_former" ]; then
+    elif [[ -n $subrepo_former ]]; then
       printf "  Former Commit:   $(git rev-parse --short $subrepo_former)"
       echo " *** DEPRECATED ***"
     fi
@@ -879,7 +879,7 @@ subrepo:clean() {
   for prefix in subrepo subrepo-push; do
     local branch="$prefix/$subdir"
     local ref="refs/heads/$branch"
-    if [ -e ".git/$ref" ]; then
+    if [[ -e .git/$ref ]]; then
       o "Remove branch '$branch'."
       RUN git update-ref -d "$ref"
       clean_list+=("branch '$branch'")
@@ -888,7 +888,7 @@ subrepo:clean() {
 
   local remote="subrepo/$subdir"
   FAIL=false OUT=true RUN git config "remote.$remote.url"
-  if [ -n "$output" ]; then
+  if [[ -n $output ]]; then
     o "Remove remote '$remote'."
     RUN git remote rm "$remote"
     clean_list+=("remote '$remote'")
@@ -914,12 +914,12 @@ subrepo:clean() {
 
 # Parse command line options:
 get-command-options() {
-  [ $# -eq 0 ] && set -- --help
+  [[ $# -eq 0 ]] && set -- --help
 
-  [ -n "$GIT_SUBREPO_DEBUG" ] && set -x
-  [ -n "$GIT_SUBREPO_QUIET" ] && quiet_wanted=true
-  [ -n "$GIT_SUBREPO_VERBOSE" ] && verbose_wanted=true
-  [ -n "$GIT_SUBREPO_DEBUG" ] && debug_wanted=true
+  [[ -n $GIT_SUBREPO_DEBUG ]] && set -x
+  [[ -n $GIT_SUBREPO_QUIET ]] && quiet_wanted=true
+  [[ -n $GIT_SUBREPO_VERBOSE ]] && verbose_wanted=true
+  [[ -n $GIT_SUBREPO_DEBUG ]] && debug_wanted=true
 
   eval "$(
     echo "$GETOPT_SPEC" |
@@ -927,7 +927,7 @@ get-command-options() {
     echo exit $?
   )"
 
-  while [ $# -gt 0 ]; do
+  while [[ $# -gt 0 ]]; do
     local option="$1"; shift
     case "$option" in
       --) break ;;
@@ -965,7 +965,7 @@ get-command-options() {
     usage-error "'$command' is not a command. See 'git subrepo help'."
 
   command_arguments=("$@")
-  if [ ${#command_arguments} -gt 0 ]; then
+  if [[ ${#command_arguments} -gt 0 ]]; then
     local first="${command_arguments[0]}"
     first="${first%/}"
     command_arguments[0]="$first"
@@ -981,15 +981,15 @@ get-command-options() {
   if $fetch_wanted; then
     check_option fetch
   fi
-  if [ -n "$override_branch" ]; then
+  if [[ -n $override_branch ]]; then
     check_option branch
   fi
-  if [ -n "$override_remote" ]; then
+  if [[ -n $override_remote ]]; then
     check_option remote
   fi
   if $update_wanted; then
     check_option update
-    if [[ -z "$subrepo_branch" && -z "$subrepo_remote" ]]; then
+    if [[ -z $subrepo_branch && -z $subrepo_remote ]]; then
       usage-error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
@@ -1017,7 +1017,7 @@ check_option() {
 
 command-init() {
   : "${GIT_SUBREPO_PAGER:=${PAGER:-less}}"
-  if [ "$GIT_SUBREPO_PAGER" == less ]; then
+  if [[ $GIT_SUBREPO_PAGER == less ]]; then
     GIT_SUBREPO_PAGER='less -FRX'
   fi
 }
@@ -1027,9 +1027,9 @@ command-setup() {
   get-params "$@"
 
   # Sanity check subdir:
-  [ -n "$subdir" ] ||
+  [[ -n $subdir ]] ||
     die "subdir not set"
-  [[ "$subdir" =~ ^/ ]] &&
+  [[ $subdir =~ ^/ ]] &&
     usage-error "The subdir '$subdir' should not be absolute path."
   subdir="${subdir#./}"
   subdir="${subdir%/}"
@@ -1043,7 +1043,7 @@ command-setup() {
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
   gitrepo="$subdir/.gitrepo"
-  if [[ ! "$command" =~ ^(clone|init)$ ]]; then
+  if [[ ! $command =~ ^(clone|init)$ ]]; then
     read-gitrepo-file
   fi
 
@@ -1056,16 +1056,16 @@ get-params() {
   local num=${#command_arguments[@]}
   for arg in $@; do
     # If arg starts with '+' then it is required
-    if [[ "$arg" =~ ^\+ ]]; then
-      if [ $i -ge $num ]; then
+    if [[ $arg =~ ^\+ ]]; then
+      if [[ $i -ge $num ]]; then
         usage-error "Command '$command' requires arg '${arg#+}'."
       fi
       printf -v ${arg#+} "${command_arguments[i]}"
     # Look for function name after ':' to provide a default value
     else
-      if [ $i -lt $num ]; then
+      if [[ $i -lt $num ]]; then
         printf -v ${arg%:*} "${command_arguments[i]}"
-      elif [[ "$arg" =~ : ]]; then
+      elif [[ $arg =~ : ]]; then
         "${arg#*:}"
       fi
     fi
@@ -1073,7 +1073,7 @@ get-params() {
   done
 
   # Check for extra arguments:
-  if [ $num -gt $i ]; then
+  if [[ $num -gt $i ]]; then
     set -- ${command_arguments[@]}
     for ((j = 1; j <= i; j++)); do shift; done
     error "Unknown argument(s) '$*' for '$command' command."
@@ -1086,7 +1086,7 @@ guess-subdir() {
   dir="${dir%.git}"
   dir="${dir%/}"
   dir="${dir##*/}"
-  [[ "$dir" =~ ^[-a-zA-Z0-9]+$ ]] ||
+  [[ $dir =~ ^[-a-zA-Z0-9]+$ ]] ||
     error "Can't determine subdir from '$subrepo_remote'."
   subdir="$dir"
 }
@@ -1099,17 +1099,17 @@ guess-subdir() {
 read-gitrepo-file() {
   gitrepo="$subdir/.gitrepo"
 
-  if [ ! -f "$gitrepo" ]; then
+  if [[ ! -f $gitrepo ]]; then
     error "'$subdir' is not a subrepo."
   fi
 
   # Read .gitrepo values:
-  if [ -z "$subrepo_remote" ]; then
+  if [[ -z $subrepo_remote ]]; then
     SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.remote
     subrepo_remote="$output"
   fi
 
-  if [ -z "$subrepo_branch" ]; then
+  if [[ -z $subrepo_branch ]]; then
     SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.branch
     subrepo_branch="$output"
   fi
@@ -1121,7 +1121,7 @@ read-gitrepo-file() {
   SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
   subrepo_parent="$output"
 
-  if [ -z "$subrepo_parent" ]; then
+  if [[ -z $subrepo_parent ]]; then
     SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.former
     subrepo_former="$output"
   fi
@@ -1132,7 +1132,7 @@ update-gitrepo-file() {
   local short_commit=
 
   local newfile=false
-  [ ! -e "$gitrepo" ] &&
+  [[ ! -e $gitrepo ]] &&
     newfile=true
 
   $newfile && cat <<... > "$gitrepo"
@@ -1144,11 +1144,11 @@ update-gitrepo-file() {
 ...
 
   # TODO: only update remote and branch if supplied and $update_wanted
-  if $newfile || [[ $update_wanted && -n "$override_remote" ]]; then
+  if $newfile || [[ $update_wanted && -n $override_remote ]]; then
     RUN git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
   fi
 
-  if $newfile || [[ $update_wanted && -n "$override_branch" ]]; then
+  if $newfile || [[ $update_wanted && -n $override_branch ]]; then
     RUN git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
   fi
 
@@ -1166,7 +1166,7 @@ assert-environment-ok() {
   type git &> /dev/null ||
     error "Can't find your 'git' command in '$PATH'."
   git_version="$(git --version)"
-  if [[ "$git_version" < "git version 1.7" ]]; then
+  if [[ $git_version < "git version 1.7" ]]; then
     error "Requires git version 1.7 or higher; you have '$git_version'."
   fi
 }
@@ -1174,7 +1174,7 @@ assert-environment-ok() {
 # Make sure git repo is ready:
 assert-repo-is-ready() {
   # Skip this for trivial info commands:
-  [[ "$command" =~ ^(help|version)$ ]] && return
+  [[ $command =~ ^(help|version)$ ]] && return
 
   # We must be inside a git repo:
   git rev-parse --git-dir &> /dev/null ||
@@ -1191,29 +1191,29 @@ assert-repo-is-ready() {
   original_head_commit="${output:-none}"
 
   # If a subrepo branch is currently checked out, then note it:
-  if [[ "$original_head_branch" =~ ^subrepo/(.*) ]]; then
+  if [[ $original_head_branch =~ ^subrepo/(.*) ]]; then
     error "Can't '$command' while subrepo branch is checked out."
   fi
 
   # Make sure we are on a branch:
-  [[ "$original_head_branch" == HEAD || -z "$original_head_branch" ]] &&
+  [[ $original_head_branch == HEAD || -z $original_head_branch ]] &&
     error "Must be on a branch to run this command."
 
   # In a work-tree:
   SAY=false OUT=true RUN git rev-parse --is-inside-work-tree
-  [ "$output" == true ] ||
+  [[ $output == true ]] ||
     error "Can't 'subrepo $command' outside a working tree."
 
   # HEAD exists:
-  [[ "$command" == "clone" ]] ||
+  [[ $command == clone ]] ||
     RUN git rev-parse --verify HEAD
 
   # Repo is in a clean state:
-  if [[ "$command" =~ ^(clone|init|pull|push|branch|commit)$ ]]; then
+  if [[ $command =~ ^(clone|init|pull|push|branch|commit)$ ]]; then
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
       error "Can't $command subrepo. Unstaged changes."
-    if [ "$command" != clone ] || git:rev-exists HEAD; then
+    if [[ $command != clone ]] || git:rev-exists HEAD; then
       git diff-index --quiet --ignore-submodules HEAD ||
         error "Can't $command subrepo. Working tree has changes."
       git diff-index --quiet --cached --ignore-submodules HEAD ||
@@ -1221,13 +1221,13 @@ assert-repo-is-ready() {
     else
       # Repo has no commits and we're cloning a subrepo. Working tree won't
       #  possibly have changes as there was nothing initial to change.
-      [[ -z "$(git ls-files)" ]] ||
+      [[ -z $(git ls-files) ]] ||
         error "Can't $command subrepo. Index has changes."
     fi
   fi
 
   # For now, only support actions from top of repo:
-  if [ "$(git rev-parse --git-dir)" != '.git' ]; then
+  if [[ $(git rev-parse --git-dir) != .git ]]; then
     error "Need to run subrepo command from top level directory of the repo."
   fi
 }
@@ -1241,14 +1241,14 @@ assert-subdir-ready-for-init() {
     error "The subdir '$subdir' is already a subrepo."
   fi
   # Check that subdir is part of the repo
-  if [[ -z "$(git log -- $subdir)" ]]; then
+  if [[ -z $(git log -- $subdir) ]]; then
     error "The subdir '$subdir' is not part of this repo."
   fi
 }
 
 # If subdir exists, make sure it is empty:
 assert-subdir-empty() {
-  if [ -e "$subdir" ] && [ -n "$(ls -A $subdir)" ]; then
+  if [[ -e $subdir ]] && [[ -n $(ls -A $subdir) ]]; then
     error "The subdir '$subdir' exists and is not empty."
   fi
 }
@@ -1276,7 +1276,7 @@ get-all-subrepos() {
 
 add-subrepo() {
   for path in "${subrepos[@]}"; do
-    [[ "$1" =~ ^$path ]] && return
+    [[ $1 =~ ^$path ]] && return
   done
   subrepos+=("$1")
 }
@@ -1285,7 +1285,7 @@ add-subrepo() {
 get-upstream-head-branch() {
   OUT=true RUN git ls-remote $subrepo_remote
   local remotes="$output"
-  [ -n "$remotes" ] ||
+  [[ -n $remotes ]] ||
     error "Failed to 'git ls-remote $subrepo_remote'."
   local commit="$(
     echo "$remotes" |
@@ -1299,7 +1299,7 @@ get-upstream-head-branch() {
     head -n1 |
     cut -f2
   )"
-  [[ "$branch" =~ refs/heads/ ]] ||
+  [[ $branch =~ refs/heads/ ]] ||
     error "Problem finding remote default head branch."
   output="${branch#refs/heads/}"
 }
@@ -1344,17 +1344,17 @@ git-subrepo:
 # were done.
 get-command-info() {
   local bin="$0"
-  if [[ "$bin" =~ / ]]; then
+  if [[ $bin =~ / ]]; then
     local lib="$(dirname "$bin")"
     # XXX Makefile needs to install these symlinks:
     # If `git-subrepo` was system-installed (`make install`):
-    if [ -e "$lib/git-subrepo.d/upstream" ] &&
-       [ -e "$lib/git-subrepo.d/commit" ]; then
+    if [[ -e $lib/git-subrepo.d/upstream ]] &&
+       [[ -e $lib/git-subrepo.d/commit ]]; then
       command_remote=$(readlink "$lib/git-subrepo.d/upstream")
       command_commit=$(readlink "$lib/git-subrepo.d/commit")
-    elif [[ "$lib" =~ / ]]; then
+    elif [[ $lib =~ / ]]; then
       lib="$(dirname "$lib")"
-      if [ -d "$lib/.git" ]; then
+      if [[ -d $lib/.git ]]; then
         local remote="$(
           GIT_DIR=$lib/.git git remote -v |
             grep '^origin' |
@@ -1362,7 +1362,7 @@ get-command-info() {
             cut -f2 |
             cut -d ' ' -f1
         )"
-        if [ -n "$remote" ]; then
+        if [[ -n $remote ]]; then
           command_remote="$remote"
         else
           local remote="$(
@@ -1371,12 +1371,12 @@ get-command-info() {
               cut -f2 |
               cut -d ' ' -f1
           )"
-          if [ -n "$remote" ]; then
+          if [[ -n $remote ]]; then
             command_remote="$remote"
           fi
         fi
         local commit="$(GIT_DIR="$lib/.git" git rev-parse --short HEAD)"
-        if [ -n "$commit" ]; then
+        if [[ -n $commit ]]; then
           command_commit="$commit"
         fi
       fi
@@ -1445,7 +1445,7 @@ git:ref-exists() {
 git:get-head-branch-name() {
   output=
   local name="$(git symbolic-ref --short --quiet HEAD)"
-  [ "$name" == HEAD ] && return
+  [[ $name == HEAD ]] && return
   output="$name"
 }
 
@@ -1494,7 +1494,7 @@ RUN() {
   rc=$?
   set -e
 
-  if [ "$rc" -ne 0 ]; then
+  if [[ $rc -ne 0 ]]; then
     OK=false
     $FAIL && error "Command failed: '$*'."
   fi
@@ -1550,7 +1550,7 @@ error() {
 }
 
 # Start at the end:
-[ "$BASH_SOURCE" != "$0" ] || main "$@"
+[[ $BASH_SOURCE != $0 ]] || main "$@"
 
 # Local Variables:
 # tab-width: 2
