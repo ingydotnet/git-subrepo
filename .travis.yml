@@ -1,6 +1,10 @@
 # Want 'bash' but 'c' works:
 language: c
 
+branches:
+  only:
+  - master
+
 script:
 - git checkout master
 - GIT_COMMITTER_NAME=Bob
