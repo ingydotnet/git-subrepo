@@ -782,7 +782,7 @@ subrepo:merge-base() {
           # If we list all, don't return
           say "Valid: $new_parent = $old_parent"
         else
-          return 0          
+          return 0
         fi
       else
         if $list_all_wanted; then
