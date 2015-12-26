@@ -321,8 +321,9 @@ The \f(CW\*(C`commit\*(C'\fR command accepts the \f(CW\*(C`\-\-force\*(C'\fR opt
 .ie n .IP """git subrepo merge\-base <branch1> <branch2>""" 4
 .el .IP "\f(CWgit subrepo merge\-base <branch1> <branch2>\fR" 4
 .IX Item "git subrepo merge-base <branch1> <branch2>"
-Find a common ancestor between two branches. This command will look at the
-referenced tree hash in the commits to see if it can locate a common one.
+This \*(L"plumbing\*(R" command finds a common ancestor between two branches. It will
+look at the referenced tree hash in the commits to see if it can locate a
+common one.
 .Sp
 This is used for pull and push before the rebase step. In this case we look at
 all the local commits and then try to find a tree hash that is available in
@@ -330,6 +331,12 @@ the subrepo.
 .Sp
 Note: This is different from the \f(CW\*(C`git merge\-base\*(C'\fR command which looks at the
       object structure.
+.Sp
+Use the \f(CW\*(C`\-\-all\*(C'\fR option to list all possible common ancestors. (This differs
+from other commands which use \f(CW\*(C`\-\-all\*(C'\fR to apply the same command to all
+subrepos).
+.Sp
+The \f(CW\*(C`merge\-base\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR option.
 .ie n .IP """git subrepo status [<subdir>]""" 4
 .el .IP "\f(CWgit subrepo status [<subdir>]\fR" 4
 .IX Item "git subrepo status [<subdir>]"

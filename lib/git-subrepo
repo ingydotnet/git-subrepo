@@ -54,7 +54,6 @@ a,all       Perform command on all current subrepos
 b,branch=   Specify an upstream branch
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
-l,list      List all similar commit for merge-base
 r,remote=   Specify an upstream remote
 u,update    Add the --branch and/or --remote overrides to .gitrepo
  
@@ -80,7 +79,6 @@ main() {
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
-  local list_all_wanted=false   # merge-base can list all matches
 
   local old_parent=             # Old subrepo parent commit
   local new_parent=             # New subrepo parent commit
@@ -131,7 +129,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ $command != help ]]; then
+  if $all_wanted && [[ ! $command =~ ^(help|merge-base)$ ]]; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -291,7 +289,7 @@ command:merge-base() {
     say "  '$branch1':$first_on_source '$new_parent'"
     say "  '$branch2':$first_on_target '$old_parent'"
   else
-    if ! $list_all_wanted; then
+    if ! $all_wanted; then
       say "No common ancestor found between '$branch1' and '$branch2'."
     fi
   fi
@@ -749,7 +747,7 @@ subrepo:merge-base() {
           old_parent="${array2[0]}"
           ancestor_tree="$tree"
         else
-          if $list_all_wanted; then
+          if $all_wanted; then
             say "Multiple on $2: $new_parent = $old_parent"
           fi
           # We found another match!
@@ -778,14 +776,14 @@ subrepo:merge-base() {
       if [[ $count -eq 1 ]]; then
         # We only have one hit on source side, then we consider it a valid
         # match that we can use
-        if $list_all_wanted; then
+        if $all_wanted; then
           # If we list all, don't return
           say "Valid: $new_parent = $old_parent"
         else
           return 0
         fi
       else
-        if $list_all_wanted; then
+        if $all_wanted; then
           say "Multiple $1: $new_parent = $old_parent"
         fi
       fi
@@ -939,7 +937,6 @@ get-command-options() {
       -f) force_wanted=true
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
-      -l) list_all_wanted=true ;;
       -r) subrepo_remote="$1"
           override_remote="$1"
           commit_msg_args+=("--remote=$1")
@@ -1002,11 +999,12 @@ options_clone='branch force'
 options_commit='fetch force'
 options_fetch='all branch remote'
 options_init='branch remote'
+options_merge_base='all'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
 options_status='fetch'
 check_option() {
-  local var="options_$command"
+  local var="options_${command//-/_}"
   [[ ${!var} =~ $1 ]] ||
     usage-error "Invalid option '--$1' for '$command'."
 }

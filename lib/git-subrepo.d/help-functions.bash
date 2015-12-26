@@ -173,8 +173,9 @@ help:merge-base() {
   Usage: git subrepo merge-base <branch1> <branch2>
 
 
-  Find a common ancestor between two branches. This command will look at the
-  referenced tree hash in the commits to see if it can locate a common one.
+  This "plumbing" command finds a common ancestor between two branches. It will
+  look at the referenced tree hash in the commits to see if it can locate a
+  common one.
 
   This is used for pull and push before the rebase step. In this case we look
   at all the local commits and then try to find a tree hash that is available
@@ -182,6 +183,12 @@ help:merge-base() {
 
   Note: This is different from the `git merge-base` command which looks at the
   object structure.
+
+  Use the `--all` option to list all possible common ancestors. (This differs
+  from other commands which use `--all` to apply the same command to all
+  subrepos).
+
+  The `merge-base` command accepts the `--all` option.
 ...
 }
 
