@@ -61,8 +61,7 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
 (
   cd $OWNER/foo
   git subrepo push bar
-)
-# &> /dev/null || die
+) &> /dev/null || die
 
 (
   cd $OWNER/bar
