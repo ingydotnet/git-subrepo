@@ -283,7 +283,7 @@ command:commit() {
   say "subdir '$subdir/' to branch '$original_head_branch'."
 }
 
-# `git subrepo merge-base branch1 [branch2]`
+# `git subrepo merge-base branch1 branch2`
 command:merge-base() {
   get-params +branch1 +branch2
   if subrepo:merge-base "$branch1" "$branch2" $all_wanted; then
@@ -733,7 +733,8 @@ subrepo:commit() {
 subrepo:merge-base() {
   local first=$(git:log-tree "$1")
   local second=$(git:log-tree "$2")
-  local local_all_wanted=$3
+  # If you only want to list all possible ancestors
+  local list_all=$3
   local ancestor_tree=""
   for source in $first; do
     local array=(${source//:/ })
@@ -750,7 +751,7 @@ subrepo:merge-base() {
           old_parent="${array2[0]}"
           ancestor_tree="$tree"
         else
-          if $local_all_wanted; then
+          if $list_all; then
             say "Multiple on $2: $new_parent = $old_parent"
           fi
           # We found another match!
@@ -779,14 +780,14 @@ subrepo:merge-base() {
       if [[ $count -eq 1 ]]; then
         # We only have one hit on source side, then we consider it a valid
         # match that we can use
-        if $local_all_wanted; then
+        if $list_all; then
           # If we list all, don't return
           say "Valid: $new_parent = $old_parent"
         else
           return 0
         fi
       else
-        if $local_all_wanted; then
+        if $list_all; then
           say "Multiple $1: $new_parent = $old_parent"
         fi
       fi
