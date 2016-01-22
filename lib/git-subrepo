@@ -1231,7 +1231,7 @@ assert-repo-is-ready() {
   fi
 
   # For now, only support actions from top of repo:
-  if [[ $(git rev-parse --git-dir) != .git ]]; then
+  if [[ -n "$(git rev-parse --show-prefix)" ]]; then
     error "Need to run subrepo command from top level directory of the repo."
   fi
 }
