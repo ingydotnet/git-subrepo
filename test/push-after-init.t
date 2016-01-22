@@ -6,15 +6,19 @@ source test/setup
 
 use Test::More
 
-git clone $UPSTREAM/init $OWNER/init &>/dev/null || die
-
+# Create directory and init git locally as this will test some corner
+# cases when you don't have any previous commits to rely on
+# see issue/122
 (
+  mkdir -p $OWNER/init
   cd $OWNER/init
+  git init
+  mkdir doc
+  add-new-files doc/FooBar
   git subrepo init doc || die
   mkdir ../upstream
   git init --bare ../upstream || die
-)
-# &> /dev/null
+) &> /dev/null
 
 output="$(
   cd $OWNER/init
@@ -39,7 +43,6 @@ gitrepo=$OWNER/init/doc/.gitrepo
 {
   test-exists \
     "$OWNER/up/.git/" \
-    "$OWNER/up/init.swim" \
     "!$OWNER/up/.gitrepo"
 }
 
