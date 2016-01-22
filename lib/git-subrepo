@@ -748,7 +748,7 @@ subrepo:merge-base() {
     first_on_target="HEAD"
     for target in $second; do
       local array2=(${target//:/ })
-      if [[ $tree == ${array2[1]} ]]; then
+      if [[ $tree == ${array2[1]} ]] && ! git:is-init-commit ${array2[0]}; then
         if [[ -z $ancestor_tree ]]; then
           # We found a match in tree hashes,
           # Store commit hashes that point to same tree hash
@@ -1484,6 +1484,10 @@ git:make-ref() {
 
 git:log-tree() {
   git log --pretty=format:%H:%T "$1"
+}
+
+git:is-init-commit() {
+  git log -n 1 --pretty=format:%s $1 | grep '^git subrepo init' > /dev/null 
 }
 
 
