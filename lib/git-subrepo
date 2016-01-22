@@ -1399,30 +1399,26 @@ get-command-info() {
 
 error-pull-rebase() {
   error-rebase-header
-  cat <<...
-  6. git subrepo commit $subdir
-...
+  echo "  6. git subrepo commit $subdir"
   error-rebase-footer
 }
 
 error-push-rebase() {
   error-rebase-header
-  cat <<...
-  6. git subrepo push $subdir subrepo-push/$subdir
-...
+  echo "  6. git subrepo push $subdir subrepo-push/$subdir"
   error-rebase-footer
 }
 
 error-rebase-header() {
   cat <<...
 
-You will need to finish the $command by hand. The working tree has temporarily
-been transformed into the subrepo's tree so that you can resolve the conflicts
-indicated in the output above.
+You will need to finish the $command by hand. Your working tree has been
+temporarily checked out from your subrepo so that you can resolve the conflicts
+shown in the output above.
 
-This is the common workflow:
+This is the common conflict resolution workflow:
 
-  1. Solve the conflicts (see "git status").
+  1. Resolve the conflicts (see "git status").
   2. "git add" the resolved files.
   3. git rebase --continue
      (If there are no changes left: git rebase --skip)
@@ -1434,7 +1430,7 @@ This is the common workflow:
 error-rebase-footer() {
   cat <<...
 
-See "man git-rebase" for details.
+See "git help rebase" for details.
 
 Alternatively, you can abort the $command and reset back to where you started:
 
