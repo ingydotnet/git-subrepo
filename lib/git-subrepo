@@ -683,7 +683,7 @@ subrepo:branch() {
 
   o "Remove the .gitrepo file from the history."
   FAIL=false RUN git filter-branch -f \
-    --tree-filter "rm -f .gitrepo"
+    --prune-empty --tree-filter "rm -f .gitrepo"
 
   o "Create branch '$branch' for this new commit set."
   RUN git branch "$branch"
