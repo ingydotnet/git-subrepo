@@ -491,8 +491,11 @@ subrepo:pull() {
     o "Rebase $upstream_ref onto $branch_name."
     FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
     if ! OK; then
-      say "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
-      CODE=1; return
+      say "The \"git rebase\" command failed:"
+      say
+      say "  ${output//$'\n'/$'\n'  }"
+      CODE=1
+      return
     fi
   fi
 
@@ -593,9 +596,11 @@ subrepo:push() {
       FAIL=false OUT=true RUN git rebase -X theirs \
           "$refs_subrepo_fetch" "$branch_name"
       if ! OK; then
-        say "The rebase command failed:"$'\n'----$'\n'"$output"$'\n'----
-        CODE=2;
-        return;
+        say "The \"git rebase\" command failed:"
+        say
+        say "  ${output//$'\n'/$'\n'  }"
+        CODE=2
+        return
       fi
     fi
 
@@ -1391,41 +1396,53 @@ get-command-info() {
 #------------------------------------------------------------------------------
 # Instructional errors:
 #------------------------------------------------------------------------------
+
 error-pull-rebase() {
+  error-rebase-header
   cat <<...
-The 'git rebase' command failed during your pull.
-You will need to finish the pull by hand. Follow these steps:
-
-  # Resolve the rebase conflicts
-  git checkout $original_head_branch
-  git subrepo commit $subdir
-
+  6. git subrepo commit $subdir
 ...
-  error-reset-message pull
+  error-rebase-footer
 }
 
 error-push-rebase() {
+  error-rebase-header
   cat <<...
-The 'git rebase' command failed during your push.
-You will need to finish the push by hand. Follow these steps:
-
-  # Resolve the rebase conflicts
-  git checkout $original_head_branch
-  git subrepo push $subdir subrepo-push/$subdir
-
+  6. git subrepo push $subdir subrepo-push/$subdir
 ...
-  error-reset-message push
+  error-rebase-footer
 }
 
-error-reset-message() {
+error-rebase-header() {
   cat <<...
-To abort the $1 and reset back to where you started:
 
-  git rebase --abort
-  git checkout ORIG_HEAD
-  git subrepo clean $subdir
+You will need to finish the $command by hand. The working tree has temporarily
+been transformed into the subrepo's tree so that you can resolve the conflicts
+indicated in the output above.
 
-See 'git help subrepo' for more help.
+This is the common workflow:
+
+  1. Solve the conflicts (see "git status").
+  2. "git add" the resolved files.
+  3. git rebase --continue
+     (If there are no changes left: git rebase --skip)
+  4. If there are more conflicts, restart at step 1.
+  5. git checkout $original_head_branch
+...
+}
+
+error-rebase-footer() {
+  cat <<...
+
+See "man git-rebase" for details.
+
+Alternatively, you can abort the $command and reset back to where you started:
+
+  1. git rebase --abort
+  2. git checkout $original_head_branch
+  3. git subrepo clean $subdir
+
+See "git help subrepo" for more help.
 
 ...
 }
