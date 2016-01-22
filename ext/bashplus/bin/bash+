@@ -6,13 +6,14 @@
 #------------------------------------------------------------------------------
 
 set -e
+shopt -s compat31&>/dev/null||:
 
 #------------------------------------------------------------------------------
 # Determine how `bash+` was called, and do the right thing:
 #------------------------------------------------------------------------------
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then
   # 'bash+' is being sourced:
-  [[ "${BASH_SOURCE[0]}" =~ /bin/bash\+$ ]] || {
+  [[ "${BASH_SOURCE[0]}" =~ /bin/bash\\+$ ]] || {
     echo "Invalid Bash+ path '${BASH_SOURCE[0]}'" 2> /dev/null
     exit 1
   }
