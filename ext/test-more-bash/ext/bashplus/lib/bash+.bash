@@ -26,7 +26,7 @@ bash+:export:std() { @ use die warn; }
 bash+:use() {
   local library_name="${1:?bash+:use requires library name}"; shift
   local library_path="$(bash+:findlib $library_name)"
-  [ -n "$library_path" ] || {
+  [[ -n $library_path ]] || {
     bash+:die "Can't find library '$library_name'." 1
   }
   source "$library_path"
@@ -41,7 +41,7 @@ bash+:use() {
 bash+:import() {
   local arg=
   for arg; do
-    if [[ "$arg" =~ ^: ]]; then
+    if [[ $arg =~ ^: ]]; then
       bash+:import `bash+:export$arg`
     else
       bash+:fcopy bash+:$arg $arg
@@ -54,7 +54,7 @@ bash+:fcopy() {
   bash+:can "${1:?bash+:fcopy requires an input function name}" ||
     bash+:die "'$1' is not a function" 2
   local func=$(type "$1" 3>/dev/null | tail -n+3)
-  [ -n "$3" ] && "$3"
+  [[ -n $3 ]] && "$3"
   eval "${2:?bash+:fcopy requires an output function name}() $func"
 }
 
@@ -72,10 +72,10 @@ bash+:die() {
   local msg="${1:-Died}"
   printf "${msg//\\n/$'\n'}" >&2
   local trailing_newline_re=$'\n''$'
-  [[ "$msg" =~ $trailing_newline_re ]] && exit 1
+  [[ $msg =~ $trailing_newline_re ]] && exit 1
 
   local c=($(caller ${DIE_STACK_LEVEL:-${2:-0}}))
-  [ ${#c[@]} -eq 2 ] &&
+  (( ${#c[@]} == 2 )) &&
     msg=" at line %d of %s" ||
     msg=" at line %d in %s of %s"
   printf "$msg\n" ${c[@]} >&2
@@ -88,5 +88,5 @@ bash+:warn() {
 }
 
 bash+:can() {
-  [ "$(type -t "${1:?bash+:can requires a function name}")" == function ]
+  [[ $(type -t "${1:?bash+:can requires a function name}") == function ]]
 }
