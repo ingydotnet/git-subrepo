@@ -1,12 +1,12 @@
 # test/tap.bash - TAP Testing Foundation for Bash
 #
-# Copyright (c) 2013-2015. Ingy döt Net.
+# Copyright (c) 2013-2016. Ingy döt Net.
 
 #------------------------------------------------------------------------------
 Test::Tap:die() { echo "$@" >&2; trap EXIT; exit 1; }
 #------------------------------------------------------------------------------
 
-Test__Tap_VERSION=0.0.3
+Test__Tap_VERSION=0.0.4
 
 Test::Tap:init() {
   [ -n "$BASH_SOURCE" ] ||

@@ -1,12 +1,12 @@
 =meta: 0.0.2
 
 name: test-tap
-version: 0.0.3
+version: 0.0.4
 abstract: TAP Test Base for Bash
 homepage: http://bpan.org/package/test-tap/
 
 license: MIT
-copyright: 2013-2015
+copyright: 2013-2016
 author:
   name: Ingy döt Net
   email: ingy@ingy.net

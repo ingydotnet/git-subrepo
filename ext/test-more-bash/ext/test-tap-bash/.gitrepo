@@ -6,6 +6,6 @@
 [subrepo]
 	remote = git@github.com:ingydotnet/test-tap-bash.git
 	branch = master
-	commit = ad3a0348b71654edd4302109315bbd85881dcc4d
-	parent = cca3317c590bca02744248f461c2da30e9b0e25a
+	commit = 7890df93f13e684715750a2d6a608e7e79671ca4
+	parent = 3faca582ee96a320b5675ad67b47ad0f16730446
 	cmdver = 0.3.0

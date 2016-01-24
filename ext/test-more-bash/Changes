@@ -1,4 +1,9 @@
 ---
+version: 0.0.3
+date:    Sat Jan 23 16:39:20 PST 2016
+changes:
+- Make up to date
+---
 version: 0.0.2
 date:    Fri Jan 23 21:26:18 PST 2015
 changes:

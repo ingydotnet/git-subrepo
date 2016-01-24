@@ -1,4 +1,9 @@
 ---
+version: 0.0.7
+date:    Sat Jan 23 16:28:59 PST 2016
+changes:
+- Update tooling, and copyright
+---
 version: 0.0.6
 date:    Fri Jan 23 21:05:15 PST 2015
 changes:
