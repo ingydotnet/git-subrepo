@@ -118,7 +118,7 @@ help:fetch() {
 
   Fetch the remote/upstream content for a subrepo.
 
-  It will create a Git reference called `subrepo/<subdir>/upstream` that
+  It will create a Git reference called `subrepo/<subdir>/fetch` that
   points at the same commit as `FETCH_HEAD`. It will also create a remote
   called `subrepo/<subdir>`. These are temporary and you can remove them
   easily with the subrepo `clean` command.
@@ -204,9 +204,9 @@ help:pull() {
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git subrepo merge-base subrepo/<subdir>/upstream subrepo/<subdir>
+    git subrepo merge-base subrepo/<subdir>/fetch subrepo/<subdir>
     git rebase --onto <new_parent> <old_parent> subrepo/<subdir>
-    git rebase subrepo/<subdir>/upstream subrepo/<subdir>
+    git rebase subrepo/<subdir>/fetch subrepo/<subdir>
     git checkout ORIG_HEAD
     git subrepo commit <subdir>
 
@@ -221,7 +221,7 @@ help:pull() {
   pull or clone) into one commit. This keeps your mainline history nice and
   clean. You can easily see the subrepo's history with the `git log` command:
 
-    git log refs/subrepo/<subdir>/upstream
+    git log refs/subrepo/<subdir>/fetch
 
   The set of commands used above are described in detail below.
 
