@@ -372,15 +372,17 @@ Git Version: $git_version
 
 command:upgrade() {
   local path="$0"
-  local branch="$(git rev-parse --abbrev-ref HEAD)"
-  if [[ $branch != master ]]; then
-    error "git-subrepo repo is not on the 'master' branch"
-  fi
   if [[ $path =~ ^/ && $path =~ ^(.*/git-subrepo)/lib/git-subrepo$ ]]; then
     local subrepo_root="${BASH_REMATCH[1]}"
     (
       o "cd $subrepo_root"
       cd "${BASH_REMATCH[1]}"
+
+      local branch="$(git rev-parse --abbrev-ref HEAD)"
+      if [[ $branch != master ]]; then
+        error "git-subrepo repo is not on the 'master' branch"
+      fi
+
       o "'git pull' latest version"
       RUN git pull --ff-only
     )
@@ -1220,7 +1222,7 @@ assert-environment-ok() {
 # Make sure git repo is ready:
 assert-repo-is-ready() {
   # Skip this for trivial info commands:
-  [[ $command =~ ^(help|version)$ ]] && return
+  [[ $command =~ ^(help|version|upgrade)$ ]] && return
 
   # We must be inside a git repo:
   git rev-parse --git-dir &> /dev/null ||
