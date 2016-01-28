@@ -5,15 +5,18 @@
 # away. You are encouraged to switch to `source /path/to/git-subrepo/.rc` in
 # your shell startup file.
 
-root_path="$(dirname $BASH_SOURCE)"
+[[ -n ${ZSH_VERSION-} ]] &&
+  GIT_SUBREPO_ROOT="$0" ||
+  GIT_SUBREPO_ROOT="$BASH_SOURCE"
+GIT_SUBREPO_ROOT="$(dirname $GIT_SUBREPO_ROOT)"
 
 cat <<... >&2
 ***
 git-subrepo DEPRECATION WARNING
-$root_path/init is changing names to $root_path/.rc
+$GIT_SUBREPO_ROOT/init is changing names to $GIT_SUBREPO_ROOT/.rc
 Please adjust your shell startup files
 See: https://github.com/ingydotnet/git-subrepo/issues/105
 ***
 ...
 
-source "$root_path/.rc"
+source "$GIT_SUBREPO_ROOT/.rc"
