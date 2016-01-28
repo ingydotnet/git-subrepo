@@ -375,7 +375,7 @@ command:upgrade() {
   if [[ $path =~ ^/ && $path =~ ^(.*/git-subrepo)/lib/git-subrepo$ ]]; then
     local subrepo_root="${BASH_REMATCH[1]}"
     (
-      o "cd $subrepo_root"
+      o "Change directory to '$subrepo_root'."
       cd "${BASH_REMATCH[1]}"
 
       local branch="$(git rev-parse --abbrev-ref HEAD)"
@@ -383,8 +383,10 @@ command:upgrade() {
         error "git-subrepo repo is not on the 'master' branch"
       fi
 
-      o "'git pull' latest version"
+      o "'git pull' latest version."
       RUN git pull --ff-only
+
+      say "git-subrepo is up to date."
     )
   else
     die "\
