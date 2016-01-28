@@ -370,6 +370,37 @@ Git Version: $git_version
   :
 }
 
+command:upgrade() {
+  local path="$0"
+  local branch="$(git rev-parse --abbrev-ref HEAD)"
+  if [[ $branch != master ]]; then
+    error "git-subrepo repo is not on the 'master' branch"
+  fi
+  if [[ $path =~ ^/ && $path =~ ^(.*/git-subrepo)/lib/git-subrepo$ ]]; then
+    local subrepo_root="${BASH_REMATCH[1]}"
+    (
+      o "cd $subrepo_root"
+      cd "${BASH_REMATCH[1]}"
+      o "'git pull' latest version"
+      RUN git pull --ff-only
+    )
+  else
+    die "\
+
+Sorry. Your installation can't use the 'git subrepo upgrade' command. The
+command only works if you installed git subrepo by adding
+'/path/to/git-subrepo' to your PATH.
+
+If you used 'make install' to install git-subrepo, then just do this:
+
+    cd /path/to/git-subrepo
+    git pull
+    make install
+
+"
+  fi
+}
+
 #------------------------------------------------------------------------------
 # Subrepo command worker functions.
 #------------------------------------------------------------------------------
