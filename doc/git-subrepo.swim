@@ -342,6 +342,38 @@ the same arguments. Keep reading…
   VERY noisy, but extremely useful in deep debugging. Applicable to all
   commands.
 
+= Environment Variables
+
+The `git-subrepo` command exports and honors some environment variables:
+
+- `GIT_SUBREPO_RUNNING`
+
+  This variable is exported when `git-subrepo` is running. It is set to the pid
+  of the `git-subrepo` process that is running. Other processes, like git hooks
+  for instance, can use this information to adjust accordingly.
+
+- `GIT_SUBREPO_COMMAND
+
+  This variable is exported when `git-subrepo` is running. It is set to the pid
+  of the name of the `git-subrepo` subcommand that is running.
+
+- `GIT_SUBREPO_PAGER`
+
+  Use this to specify the pager to use for long output commands. Defaults to
+  `$PAGER` or `less`.
+
+- `GIT_SUBREPO_QUIET`
+
+  Set this for quiet (`-q`) output.
+
+- `GIT_SUBREPO_VERBOSE`
+
+  Set this for verbose (`-v`) output.
+
+- `GIT_SUBREPO_DEBUG`
+
+  Set this for really debugging (`-d`) output.
+
 = Installation Instructions
 
 There are currently 3 ways to install `git-subrepo`. For all of them you need

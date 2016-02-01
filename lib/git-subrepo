@@ -958,7 +958,6 @@ subrepo:clean() {
 get-command-options() {
   [[ $# -eq 0 ]] && set -- --help
 
-  [[ -n $GIT_SUBREPO_DEBUG ]] && set -x
   [[ -n $GIT_SUBREPO_QUIET ]] && quiet_wanted=true
   [[ -n $GIT_SUBREPO_VERBOSE ]] && verbose_wanted=true
   [[ -n $GIT_SUBREPO_DEBUG ]] && debug_wanted=true
@@ -1058,6 +1057,12 @@ check_option() {
 #------------------------------------------------------------------------------
 
 command-init() {
+  # Export variable to let other processes (possibly git hooks) know that they
+  # are running under git-subrepo. Set to current process pid, so it can be
+  # further verified if need be:
+  export GIT_SUBREPO_RUNNING="$$"
+  export GIT_SUBREPO_COMMAND="$command"
+
   : "${GIT_SUBREPO_PAGER:=${PAGER:-less}}"
   if [[ $GIT_SUBREPO_PAGER == less ]]; then
     GIT_SUBREPO_PAGER='less -FRX'
