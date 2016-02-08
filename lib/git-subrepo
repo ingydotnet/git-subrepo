@@ -782,11 +782,9 @@ subrepo:merge-base() {
   local target="target$merge_counter"
 
   prepare-merge-base "$source" "$1" true
-  o "$branch_first_commit"
   local first_commit_on_source="$branch_first_commit"
   prepare-merge-base "$target" "$2" false
   local first_commit_on_target="$branch_first_commit"
-  o "KALLE: $branch_first_commit"
 
   for entry in ${merge_base_order[@]}; do
     local source_key="${source}_$entry"
@@ -956,7 +954,7 @@ prepare-merge-base() {
     local commit=${array[0]}
     local tree=${array[1]}
     local key="${prefix}_$tree"
-    
+
     if [ -z "$first_commit" ]; then
       first_commit=$commit
     fi
