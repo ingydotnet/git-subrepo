@@ -84,6 +84,8 @@ main() {
   local new_parent=             # New subrepo parent commit
   local first_on_source="HEAD"  # Merge base source is HEAD
   local first_on_target="HEAD"  # Merge base target is HEAD
+  local merge_counter=0         # Unique prefix for merge bases
+  local branch_first_commit=    # Return value from prepare_merge_base
 
   local subdir=                 # Subdirectory of the subrepo being used
   local gitrepo=                # Path to .gitrepo file
@@ -771,74 +773,65 @@ subrepo:commit() {
 }
 
 subrepo:merge-base() {
-  local first=$(git:log-tree "$1")
-  local second=$(git:log-tree "$2")
+  local merge_base_order=()
+  local counter=0
   # If you only want to list all possible ancestors
   local list_all=$3
-  local ancestor_tree=""
-  for source in $first; do
-    local array=(${source//:/ })
-    local commit=${array[0]}
-    local tree=${array[1]}
-    first_on_target="HEAD"
-    for target in $second; do
-      local array2=(${target//:/ })
-      if [[ $tree == ${array2[1]} ]]; then
-        if [[ -z $ancestor_tree ]]; then
-          # We found a match in tree hashes,
-          # Store commit hashes that point to same tree hash
-          new_parent="$commit"
-          old_parent="${array2[0]}"
-          ancestor_tree="$tree"
-        else
-          if $list_all; then
-            say "Multiple on $2: $new_parent = $old_parent"
-          fi
-          # We found another match!
-          # Reset and continue
-          ancestor_tree=""
-          break
-        fi
-      fi
-      if [[ -z $ancestor_tree ]]; then
-        # If we ever some here with an empty ancestor_tree
-        # we now that the the target found is not the first one
-        first_on_target=""
-      fi
-    done
+  ((merge_counter++))
+  local source="source$merge_counter"
+  local target="target$merge_counter"
 
-    if [[ -n $ancestor_tree ]]; then
-      # We have a candidate, we need to check our own side as well
-      local count=0
-      for source_copy in $first; do
-        local array3=(${source_copy//:/ })
-        if [[ $ancestor_tree == ${array3[1]} ]]; then
-          ((count++))
-        fi
-      done
+  prepare-merge-base "$source" "$1" true
+  local first_commit_on_source="$branch_first_commit"
+  prepare-merge-base "$target" "$2" false
+  local first_commit_on_target="$branch_first_commit"
 
-      if [[ $count -eq 1 ]]; then
-        # We only have one hit on source side, then we consider it a valid
-        # match that we can use
-        if $list_all; then
-          # If we list all, don't return
-          say "Valid: $new_parent = $old_parent"
-        else
-          return 0
-        fi
+  for entry in ${merge_base_order[@]}; do
+    local source_key="${source}_$entry"
+    local source_value="${!source_key}"
+    if [[ ${#source_value} > 40 ]]; then
+      if $list_all; then
+        say "Multiple on $1: $source_value"
+      fi
+    else
+      local target_key="${target}_$entry"
+      if [ -z ${!target_key+x} ]; then
+        # We didn't find it on the target side
+        :
       else
-        if $list_all; then
-          say "Multiple $1: $new_parent = $old_parent"
+        local target_value=${!target_key};
+        if [[ ${#target_value} > 40 ]]; then
+          if $list_all; then
+            say "Multiple on $2: $target_value"
+          fi
+        else
+          o "Found ancestor: ${!source_key},${!target_key}"
+          o "Steps from HEAD: $counter"
+          new_parent="${!source_key}"
+          old_parent="${!target_key}"
+          if [[ $new_parent == $first_commit_on_source ]]; then
+            first_on_source="HEAD"
+          else
+            first_on_source=""
+          fi
+          if [[ $old_parent == $first_commit_on_target ]]; then
+            first_on_target="HEAD"
+          else
+            first_on_target=""
+          fi
+
+          if $list_all; then
+            say "Valid: $new_parent = $old_parent"
+          else
+            # We found the first ancestor
+            return 0
+          fi
         fi
       fi
-
-      # We found another match!
-      # Reset and continue
-      ancestor_tree=""
     fi
-
-    first_on_source=""
+    ((counter++));
   done
+  o "No ancestor found";
   return 1
 }
 
@@ -949,6 +942,40 @@ subrepo:clean() {
 #------------------------------------------------------------------------------
 # Support functions:
 #------------------------------------------------------------------------------
+
+prepare-merge-base() {
+  local prefix="$1";
+  local data=$(git:log-tree "$2");
+  local counter=0;
+  local first_commit="";
+
+  for entry in $data; do
+    local array=(${entry//:/ })
+    local commit=${array[0]}
+    local tree=${array[1]}
+    local key="${prefix}_$tree"
+
+    if [ -z "$first_commit" ]; then
+      first_commit=$commit
+    fi
+
+    if [ -z ${!key+x} ]; then
+      eval "$key=$commit";
+    else
+      eval "$key=${!key}_$commit";
+    fi
+    if $3; then
+      # Store the commit order
+      # This is used when we find the the first common ancestor
+      merge_base_order+=("$tree");
+    fi
+    ((counter++))
+  done
+
+  o "$prefix side: $counter commits"
+  branch_first_commit=$first_commit
+}
+
 
 # TODO:
 # Collect original options and arguments into an array for commit message
