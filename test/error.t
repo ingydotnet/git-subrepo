@@ -54,11 +54,11 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       catch git subrepo pull /home/user/bar/foo
     )" \
-    "git-subrepo: The subdir '/home/user/bar/foo' should not be absolute path." \
+    "git-subrepo: The subdir '.*/home/user/bar/foo' should not be absolute path." \
     "Error OK: check subdir is not absolute path"
 }
 

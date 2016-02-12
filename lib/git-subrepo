@@ -16,7 +16,7 @@ while [[ -h $SOURCE ]]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 SOURCE_DIR="$(dirname "$SOURCE")"
-source "${SOURCE_DIR}/git-subrepo.d/bash+.bash"
+source "${SOURCE_DIR}/../ext/bashplus/lib/bash+.bash"
 bash+:import :std can
 
 VERSION=0.3.0
@@ -1111,7 +1111,7 @@ command-setup() {
   # Sanity check subdir:
   [[ -n $subdir ]] ||
     die "subdir not set"
-  [[ $subdir =~ ^/ ]] &&
+  ([[ $subdir =~ ^/ ]] || [[ $subdir =~ ^[A-Z]: ]]) &&
     usage-error "The subdir '$subdir' should not be absolute path."
   subdir="${subdir#./}"
   subdir="${subdir%/}"
@@ -1634,7 +1634,7 @@ error() {
 }
 
 # Start at the end:
-[[ $BASH_SOURCE != $0 ]] || main "$@"
+[[ "$BASH_SOURCE" != "$0" ]] || main "$@"
 
 # Local Variables:
 # tab-width: 2

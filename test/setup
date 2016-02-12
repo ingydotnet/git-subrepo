@@ -16,7 +16,7 @@ source 'lib/git-subrepo'
 TMP="tmp"
 rm -fr $TMP
 
-export GIT_EXEC_PATH="$PWD/lib:$(git --exec-path)"
+#export GIT_EXEC_PATH="$PWD/lib:$(git --exec-path)"
 export UPSTREAM="$TMP/upstream"
 export OWNER="$TMP/owner"
 export COLLAB="$TMP/collab"
