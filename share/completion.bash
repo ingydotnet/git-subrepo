@@ -5,7 +5,7 @@
 _git_subrepo() {
     local _opts=" -h --help --version -a --all -b= --branch= -f --force -F --fetch -r= --remote= -u --update -q --quiet -v --verbose -d --debug -x --DEBUG"
     local subcommands="branch clean clone commit fetch help init merge-base pull push status version"
-    local subdircommands="branch clean commit fetch init pull push status"
+    local subdircommands="branch clean commit fetch pull push status"
     local subcommand="$(__git_find_on_cmdline "$subcommands")"
 
     if [ -z "$subcommand" ]; then
