@@ -51,8 +51,12 @@ _git-subrepo() {
                 esac
         ;;
 
-        branch|clean|commit|fetch|init|pull|push|status)
+        branch|clean|commit|fetch|pull|push|status)
             _compadd_subdirs
+        ;;
+
+        init)
+            _files
         ;;
 
         help)
