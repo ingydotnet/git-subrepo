@@ -118,6 +118,7 @@ main() {
 
   local FAIL=true               # Flag for RUN: fail on error
   local OUT=false               # Flag for RUN: put output in $output
+  local TTY=false               # Flag for RUN: print output directly
   local SAY=true                # Flag for RUN: print command for verbose
   local EXEC=false              # Flag for RUN: run subprocess
   local OK=true                 # Flag that commands have succeeded
@@ -466,7 +467,7 @@ subrepo:init() {
 
   # filter-branch out the subdir
   o "Get commits specific to the subdir."
-  FAIL=false RUN git filter-branch -f \
+  TTY=true FAIL=false RUN git filter-branch -f \
     --subdirectory-filter "$subdir" \
     HEAD
   if ! $OK; then
@@ -481,6 +482,9 @@ subrepo:init() {
     error "Failed to get commit for new 'subrepo': $output"
   fi
   local upstream_head_commit="$output"
+
+  o "Create branch '$branch_name' for this new subrepo."
+  RUN git branch "$branch_name"
 
   o "Reset to the commit we started at."
   RUN git reset --hard "$original_head_commit"
@@ -1577,10 +1581,14 @@ RUN() {
   set +e
   local rc=
   local out=
-  if $OUT; then
-    out="$("$@" 2>/dev/null)"
+  if $verbose_wanted && $TTY && interactive; then
+    "$@"
   else
-    out="$("$@" 2>&1)"
+    if $OUT; then
+      out="$("$@" 2>/dev/null)"
+    else
+      out="$("$@" 2>&1)"
+    fi
   fi
   rc=$?
   set -e
@@ -1590,6 +1598,15 @@ RUN() {
     $FAIL && error "Command failed: '$*'."
   fi
   output="$out"
+}
+
+
+interactive() {
+  if [[ -t 0 && -t 1 ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 # Call a function with indent increased:
