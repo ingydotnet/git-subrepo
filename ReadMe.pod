@@ -402,7 +402,7 @@ This variable is exported when C<git-subrepo> is running. It is set to the pid
 of the C<git-subrepo> process that is running. Other processes, like git hooks
 for instance, can use this information to adjust accordingly.
 
-=item `GIT_SUBREPO_COMMAND
+=item C<GIT_SUBREPO_COMMAND>
 
 This variable is exported when C<git-subrepo> is running. It is set to the pid
 of the name of the C<git-subrepo> subcommand that is running.
