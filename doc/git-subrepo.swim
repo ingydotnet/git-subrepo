@@ -352,7 +352,7 @@ The `git-subrepo` command exports and honors some environment variables:
   of the `git-subrepo` process that is running. Other processes, like git hooks
   for instance, can use this information to adjust accordingly.
 
-- `GIT_SUBREPO_COMMAND
+- `GIT_SUBREPO_COMMAND`
 
   This variable is exported when `git-subrepo` is running. It is set to the pid
   of the name of the `git-subrepo` subcommand that is running.

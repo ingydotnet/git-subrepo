@@ -447,8 +447,9 @@ The \f(CW\*(C`git\-subrepo\*(C'\fR command exports and honors some environment v
 This variable is exported when \f(CW\*(C`git\-subrepo\*(C'\fR is running. It is set to the pid
 of the \f(CW\*(C`git\-subrepo\*(C'\fR process that is running. Other processes, like git hooks
 for instance, can use this information to adjust accordingly.
-.IP "`\s-1GIT_SUBREPO_COMMAND\s0" 4
-.IX Item "`GIT_SUBREPO_COMMAND"
+.ie n .IP """GIT_SUBREPO_COMMAND""" 4
+.el .IP "\f(CWGIT_SUBREPO_COMMAND\fR" 4
+.IX Item "GIT_SUBREPO_COMMAND"
 This variable is exported when \f(CW\*(C`git\-subrepo\*(C'\fR is running. It is set to the pid
 of the name of the \f(CW\*(C`git\-subrepo\*(C'\fR subcommand that is running.
 .ie n .IP """GIT_SUBREPO_PAGER""" 4
