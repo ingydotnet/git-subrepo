@@ -18,6 +18,17 @@ note "Pull - Conflict - Merge ours/theirs - Push"
   git push
 ) &> /dev/null || die
 
+gitrepo=$OWNER/foo/bar/.gitrepo
+# Test foo/bar/.gitrepo file contents:
+{
+  foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
+  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD^)"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "parent" "$foo_pull_commit"
+}
+
+foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
+
 (
   cd $OWNER/foo
   git subrepo pull bar
@@ -36,7 +47,7 @@ note "Pull - Conflict - Merge ours/theirs - Push"
   git subrepo pull bar || {
       echo "Merged Bar2" > Bar2
       git add Bar2
-      git rebase --continue
+      git commit --file .git/MERGE_MSG
       git checkout master
       git subrepo commit bar
       git subrepo clean bar
@@ -50,6 +61,13 @@ test-exists \
 is "$(cat $OWNER/foo/bar/Bar2)" \
   "Merged Bar2" \
   "The readme file in the mainrepo is merged"
+
+# Test foo/bar/.gitrepo file contents:
+{
+  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "parent" "$foo_pull_commit"
+}
 
 (
   set -x
