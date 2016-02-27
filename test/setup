@@ -149,6 +149,12 @@ test-gitrepo-field() {
     ".gitrepo $1 is correct"
 }
 
+test-commit-count() {
+  is "`cd $1; git rev-list --count $2`" \
+    "$3" \
+    "commit count is correct"
+}
+
 save-original-state() {
   original_head_ref="$(cd $1; cat .git/HEAD)"
   original_branch="${original_head_ref#ref: refs/heads/}"
