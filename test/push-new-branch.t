@@ -33,8 +33,7 @@ clone-foo-and-bar
     'First push message is correct '
 }
 
-# Do the subrepo push to another branch again, this time it should complain
-# that we need to pull first
+# Do the subrepo push to another branch again:
 {
   message="$(
     cd $OWNER/foo

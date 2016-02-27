@@ -18,14 +18,13 @@ subrepo-clone-bar-into-foo
 
 (
   cd $OWNER/foo
-  git subrepo pull bar
-) &> /dev/null || die
-
-(
-  cd $OWNER/bar
-  remove-files Bar2
+  echo ".*" >> .gitignore
+  git add .gitignore
+  git commit -m "Add gitignore"
   git push
 ) &> /dev/null || die
+
+
 
 # Do the pull and check output:
 {
@@ -37,12 +36,11 @@ subrepo-clone-bar-into-foo
     'subrepo pull command output is correct'
 }
 
-# Test subrepo file content, Bar2 was removed from subrepo and
-# should not be present in foo:
+# Test subrepo file content:
 gitrepo=$OWNER/foo/bar/.gitrepo
 {
   test-exists \
-    !"$OWNER/foo/bar/Bar2" \
+    "$OWNER/foo/bar/Bar2" \
     "$gitrepo"
 }
 
@@ -58,6 +56,6 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   test-gitrepo-field "cmdver" "`git subrepo --version`"
 }
 
-done_testing # 9
+done_testing
 
 teardown

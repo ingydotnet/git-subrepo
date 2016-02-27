@@ -10,6 +10,7 @@ clone-foo-and-bar
 
 subrepo-clone-bar-into-foo
 
+
 is "$(
   cd $OWNER/foo
   add-new-files bar/file

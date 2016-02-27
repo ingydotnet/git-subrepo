@@ -40,8 +40,9 @@ note "Pull - Conflict - Use theirs - Push"
 (
   cd $OWNER/foo
   git subrepo pull bar || {
-      git checkout --ours Bar2
-      git rebase --skip
+      git checkout --theirs Bar2
+      git add Bar2
+      git commit --file .git/MERGE_MSG
       git checkout master
       git subrepo commit bar
       git subrepo clean bar

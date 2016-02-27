@@ -16,6 +16,7 @@ subrepo-clone-bar-into-foo
   git push
 ) &> /dev/null || die
 
+
 # Do the pull and check output:
 {
   is "$(
@@ -62,7 +63,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 (
   cd $OWNER/foo
-  git subrepo pull bar --debug || touch pull_failed
+  git subrepo pull bar || touch pull_failed
 ) &> /dev/null || die
 
 # We check that the control file was created
