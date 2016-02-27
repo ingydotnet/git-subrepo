@@ -215,6 +215,7 @@ command:pull() {
   elif [[ $CODE -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date."
   elif [[ $CODE -eq 1 ]]; then
+    #TODO: Fix error message
     error-pull-rebase
     return "$CODE"
   else
@@ -268,9 +269,6 @@ command:branch() {
 
   # Create the subrepo branch:
   subrepo:branch
-
-  o "Create ref '$refs_subrepo_branch' for branch '$branch'."
-  git:make-ref "$refs_subrepo_branch" "$branch"
 
   say "Created branch '$branch'."
 }
@@ -530,30 +528,16 @@ subrepo:pull() {
   o "Create subrepo branch '$branch_name'."
   CALL subrepo:branch
 
-  o "Find common ancestor (with same treehash)."
-  if ! subrepo:merge-base "$refs_subrepo_fetch" "$branch_name" false; then
-    error "Can't find a common ancestor between $refs_subrepo_fetch "\
-"and $branch_name. This might be the case if someone used push --force on "\
-"the subrepo. You need to find out why and possibly reclone the subrepo."
-  fi
+  subrepo_commit_ref="$branch_name"
 
-  if [[ -n $first_on_source ]] && [[ -n $first_on_target ]]; then
-    o "We are already at the same tree hash, only update local '.gitrepo'."
-    subrepo_commit_ref="$refs_subrepo_fetch"
-  else
-    subrepo_commit_ref="$branch_name"
-    o "Set a common ancestor."
-    RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
-
-    o "Rebase $upstream_ref onto $branch_name."
-    FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
-    if ! OK; then
-      say "The \"git rebase\" command failed:"
-      say
-      say "  ${output//$'\n'/$'\n'  }"
-      CODE=1
-      return
-    fi
+  o "Merge in changes from $refs_subrepo_fetch"
+  FAIL=false OUT=true RUN git merge "$refs_subrepo_fetch"
+  if ! OK; then
+    say "The \"git merge\" command failed:"
+    say
+    say "  ${output//$'\n'/$'\n'  }"
+    CODE=1
+    return
   fi
 
   o "Checkout '$original_head_branch'."
@@ -733,20 +717,15 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
-  o "Get commits specific to the subdir."
-  FAIL=false RUN git filter-branch -f \
-    --subdirectory-filter "$subdir" \
-    HEAD
+  o "Create a new commit with current status"
+  OUT=true FAIL=false RUN git commit-tree -m "GEN" -p "$subrepo_commit" HEAD:"$subdir"
+
+  o "Create branch '$branch' for this new commit set $output."
+  RUN git checkout -b "$branch" "$output"
 
   o "Remove the .gitrepo file from the history."
   FAIL=false RUN git filter-branch -f \
     --prune-empty --tree-filter "rm -f .gitrepo"
-
-  o "Create branch '$branch' for this new commit set."
-  RUN git branch "$branch"
-
-  o "Reset to the '$original_head_branch' branch."
-  RUN git reset --hard "$original_head_commit"
 }
 
 # Commit a merged subrepo branch:
