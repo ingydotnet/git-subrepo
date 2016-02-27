@@ -276,7 +276,7 @@ command:branch() {
   fi
 
   # Create the subrepo branch:
-  subrepo:branch
+  CALL subrepo:branch
 
   o "Checkout '$original_head_branch'."
   git checkout --quiet "$original_head_branch"
