@@ -457,6 +457,35 @@ to your other git commands:
 
 This method does not account for upgrading and command completion yet.
 
+=head2 Windows
+
+This command works in various Windows environments:
+
+=over
+
+=item * Git for Windows -- L<https://git-for-windows.github.io/>
+
+=item * Babun -- L<http://babun.github.io/>
+
+=item * Cygwin -- L<https://www.cygwin.com/>
+
+=back
+
+You should probably make sure this config setting is in place:
+
+    git config --global core.autocrlf input
+
+=head1 Testing
+
+The C<git-subrepo> repository comes with a extensive test suite. You can
+run it with:
+
+    make test
+
+or if you don't have C<make> on your system:
+
+    prove -v test
+
 =head1 Upgrading
 
 If you used the C<PATH> method of installation, just run this to upgrade
@@ -543,11 +572,27 @@ C<irc.freenode.net>.
 
 =over
 
-=item * This command currently only works on POSIX systems.
+=item * Works on POSIX systems:
 
 =over
 
-=item * Windows support via msysgit is being looked into (works on cygwin).
+=item * Linux
+
+=item * BSD
+
+=item * OSX
+
+=back
+
+=item * Works on Windows:
+
+=over
+
+=item * Git for Windows -- L<https://git-for-windows.github.io/>
+
+=item * Babun -- L<http://babun.github.io/>
+
+=item * Cygwin -- L<https://www.cygwin.com/>
 
 =back
 

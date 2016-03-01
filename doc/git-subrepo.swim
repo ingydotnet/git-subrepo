@@ -405,6 +405,29 @@ to your other git commands:
 
 This method does not account for upgrading and command completion yet.
 
+== Windows
+
+This command works in various Windows environments:
+
+* Git for Windows -- https://git-for-windows.github.io/
+* Babun -- http://babun.github.io/
+* Cygwin -- https://www.cygwin.com/
+
+You should probably make sure this config setting is in place:
+
+  git config --global core.autocrlf input
+
+= Testing
+
+The `git-subrepo` repository comes with a extensive test suite. You can run it
+with:
+
+  make test
+
+or if you don't have `make` on your system:
+
+  prove -v test
+
 = Upgrading
 
 If you used the `PATH` method of installation, just run this to upgrade
@@ -480,8 +503,14 @@ If you want to chat about the `git-subrepo` command, join `#git-commands` on
 
 = Notes
 
-* This command currently only works on POSIX systems.
-  * Windows support via msysgit is being looked into (works on cygwin).
+* Works on POSIX systems:
+  * Linux
+  * BSD
+  * OSX
+* Works on Windows:
+  * Git for Windows -- https://git-for-windows.github.io/
+  * Babun -- http://babun.github.io/
+  * Cygwin -- https://www.cygwin.com/
 * The `git-subrepo` repo itself has 2 subrepos under the `ext/` subdirectory.
 * Written in (very modern) Bash, with full test suite. Take a look.
 * A `.gitrepo` file never is in the top level dir (next to a `.git/` dir).
