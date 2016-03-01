@@ -16,7 +16,14 @@ while [[ -h $SOURCE ]]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 SOURCE_DIR="$(dirname "$SOURCE")"
-source "${SOURCE_DIR}/../ext/bashplus/lib/bash+.bash"
+
+if [[ -z "$GIT_SUBREPO_ROOT" ]]; then
+  # If `make install` installation used:
+  source "${SOURCE_DIR}/git-subrepo.d/bash+.bash"
+else
+  # If `source .rc` method used:
+  source "${SOURCE_DIR}/../ext/bashplus/lib/bash+.bash"
+fi
 bash+:import :std can
 
 VERSION=0.3.0
