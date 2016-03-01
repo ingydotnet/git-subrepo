@@ -212,8 +212,7 @@ command:pull() {
   elif [[ $CODE -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date."
   elif [[ $CODE -eq 1 ]]; then
-    #TODO: Fix error message
-    error-pull-rebase
+    error-pull-merge
     return "$CODE"
   else
     die "Unknown pull error code: '$CODE'"
@@ -231,9 +230,6 @@ command:push() {
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
   elif [[ $CODE -eq -2 ]]; then
     say "Subrepo '$subdir' has no new commits to push."
-  elif [[ $CODE -eq 2 ]]; then
-    error-push-rebase
-    return "$CODE"
   else
     die "Unknown push error code: '$CODE'"
   fi
@@ -601,10 +597,10 @@ subrepo:push() {
     fi
   fi
 
-  #TODO: Fix force
-  local force="$force_wanted" && force=--force
+  local force=
+  "$force_wanted" && force=--force
 
-  o "Push branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
+  o "Push $force branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
   RUN git push $force "$subrepo_remote" "$branch_name":"$subrepo_branch"
 
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
@@ -616,10 +612,12 @@ subrepo:push() {
   fi
 
   o "Put updates into '$subdir/.gitrepo' file."
+  # Store this to shown in the commit message
+  subrepo_commit_ref="$upstream_head_commit"
   upstream_head_commit="$new_upstream_head_commit"
   update-gitrepo-file
   RUN git add "$gitrepo"
-  RUN git commit -m "PUSH PLACEHOLDER"
+  RUN git commit -m "$(get-commit-message)"
 }
 
 # Fetch the subrepo's remote branch content:
@@ -1336,6 +1334,8 @@ get-commit-message() {
   OUT=true RUN git rev-parse --short "$subrepo_commit_ref"
   local merged="$output"
 
+  # TODO: Consider output for push!
+
   # Format subrepo commit message:
   cat <<...
 git subrepo $command ${args[@]}
@@ -1403,19 +1403,7 @@ get-command-info() {
 # Instructional errors:
 #------------------------------------------------------------------------------
 
-error-pull-rebase() {
-  error-rebase-header
-  echo "  6. git subrepo commit $subdir"
-  error-rebase-footer
-}
-
-error-push-rebase() {
-  error-rebase-header
-  echo "  6. git subrepo push $subdir subrepo-push/$subdir"
-  error-rebase-footer
-}
-
-error-rebase-header() {
+error-pull-merge() {
   cat <<...
 
 You will need to finish the $command by hand. Your working tree has been
@@ -1426,21 +1414,16 @@ This is the common conflict resolution workflow:
 
   1. Resolve the conflicts (see "git status").
   2. "git add" the resolved files.
-  3. git rebase --continue
-     (If there are no changes left: git rebase --skip)
+  3. git commit
   4. If there are more conflicts, restart at step 1.
   5. git checkout $original_head_branch
-...
-}
+  6. git subrepo commit $subdir
 
-error-rebase-footer() {
-  cat <<...
-
-See "git help rebase" for details.
+See "git help merge" for details.
 
 Alternatively, you can abort the $command and reset back to where you started:
 
-  1. git rebase --abort
+  1. git merge --abort
   2. git checkout $original_head_branch
   3. git subrepo clean $subdir
 
