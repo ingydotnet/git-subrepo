@@ -2,6 +2,9 @@
 
 set -e
 
+# Set the GIT_SUBREPO_ROOT for testing.
+source $PWD/.rc
+
 export BASHLIB="`
   find $PWD -type d |
   grep -E '/(bin|lib)$' |
