@@ -1641,7 +1641,7 @@ error() {
 }
 
 # Start at the end:
-[[ "$BASH_SOURCE" != "$0" ]] || main "$@"
+[[ $BASH_SOURCE != "$0" ]] || main "$@"
 
 # Local Variables:
 # tab-width: 2
