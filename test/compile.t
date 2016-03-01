@@ -10,10 +10,10 @@ use Test::More
   source lib/git-subrepo
   pass 'source lib/git-subrepo'
 
-  #source lib/git-subrepo.d/bash+.bash
-  #pass 'source lib/git-subrepo.d/bash+.bash'
+  source ext/bashplus/lib/bash+.bash
+  pass 'source ext/bashplus/lib/bash+.bash'
 }
 
-done_testing 1
+done_testing 2
 
 teardown
