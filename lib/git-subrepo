@@ -554,7 +554,7 @@ subrepo:pull() {
 subrepo:push() {
   local branch_name="$branch"
   local new_upstream=false
-  local ready_to_push=$force_wanted
+
   if [[ -z $branch_name ]]; then
     o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     FAIL=false OUT=false CALL subrepo:fetch
@@ -565,40 +565,26 @@ subrepo:push() {
       local re="^fatal: Couldn't find remote ref "
       if [[ $output =~ $re ]]; then
         o "Pushing to new upstream: $subrepo_remote ($subrepo_branch)."
-        RUN git push \
-          "$subrepo_remote" "$subrepo_commit:refs/heads/$subrepo_branch"
-
-        o "We have pushed, now we need to fetch this information"
-        OUT=false CALL subrepo:fetch
         new_upstream=true
-        ready_to_push=true
       else
         error "Fetch for push failed: $output"
       fi
     else
       # Check that we are up to date:
       o "Check upstream head against .gitrepo commit."
-      if [[ $upstream_head_commit == $subrepo_commit ]]; then
-        ready_to_push=true
+      if [[ $upstream_head_commit != $subrepo_commit ]]; then
+        error "There are new changes upstream, you need to pull first."
       fi
     fi
 
     branch_name="subrepo-push/$subdir"
     if git:branch-exists "$branch_name"; then
-      error "There is a previous push branch '$branch_name'. "\
-"Delete it first."
+      o "Deleting old '$branch_name' branch."
+      RUN git branch -D "$branch_name"
     fi
 
     o "Create subrepo branch '$branch_name'."
     CALL subrepo:branch "$branch_name"
-
-    o "Check if we have something to push"
-    git:get-head-branch-commit
-    if [[ $upstream_head_commit == $output ]]; then
-      #TODO: Fix this handling
-      error "Already up to date"
-      return
-    fi
 
     RUN git checkout "$original_head_branch"
   else
@@ -611,6 +597,16 @@ subrepo:push() {
   git:branch-exists "$branch_name" ||
     error "No subrepo branch '$branch_name' to push."
 
+  o "Check if we have something to push"
+  new_upstream_head_commit="$(git rev-parse "$branch_name")"
+  if ! $new_upstream; then
+    if [[ $upstream_head_commit == $new_upstream_head_commit ]]; then
+      OK=false
+      CODE=-2
+      return
+    fi
+  fi
+
   if ! $force_wanted; then
     o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
@@ -622,7 +618,7 @@ subrepo:push() {
   local force="$force_wanted" && force=--force
 
   o "Push branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push "$subrepo_remote" "$branch_name":"$subrepo_branch"
+  RUN git push $force "$subrepo_remote" "$branch_name":"$subrepo_branch"
 
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
@@ -633,6 +629,7 @@ subrepo:push() {
   fi
 
   o "Put updates into '$subdir/.gitrepo' file."
+  upstream_head_commit="$new_upstream_head_commit"
   update-gitrepo-file
   RUN git add "$gitrepo"
   RUN git commit -m "PUSH PLACEHOLDER"
@@ -677,7 +674,7 @@ subrepo:branch() {
   OUT=true FAIL=false RUN git commit-tree -m "PLACEHOLDER" -p "$subrepo_commit" HEAD:"$subdir"
 
   o "Create branch '$branch' for this new commit set $output."
-  RUN git checkout -b "$branch" "$output"
+  RUN git checkout -B "$branch" "$output"
 
   o "Remove the .gitrepo file from the history."
   FAIL=false RUN git filter-branch -f \
