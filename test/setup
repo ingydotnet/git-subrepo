@@ -175,7 +175,7 @@ assert-original-state() {
 }
 
 catch() {
-  local error="$("$@" 2>&1 || true)"
+  local error=; error="$("$@" 2>&1 || true)"
   echo "$error"
 }
 
