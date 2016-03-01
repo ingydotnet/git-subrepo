@@ -16,7 +16,7 @@ source bash+ :std
 source 'lib/git-subrepo'
 
 # TODO: Move to test/tmp
-TMP="tmp"
+export TMP="tmp"
 rm -fr $TMP
 
 #export GIT_EXEC_PATH="$PWD/lib:$(git --exec-path)"
