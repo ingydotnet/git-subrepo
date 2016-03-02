@@ -26,8 +26,9 @@ cd "$TMP"
 # Add an empty 'readme' to the share repo:
 (
   cd share
+  echo '* text eol=lf' > .gitattributes
   touch readme
-  git add readme
+  git add readme .gitattributes
   git commit -m "Initial share"
   # To push into here later we must not have working copy on master branch:
   git checkout -b temp
