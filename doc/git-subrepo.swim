@@ -501,14 +501,8 @@ If you want to chat about the `git-subrepo` command, join `#git-commands` on
 
 = Notes
 
-* Works on POSIX systems:
-  * Linux
-  * BSD
-  * OSX
-* Works on Windows:
-  * Git for Windows -- https://git-for-windows.github.io/
-  * Babun -- http://babun.github.io/
-  * Cygwin -- https://www.cygwin.com/
+* Works on POSIX systems: Linux, BSD, OSX, etc.
+* Works on various Windows environments. See "Windows" section above.
 * The `git-subrepo` repo itself has 2 subrepos under the `ext/` subdirectory.
 * Written in (very modern) Bash, with full test suite. Take a look.
 * A `.gitrepo` file never is in the top level dir (next to a `.git/` dir).

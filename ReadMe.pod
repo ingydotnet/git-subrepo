@@ -570,29 +570,9 @@ C<irc.freenode.net>.
 
 =over
 
-=item * Works on POSIX systems:
+=item * Works on POSIX systems: Linux, BSD, OSX, etc.
 
-=over
-
-=item * Linux
-
-=item * BSD
-
-=item * OSX
-
-=back
-
-=item * Works on Windows:
-
-=over
-
-=item * Git for Windows -- L<https://git-for-windows.github.io/>
-
-=item * Babun -- L<http://babun.github.io/>
-
-=item * Cygwin -- L<https://www.cygwin.com/>
-
-=back
+=item * Works on various Windows environments. See "Windows" section above.
 
 =item * The C<git-subrepo> repo itself has 2 subrepos under the C<ext/> subdirectory.
 
