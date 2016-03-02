@@ -697,6 +697,9 @@ subrepo:branch() {
   o "Remove the .gitrepo file from the history."
   FAIL=false RUN git filter-branch -f \
     --prune-empty --tree-filter "rm -f .gitrepo"
+
+  o "Create ref '$refs_subrepo_branch'."
+  git:make-ref "$refs_subrepo_branch" HEAD
 }
 
 # Commit a merged subrepo branch:
@@ -1210,7 +1213,12 @@ update-gitrepo-file() {
   fi
 
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
-  RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
+  # Only write new parent when we push
+  # TODO: Make it possible to override this
+  local head_commit=$(git rev-parse "$refs_subrepo_branch")
+  if $newfile || [[ $upstream_head_commit == $head_commit ]]; then
+    RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
+  fi
   RUN git config --file="$gitrepo" subrepo.cmdver "$VERSION"
 }
 
