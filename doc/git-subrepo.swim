@@ -407,15 +407,13 @@ This method does not account for upgrading and command completion yet.
 
 == Windows
 
-This command works in various Windows environments:
+This command is known to work in these Windows environments:
 
 * Git for Windows -- https://git-for-windows.github.io/
 * Babun -- http://babun.github.io/
 * Cygwin -- https://www.cygwin.com/
 
-You should probably make sure this config setting is in place:
-
-  git config --global core.autocrlf input
+Let us know if there are others that it works (or doesn't work) in.
 
 = Testing
 
