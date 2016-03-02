@@ -668,11 +668,31 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
-  o "Create a new commit with current status"
-  OUT=true FAIL=false RUN git commit-tree -m "PLACEHOLDER" -p "$subrepo_commit" HEAD:"$subdir"
+  local prev_commit=
+  local last_gitrepo_commit=
+
+  o "Create new commits with parents into the subrepo fetch"
+  for commit in $(git rev-list --reverse "$subrepo_parent"..HEAD); do
+
+    local gitrepo_commit=$(git config --blob "$commit":"$subdir/.gitrepo" subrepo.commit)
+    o "$commit => $gitrepo_commit"
+
+    local first_parent=
+    [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
+    local second_parent=
+    if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
+      second_parent="-p $gitrepo_commit"
+      last_gitrepo_commit="$gitrepo_commit"
+    fi
+
+    o "Create a new commit $first_parent $second_parent"
+    local output=$(git log -n 1 --format=%B "$commit" | git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
+    prev_commit="$output"
+  done
+
 
   o "Create branch '$branch' for this new commit set $output."
-  RUN git checkout -B "$branch" "$output"
+  RUN git checkout -B "$branch" "$prev_commit"
 
   o "Remove the .gitrepo file from the history."
   FAIL=false RUN git filter-branch -f \
