@@ -459,7 +459,7 @@ This method does not account for upgrading and command completion yet.
 
 =head2 Windows
 
-This command works in various Windows environments:
+This command is known to work in these Windows environments:
 
 =over
 
@@ -471,9 +471,7 @@ This command works in various Windows environments:
 
 =back
 
-You should probably make sure this config setting is in place:
-
-    git config --global core.autocrlf input
+Let us know if there are others that it works (or doesn't work) in.
 
 =head1 Testing
 
@@ -572,29 +570,9 @@ C<irc.freenode.net>.
 
 =over
 
-=item * Works on POSIX systems:
+=item * Works on POSIX systems: Linux, BSD, OSX, etc.
 
-=over
-
-=item * Linux
-
-=item * BSD
-
-=item * OSX
-
-=back
-
-=item * Works on Windows:
-
-=over
-
-=item * Git for Windows -- L<https://git-for-windows.github.io/>
-
-=item * Babun -- L<http://babun.github.io/>
-
-=item * Cygwin -- L<https://www.cygwin.com/>
-
-=back
+=item * Works on various Windows environments. See "Windows" section above.
 
 =item * The C<git-subrepo> repo itself has 2 subrepos under the C<ext/> subdirectory.
 
