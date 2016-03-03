@@ -258,6 +258,9 @@ command:branch() {
   # Create the subrepo branch:
   subrepo:branch
 
+  o "Checkout '$original_head_branch'."
+  git checkout --quiet "$original_head_branch"
+
   say "Created branch '$branch'."
 }
 
@@ -659,7 +662,7 @@ subrepo:branch() {
 
     local gitrepo_commit=$(git config --blob "$commit":"$subdir/.gitrepo" subrepo.commit)
     o "$commit => $gitrepo_commit"
-    "$first_gitrepo_commit" || first_gitrepo_commit="$gitrepo_commit"
+    [[ -z "$first_gitrepo_commit" ]] || first_gitrepo_commit="$gitrepo_commit"
 
     local first_parent=
     [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
@@ -1083,17 +1086,22 @@ update-gitrepo-file() {
 
   local newfile=false
   if [[ ! -e $gitrepo ]]; then
-    o "Try to recreate gitrepo file from $original_head_commit"
-    git cat-file -p "$original_head_commit":"$gitrepo" 1> "$gitrepo" 2> /dev/null
 
-    [[ ! -e $gitrepo ]] && newfile=true
-    $newfile && cat <<... > "$gitrepo"
+    FAIL=false RUN git cat-file -e "$original_head_commit":"$gitrepo"
+
+    if OK; then
+      o "Try to recreate gitrepo file from $original_head_commit"
+      git cat-file -p "$original_head_commit":"$gitrepo" > "$gitrepo"
+    else
+      newfile=true
+      cat <<... > "$gitrepo"
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git "subrepo", and this file is maintained by the
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 ...
+    fi 
   fi
 
 
