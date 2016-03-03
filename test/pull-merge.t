@@ -36,7 +36,7 @@ note "Pull - Conflict - Merge ours/theirs - Push"
   git subrepo pull bar || {
       echo "Merged Bar2" > Bar2
       git add Bar2
-      git rebase --continue
+      git commit --file .git/MERGE_MSG
       git checkout master
       git subrepo commit bar
       git subrepo clean bar
