@@ -521,6 +521,8 @@ subrepo:pull() {
     o "Deleting old '$branch_name' branch."
     RUN git branch -D "$branch_name"
   fi
+
+  subrepo_parent="HEAD^"
   o "Create subrepo branch '$branch_name'."
   CALL subrepo:branch
 
@@ -1187,21 +1189,26 @@ read-gitrepo-file() {
   fi
 }
 
+
 # Update the subdir/.gitrepo state file:
 update-gitrepo-file() {
   local short_commit=
 
   local newfile=false
-  [[ ! -e $gitrepo ]] &&
-    newfile=true
+  if [[ ! -e $gitrepo ]]; then
+    o "Try to recreate gitrepo file from $original_head_commit"
+    git cat-file -p "$original_head_commit":"$gitrepo" 1> "$gitrepo" 2> /dev/null
 
-  $newfile && cat <<... > "$gitrepo"
+    [[ ! -e $gitrepo ]] && newfile=true
+    $newfile && cat <<... > "$gitrepo"
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git "subrepo", and this file is maintained by the
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 ...
+  fi
+
 
   # TODO: only update remote and branch if supplied and $update_wanted
   if $newfile || [[ $update_wanted && -n $override_remote ]]; then
@@ -1213,9 +1220,10 @@ update-gitrepo-file() {
   fi
 
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
-  # Only write new parent when we push
+  # Only write new parent when we are at the tip
   # TODO: Make it possible to override this
   OUT=true FAIL=false RUN git rev-parse "$refs_subrepo_branch"
+  o "$newfile || $upstream_head_commit == $output"
   if $newfile || [[ $upstream_head_commit == $output ]]; then
     RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
   fi
