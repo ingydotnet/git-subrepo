@@ -672,12 +672,14 @@ subrepo:branch() {
 
   local prev_commit=
   local last_gitrepo_commit=
+  local first_gitrepo_commit=
 
   o "Create new commits with parents into the subrepo fetch"
   for commit in $(git rev-list --reverse "$subrepo_parent"..HEAD); do
 
     local gitrepo_commit=$(git config --blob "$commit":"$subdir/.gitrepo" subrepo.commit)
     o "$commit => $gitrepo_commit"
+    "$first_gitrepo_commit" || first_gitrepo_commit="$gitrepo_commit"
 
     local first_parent=
     [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
@@ -688,7 +690,8 @@ subrepo:branch() {
     fi
 
     o "Create a new commit $first_parent $second_parent"
-    local output=$(git log -n 1 --format=%B "$commit" | git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
+    local output=$(git log -n 1 --format=%B "$commit" |
+      git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
     prev_commit="$output"
   done
 
@@ -696,9 +699,9 @@ subrepo:branch() {
   o "Create branch '$branch' for this new commit set $output."
   RUN git checkout -B "$branch" "$prev_commit"
 
-  o "Remove the .gitrepo file from the history."
-  FAIL=false RUN git filter-branch -f \
-    --prune-empty --tree-filter "rm -f .gitrepo"
+  o "Remove the .gitrepo file from $first_gitrepo_commit..HEAD"
+  FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
+    "rm -f .gitrepo" -- "$first_gitrepo_commit"..HEAD
 
   o "Create ref '$refs_subrepo_branch'."
   git:make-ref "$refs_subrepo_branch" HEAD
