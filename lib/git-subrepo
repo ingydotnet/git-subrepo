@@ -662,7 +662,7 @@ subrepo:branch() {
 
     local gitrepo_commit=$(git config --blob "$commit":"$subdir/.gitrepo" subrepo.commit)
     o "$commit => $gitrepo_commit"
-    [[ -z "$first_gitrepo_commit" ]] || first_gitrepo_commit="$gitrepo_commit"
+    [[ -z "$first_gitrepo_commit" ]] && first_gitrepo_commit="$gitrepo_commit"
 
     local first_parent=
     [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
