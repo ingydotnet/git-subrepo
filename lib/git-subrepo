@@ -41,7 +41,6 @@ Commands:
   fetch     Fetch a subrepo's remote branch (and create a ref for it)
   branch    Create a branch containing the local subrepo commits
   commit    Commit a merged subrepo branch into the mainline
-  merge-base  Find the common ancestor of 2 commits (plumbing command)
 
   status    Get status of a subrepo (or all of them)
   clean     Remove branches, remotes and refs for a subrepo
@@ -289,20 +288,6 @@ command:commit() {
   say "subdir '$subdir/' to branch '$original_head_branch'."
 }
 
-# `git subrepo merge-base branch1 branch2`
-command:merge-base() {
-  get-params +branch1 +branch2
-  if subrepo:merge-base "$branch1" "$branch2" $all_wanted; then
-    say "Found common ancestor between these commits:"
-    say "  '$branch1':$first_on_source '$new_parent'"
-    say "  '$branch2':$first_on_target '$old_parent'"
-  else
-    if ! $all_wanted; then
-      say "No common ancestor found between '$branch1' and '$branch2'."
-    fi
-  fi
-}
-
 # `git subrepo status [<subdir>]` command:
 command:status() {
   subrepo:status | ${GIT_SUBREPO_PAGER}
@@ -312,7 +297,7 @@ status-refs() {
   local output=
   while read line; do
     [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subdir/([a-z]+) ]] || continue
-    local sha1=; sha1="$(git rev-parse --short "${BASH_REMATCH[1]}")"
+    local sha1="$(git rev-parse --short "${BASH_REMATCH[1]}")"
     local type="${BASH_REMATCH[2]}"
     local ref="refs/subrepo/$subdir/$type"
     if [[ $type == branch ]]; then
@@ -384,7 +369,7 @@ command:upgrade() {
       o "Change directory to '$subrepo_root'."
       cd "${BASH_REMATCH[1]}"
 
-      local branch=; branch="$(git rev-parse --abbrev-ref HEAD)"
+      local branch="$(git rev-parse --abbrev-ref HEAD)"
       if [[ $branch != master ]]; then
         error "git-subrepo repo is not on the 'master' branch"
       fi
@@ -649,7 +634,7 @@ subrepo:fetch() {
   OUT=true RUN git rev-parse FETCH_HEAD^0
   upstream_head_commit="$output"
 
-  local output=; output=$(git config "remote.subrepo/$subdir.url" || true)
+  local output=$(git config "remote.subrepo/$subdir.url")
   if [[ -z $output ]]; then
     o "Create subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
     RUN git remote add "subrepo/$subdir" "$subrepo_remote"
@@ -748,69 +733,6 @@ subrepo:commit() {
 
   o "Create ref '$refs_subrepo_commit'."
   git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
-}
-
-subrepo:merge-base() {
-  local merge_base_order=()
-  local counter=0
-  # If you only want to list all possible ancestors
-  local list_all=$3
-  ((merge_counter++))
-  local source="source$merge_counter"
-  local target="target$merge_counter"
-
-  prepare-merge-base "$source" "$1" true
-  local first_commit_on_source="$branch_first_commit"
-  prepare-merge-base "$target" "$2" false
-  local first_commit_on_target="$branch_first_commit"
-
-  for entry in ${merge_base_order[@]}; do
-    local source_key="${source}_$entry"
-    local source_value="${!source_key}"
-    if [[ ${#source_value} > 40 ]]; then
-      if $list_all; then
-        say "Multiple on $1: $source_value"
-      fi
-    else
-      local target_key="${target}_$entry"
-      if [ -z ${!target_key+x} ]; then
-        # We didn't find it on the target side
-        :
-      else
-        local target_value=${!target_key};
-        if [[ ${#target_value} > 40 ]]; then
-          if $list_all; then
-            say "Multiple on $2: $target_value"
-          fi
-        else
-          o "Found ancestor: ${!source_key},${!target_key}"
-          o "Steps from HEAD: $counter"
-          new_parent="${!source_key}"
-          old_parent="${!target_key}"
-          if [[ $new_parent == $first_commit_on_source ]]; then
-            first_on_source="HEAD"
-          else
-            first_on_source=""
-          fi
-          if [[ $old_parent == $first_commit_on_target ]]; then
-            first_on_target="HEAD"
-          else
-            first_on_target=""
-          fi
-
-          if $list_all; then
-            say "Valid: $new_parent = $old_parent"
-          else
-            # We found the first ancestor
-            return 0
-          fi
-        fi
-      fi
-    fi
-    ((counter++));
-  done
-  o "No ancestor found";
-  return 1
 }
 
 subrepo:status() {
@@ -920,39 +842,6 @@ subrepo:clean() {
 #------------------------------------------------------------------------------
 # Support functions:
 #------------------------------------------------------------------------------
-
-prepare-merge-base() {
-  local prefix="$1";
-  local data=; data=$(git:log-tree "$2");
-  local counter=0;
-  local first_commit="";
-
-  for entry in $data; do
-    local array=(${entry//:/ })
-    local commit=${array[0]}
-    local tree=${array[1]}
-    local key="${prefix}_$tree"
-
-    if [ -z "$first_commit" ]; then
-      first_commit=$commit
-    fi
-
-    if [ -z ${!key+x} ]; then
-      eval "$key=$commit";
-    else
-      eval "$key=${!key}_$commit";
-    fi
-    if $3; then
-      # Store the commit order
-      # This is used when we find the the first common ancestor
-      merge_base_order+=("$tree");
-    fi
-    ((counter++))
-  done
-
-  o "$prefix side: $counter commits"
-  branch_first_commit=$first_commit
-}
 
 
 # TODO:
@@ -1360,12 +1249,12 @@ get-upstream-head-branch() {
   local remotes="$output"
   [[ -n $remotes ]] ||
     error "Failed to 'git ls-remote $subrepo_remote'."
-  local commit=; commit="$(
+  local commit="$(
     echo "$remotes" |
     grep HEAD |
     cut -f1
   )"
-  local branch=; branch="$(
+  local branch="$(
     echo "$remotes" |
     grep "$commit" |
     grep -v HEAD |
@@ -1379,7 +1268,7 @@ get-upstream-head-branch() {
 
 # Commit msg for an action commit:
 get-commit-message() {
-  local commit=; commit="$(git rev-parse --short "$upstream_head_commit")"
+  local commit="$(git rev-parse --short "$upstream_head_commit")"
   local args=() debug_wanted=false
   if $all_wanted; then
     args+=("$subdir")
@@ -1420,7 +1309,7 @@ git-subrepo:
 get-command-info() {
   local bin="$0"
   if [[ $bin =~ / ]]; then
-    local lib=; lib="$(dirname "$bin")"
+    local lib="$(dirname "$bin")"
     # XXX Makefile needs to install these symlinks:
     # If `git-subrepo` was system-installed (`make install`):
     if [[ -e $lib/git-subrepo.d/upstream ]] &&
@@ -1430,7 +1319,7 @@ get-command-info() {
     elif [[ $lib =~ / ]]; then
       lib="$(dirname "$lib")"
       if [[ -d $lib/.git ]]; then
-        local remote=; remote="$(
+        local remote="$(
           GIT_DIR=$lib/.git git remote -v |
             grep '^origin' |
             head -n1 |
@@ -1440,7 +1329,7 @@ get-command-info() {
         if [[ -n $remote ]]; then
           command_remote="$remote"
         else
-          local remote=; remote="$(
+          local remote="$(
             GIT_DIR=$lib/.git git remote -v |
               head -n1 |
               cut -f2 |
@@ -1450,9 +1339,7 @@ get-command-info() {
             command_remote="$remote"
           fi
         fi
-        local commit=; commit="$(
-          GIT_DIR="$lib/.git" git rev-parse --short HEAD
-        )"
+        local commit="$(GIT_DIR="$lib/.git" git rev-parse --short HEAD)"
         if [[ -n $commit ]]; then
           command_commit="$commit"
         fi
@@ -1512,7 +1399,7 @@ git:ref-exists() {
 
 git:get-head-branch-name() {
   output=
-  local name=; name="$(git symbolic-ref --short --quiet HEAD || true)"
+  local name="$(git symbolic-ref --short --quiet HEAD)"
   [[ $name == HEAD ]] && return
   output="$name"
 }
@@ -1529,12 +1416,8 @@ git:commit-in-rev-list() {
 
 git:make-ref() {
   local ref_name="$1"
-  local commit=; commit="$(git rev-parse "$2")"
+  local commit="$(git rev-parse "$2")"
   git update-ref "$ref_name" "$commit"
-}
-
-git:log-tree() {
-  git log --pretty=format:%H:%T "$1"
 }
 
 
