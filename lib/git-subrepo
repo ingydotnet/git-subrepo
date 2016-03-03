@@ -88,13 +88,6 @@ main() {
   local fetch_wanted=false      # Fetch requested before a command
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
 
-  local old_parent=             # Old subrepo parent commit
-  local new_parent=             # New subrepo parent commit
-  local first_on_source="HEAD"  # Merge base source is HEAD
-  local first_on_target="HEAD"  # Merge base target is HEAD
-  local merge_counter=0         # Unique prefix for merge bases
-  local branch_first_commit=    # Return value from prepare_merge_base
-
   local subdir=                 # Subdirectory of the subrepo being used
   local gitrepo=                # Path to .gitrepo file
 
