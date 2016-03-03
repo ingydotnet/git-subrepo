@@ -659,8 +659,10 @@ subrepo:branch() {
   local last_gitrepo_commit=
   local first_gitrepo_commit=
 
+  # TODO: Currently --first-parent avoids the branching
+  # Should you create a more complex structure instead?
   o "Create new commits with parents into the subrepo fetch"
-  for commit in $(git rev-list --reverse "$subrepo_parent"..HEAD); do
+  for commit in $(git rev-list --reverse --first-parent "$subrepo_parent"..HEAD); do
 
     local gitrepo_commit=$(git config --blob "$commit":"$subdir/.gitrepo" subrepo.commit)
     o "$commit => $gitrepo_commit"
