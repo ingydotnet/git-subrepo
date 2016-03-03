@@ -1215,8 +1215,8 @@ update-gitrepo-file() {
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
   # Only write new parent when we push
   # TODO: Make it possible to override this
-  local head_commit=$(git rev-parse "$refs_subrepo_branch")
-  if $newfile || [[ $upstream_head_commit == $head_commit ]]; then
+  OUT=true FAIL=false RUN git rev-parse "$refs_subrepo_branch"
+  if $newfile || [[ $upstream_head_commit == $output ]]; then
     RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
   fi
   RUN git config --file="$gitrepo" subrepo.cmdver "$VERSION"
