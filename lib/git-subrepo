@@ -439,7 +439,6 @@ subrepo:init() {
   # Check if subdir is proper candidate for this init:
   assert-subdir-ready-for-init
 
-  # filter-branch out the subdir
   o "Get commits specific to the subdir."
   TTY=true FAIL=false RUN git filter-branch -f \
     --subdirectory-filter "$subdir" \
@@ -455,7 +454,6 @@ subrepo:init() {
     RUN git reset --hard "$original_head_commit"
     error "Failed to get commit for new 'subrepo': $output"
   fi
-  local upstream_head_commit="$output"
 
   o "Create branch '$branch_name' for this new subrepo."
   FAIL=false RUN git branch -D "$branch_name"
@@ -477,7 +475,7 @@ subrepo:init() {
   RUN git add "$subdir/.gitrepo"
 
   o "Commit new subrepo to the '$original_head_branch' branch."
-  subrepo_commit_ref="$upstream_head_commit"
+  subrepo_commit_ref="$original_head_commit"
   RUN git commit -m "$(get-commit-message)"
 
   o "Create ref '$refs_subrepo_commit'."
@@ -662,8 +660,10 @@ subrepo:branch() {
     o "Find out the .gitrepo reference"
     OUT=true RUN git config --blob "$commit":"$subdir/.gitrepo" "subrepo.commit"
     local gitrepo_commit="$output"
-    if ! git:commit-in-rev-list  "$output" "$refs_subrepo_fetch"; then
-      error "Can't branch: 'FETCH_HEAD' doesn't contain $output."
+    if [[ -n "$refs_subrepo_fetch" ]]; then
+      if ! git:commit-in-rev-list  "$output" "$refs_subrepo_fetch"; then
+        error "Can't branch: 'FETCH_HEAD' doesn't contain $output."
+      fi
     fi
 
     [[ -z "$first_gitrepo_commit" ]] && first_gitrepo_commit="$gitrepo_commit"
@@ -689,8 +689,10 @@ subrepo:branch() {
   RUN git checkout -B "$branch" "$prev_commit"
 
   o "Remove the .gitrepo file from $first_gitrepo_commit..HEAD"
+  local filter="HEAD"
+  [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..HEAD"
   FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-    "rm -f .gitrepo" -- "$first_gitrepo_commit"..HEAD
+    "rm -f .gitrepo" "$filter"
 
   o "Create ref '$refs_subrepo_branch'."
   git:make-ref "$refs_subrepo_branch" HEAD
@@ -1268,7 +1270,12 @@ get-upstream-head-branch() {
 
 # Commit msg for an action commit:
 get-commit-message() {
-  local commit="$(git rev-parse --short "$upstream_head_commit")"
+  local commit="None"
+  OUT=true FAIL=false RUN git rev-parse --short "$upstream_head_commit"
+  if OK; then
+    commit="$output"
+  fi
+  
   local args=() debug_wanted=false
   if $all_wanted; then
     args+=("$subdir")
@@ -1280,8 +1287,11 @@ get-commit-message() {
   local command_commit='???'
   get-command-info
 
-  OUT=true RUN git rev-parse --short "$subrepo_commit_ref"
-  local merged="$output"
+  local merged="None"
+  OUT=true FAIL=false RUN git rev-parse --short "$subrepo_commit_ref"
+  if OK; then
+    merged="$output"
+  fi
 
   # TODO: Consider output for push!
 
