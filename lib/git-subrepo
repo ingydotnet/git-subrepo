@@ -99,10 +99,9 @@ main() {
   local subrepo_parent=         # Local commit from before previous clone/pull
   local subrepo_former=         # A retired gitrepo key that might still exist
 
-  local refs_subrepo_branch=    # A subrepo ref -> commit of branch command
+  local refs_subrepo_branch=    # A subrepo ref -> commit of branch/pull command
   local refs_subrepo_commit=    # A subrepo ref -> commit last merged
   local refs_subrepo_fetch=     # A subrepo ref -> FETCH_HEAD after fetch
-  local refs_subrepo_pull=      # A subrepo ref -> branch after pull
   local refs_subrepo_push=      # A subrepo ref -> branch after push
 
   local override_remote=        # Remote specified with -r
@@ -254,7 +253,7 @@ command:branch() {
   fi
 
   # Create the subrepo branch:
-  subrepo:branch
+  CALL subrepo:branch
 
   o "Checkout '$original_head_branch'."
   git checkout --quiet "$original_head_branch"
@@ -520,11 +519,11 @@ subrepo:pull() {
   o "Checkout '$original_head_branch'."
   git checkout --quiet "$original_head_branch"
 
+  o "Create ref '$refs_subrepo_branch' for branch '$branch_name'."
+  git:make-ref "$refs_subrepo_branch" "$branch_name"
+
   o "Commit the new '$subrepo_commit_ref' content."
   CALL subrepo:commit
-
-  o "Create ref '$refs_subrepo_pull' for branch '$branch_name'."
-  git:make-ref "$refs_subrepo_pull" "$branch_name"
 }
 
 # Push a properly merged subrepo branch upstream:
@@ -656,12 +655,20 @@ subrepo:branch() {
   # TODO: Currently --first-parent avoids the branching
   # Should you create a more complex structure instead?
   o "Create new commits with parents into the subrepo fetch"
-  for commit in $(git rev-list --reverse --first-parent "$subrepo_parent"..HEAD); do
+  OUT=true RUN git rev-list --reverse --first-parent "$subrepo_parent"..HEAD
+  local commit_list="$output"
+  for commit in $commit_list; do
+    
+    o "Find out the .gitrepo reference"
+    OUT=true RUN git config --blob "$commit":"$subdir/.gitrepo" "subrepo.commit"
+    local gitrepo_commit="$output"
+    if ! git:commit-in-rev-list  "$output" "$refs_subrepo_fetch"; then
+      error "Can't branch: 'FETCH_HEAD' doesn't contain $output."
+    fi
 
-    local gitrepo_commit=$(git config --blob "$commit":"$subdir/.gitrepo" subrepo.commit)
-    o "$commit => $gitrepo_commit"
     [[ -z "$first_gitrepo_commit" ]] && first_gitrepo_commit="$gitrepo_commit"
 
+    o "Find parents"
     local first_parent=
     [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
     local second_parent=
@@ -671,6 +678,7 @@ subrepo:branch() {
     fi
 
     o "Create a new commit $first_parent $second_parent"
+    # TODO: This should use RUN
     local output=$(git log -n 1 --format=%B "$commit" |
       git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
     prev_commit="$output"
@@ -983,7 +991,6 @@ command-setup() {
   refs_subrepo_branch="refs/subrepo/$subdir/branch"
   refs_subrepo_commit="refs/subrepo/$subdir/commit"
   refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
-  refs_subrepo_pull="refs/subrepo/$subdir/pull"
   refs_subrepo_push="refs/subrepo/$subdir/push"
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
@@ -1410,7 +1417,7 @@ git:commit-in-rev-list() {
 git:make-ref() {
   local ref_name="$1"
   local commit="$(git rev-parse "$2")"
-  git update-ref "$ref_name" "$commit"
+  RUN git update-ref "$ref_name" "$commit"
 }
 
 
