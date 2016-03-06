@@ -662,7 +662,9 @@ subrepo:branch() {
     o "Find out the .gitrepo reference"
     OUT=true RUN git config --blob "$commit":"$subdir/.gitrepo" "subrepo.commit"
     local gitrepo_commit="$output"
-    if [[ -n "$refs_subrepo_fetch" ]]; then
+
+    o "Check for rebase"
+    if git:rev-exists "$refs_subrepo_fetch"; then
       if ! git:commit-in-rev-list  "$output" "$refs_subrepo_fetch"; then
         error "Can't branch: 'FETCH_HEAD' doesn't contain $output."
       fi
