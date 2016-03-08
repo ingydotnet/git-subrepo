@@ -20,7 +20,8 @@ subrepo-clone-bar-into-foo
   cd $OWNER/foo
   add-new-files bar/Foo1
   git subrepo push bar --force --debug
-) &> /dev/null || die
+)
+# &> /dev/null || die
 
 (
   cd $OWNER/foo
