@@ -546,8 +546,10 @@ subrepo:push() {
     else
       # Check that we are up to date:
       o "Check upstream head against .gitrepo commit."
-      if [[ $upstream_head_commit != $subrepo_commit ]]; then
-        error "There are new changes upstream, you need to pull first."
+      if ! $force_wanted; then
+        if [[ $upstream_head_commit != $subrepo_commit ]]; then
+          error "There are new changes upstream, you need to pull first."
+        fi
       fi
     fi
 
@@ -1271,11 +1273,11 @@ get-upstream-head-branch() {
 }
 
 # Commit msg for an action commit:
+# Don't use RUN here as it will pollute commit message
 get-commit-message() {
   local commit="None"
-  OUT=true FAIL=false RUN git rev-parse --short "$upstream_head_commit"
-  if OK; then
-    commit="$output"
+  if git:rev-exists "$upstream_head_commit"; then
+    commit=$(git rev-parse --short "$upstream_head_commit")
   fi
   
   local args=() debug_wanted=false
@@ -1290,9 +1292,8 @@ get-commit-message() {
   get-command-info
 
   local merged="None"
-  OUT=true FAIL=false RUN git rev-parse --short "$subrepo_commit_ref"
-  if OK; then
-    merged="$output"
+  if git:rev-exists "$subrepo_commit_ref"; then
+    merged=$(git rev-parse --short "$subrepo_commit_ref")
   fi
 
   # TODO: Consider output for push!

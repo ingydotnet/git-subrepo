@@ -125,7 +125,7 @@ test-exists \
 
   # Test the output:
   is "$message" \
-    "git-subrepo: Local branch is not updated, perform pull or use '--force' to always trust local branch in conflicts" \
+    "git-subrepo: There are new changes upstream, you need to pull first." \
     'Stopped by other push'
 }
 
