@@ -485,7 +485,11 @@ subrepo:init() {
 
   o "Create branch '$branch_name' for this new subrepo."
   FAIL=false RUN git branch -D "$branch_name"
-  RUN git branch "$branch_name"
+  FAIL=false RUN git branch "$branch_name"
+  if ! $OK; then
+    RUN git reset --hard "$original_head_commit"
+    error "Failed to 'git branch $branch_name'."
+  fi
 
   if [[ $subrepo_remote != none ]]; then
     o "Create subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
