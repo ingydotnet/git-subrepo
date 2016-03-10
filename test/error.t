@@ -196,6 +196,26 @@ clone-foo-and-bar
     "Error OK: clone non-repo"
 }
 
-done_testing 29
+{
+  is "$(
+      cd $OWNER/bar
+      git reset --quiet --hard HEAD^
+      git subrepo --quiet clone ../../../$UPSTREAM/foo
+      git subrepo --quiet branch foo
+      mkdir foo/sub
+      add-new-files foo/sub/file
+      catch git subrepo init foo/sub
+    )" \
+    "git-subrepo: The subdir 'foo/sub' is already part of another subrepo at 'foo'." \
+    "Error OK: can't create a subrepo inside of another subrepo"
+
+  (
+    cd $OWNER/bar
+    git subrepo --quiet clean foo
+    git reset --quiet --hard HEAD^
+  )
+}
+
+done_testing 30
 
 teardown
