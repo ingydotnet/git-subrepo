@@ -1344,7 +1344,7 @@ assert-subdir-ready-for-init() {
     parentdir="$parentdir$dir/"
     if [[ -e $parentdir.gitrepo ]]; then
       error "The subdir '$subdir' is already part of another subrepo at "\
-"'$parentdir'."
+"'${parentdir%/}'."
     fi
   done
   # Check that subdir is part of the repo
