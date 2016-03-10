@@ -1338,6 +1338,15 @@ assert-subdir-ready-for-init() {
   if [[ -e $subdir/.gitrepo ]]; then
     error "The subdir '$subdir' is already a subrepo."
   fi
+  # Check if subdir is already part of another subrepo.
+  parentdir=
+  for dir in $(echo "$subdir" | tr '/' '\n'); do
+    parentdir="$parentdir$dir/"
+    if [[ -e $parentdir.gitrepo ]]; then
+      error "The subdir '$subdir' is already part of another subrepo at "\
+"'$parentdir'."
+    fi
+  done
   # Check that subdir is part of the repo
   if [[ -z $(git log -1 -- $subdir) ]]; then
     error "The subdir '$subdir' is not part of this repo."
