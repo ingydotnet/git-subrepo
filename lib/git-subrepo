@@ -621,56 +621,61 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
-  local prev_commit=
   local last_gitrepo_commit=
   local first_gitrepo_commit=
 
   # TODO: Currently --first-parent avoids the branching
   # Should you create a more complex structure instead?
-  o "Create new commits with parents into the subrepo fetch"
-  local parent_filter="HEAD"
-  [[ -n "$subrepo_parent" ]] && parent_filter="$subrepo_parent..HEAD"
-  OUT=true RUN git rev-list --reverse --first-parent "$parent_filter"
-  local commit_list="$output"
-  for commit in $commit_list; do
-    
-    o "Find out the .gitrepo reference"
-    FAIL=false OUT=true RUN git config --blob "$commit":"$subdir/.gitrepo" "subrepo.commit"
-    local gitrepo_commit="$output"
+  o "XXX: $subrepo_parent"
+  if [[ -n "$subrepo_parent" ]]; then
+    local prev_commit=
+    o "Create new commits with parents into the subrepo fetch"
+    OUT=true RUN git rev-list --reverse --first-parent "$subrepo_parent..HEAD"
+    local commit_list="$output"
+    for commit in $commit_list; do
+      o "Find out the .gitrepo reference"
+      FAIL=false OUT=true RUN git config --blob \
+        "$commit":"$subdir/.gitrepo" "subrepo.commit"
+      local gitrepo_commit="$output"
 
-    o "Check for rebase"
-    if git:rev-exists "$refs_subrepo_fetch"; then
-      if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
-        error "Can't branch: 'FETCH_HEAD' doesn't contain $gitrepo_commit."
+      o "Check for rebase"
+      if git:rev-exists "$refs_subrepo_fetch"; then
+        if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
+          error "Can't branch: 'FETCH_HEAD' doesn't contain $gitrepo_commit."
+        fi
       fi
-    fi
 
-    [[ -z "$first_gitrepo_commit" ]] && first_gitrepo_commit="$gitrepo_commit"
+      [[ -z "$first_gitrepo_commit" ]] && first_gitrepo_commit="$gitrepo_commit"
 
-    o "Find parents"
-    local first_parent=
-    [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
-    local second_parent=
-    if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
-      second_parent="-p $gitrepo_commit"
-      last_gitrepo_commit="$gitrepo_commit"
-    fi
+      o "Find parents"
+      local first_parent=
+      [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
+      local second_parent=
+      if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
+        second_parent="-p $gitrepo_commit"
+        last_gitrepo_commit="$gitrepo_commit"
+      fi
+    
+      o "Create a new commit $first_parent $second_parent"
+      FAIL=false RUN git cat-file -e "$commit":"$subdir"
+      if OK; then
+        o "Create with content"
+        prev_commit=$(git log -n 1 --format=%B "$commit" |
+          git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
+      else
+        o "Create empty placeholder"
+        prev_commit=$(git commit-tree -m "EMPTY" \
+          $first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+      fi
+    done
 
-    o "Create a new commit $first_parent $second_parent"
-    FAIL=false RUN git cat-file -e "$commit":"$subdir"
-    if OK; then
-      o "Create with content"
-      prev_commit=$(git log -n 1 --format=%B "$commit" |
-        git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
-    else
-      o "Create empty placeholder"
-      prev_commit=$(git commit-tree -m "EMPTY" $first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
-    fi
-  done
-
-
-  o "Create branch '$branch' for this new commit set $output."
-  RUN git checkout -B "$branch" "$prev_commit"
+    o "Create branch '$branch' for this new commit set $output."
+    RUN git checkout -B "$branch" "$prev_commit"
+  else
+    o "Create a new branch"
+    RUN git checkout -B "$branch"
+    TTY=true FAIL=false RUN git filter-branch -f --subdirectory-filter "$subdir" HEAD
+  fi
 
   o "Remove the .gitrepo file from $first_gitrepo_commit..HEAD"
   local filter="HEAD"
@@ -1102,15 +1107,13 @@ update-gitrepo-file() {
 
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
   # Only write new parent when we are at the head of upstream
-  local parent=
   if [[ -n $upstream_head_commit && -n $subrepo_commit_ref ]]; then
     OUT=true RUN git rev-parse "$subrepo_commit_ref"
     o "$upstream_head_commit == $output"
     if [[ $upstream_head_commit == $output ]]; then
-      parent="$original_head_commit"
+      RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
     fi
   fi
-  RUN git config --file="$gitrepo" subrepo.parent "$parent"
   RUN git config --file="$gitrepo" subrepo.cmdver "$VERSION"
 
   RUN git add -f "$gitrepo"
@@ -1260,7 +1263,7 @@ get-upstream-head-branch() {
 # Commit msg for an action commit:
 # Don't use RUN here as it will pollute commit message
 get-commit-message() {
-  local commit="None"
+  local commit="none"
   if git:rev-exists "$upstream_head_commit"; then
     commit=$(git rev-parse --short "$upstream_head_commit")
   fi
@@ -1276,7 +1279,7 @@ get-commit-message() {
   local command_commit='???'
   get-command-info
 
-  local merged="None"
+  local merged="none"
   if git:rev-exists "$subrepo_commit_ref"; then
     merged=$(git rev-parse --short "$subrepo_commit_ref")
   fi
