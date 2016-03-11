@@ -1197,7 +1197,7 @@ assert-subdir-ready-for-init() {
     error "The subdir '$subdir' is already a subrepo."
   fi
   # Check that subdir is part of the repo
-  if [[ -z $(git log -- $subdir) ]]; then
+  if [[ -z $(git log -1 -- $subdir) ]]; then
     error "The subdir '$subdir' is not part of this repo."
   fi
 }
