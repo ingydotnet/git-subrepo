@@ -38,13 +38,13 @@ clone-foo-and-bar
 
   clone_output_empty="$(
     cd $OWNER/empty
-    git subrepo clone ../../../$UPSTREAM/bar
+    catch git subrepo clone ../../../$UPSTREAM/bar
   )"
 
   # Check output is correct:
   is "$clone_output_empty" \
-    "Subrepo '../../../tmp/upstream/bar' (master) cloned into 'bar'." \
-    'subrepo clone command output is correct'
+    "git-subrepo: You can't clone into an empty repository" \
+    'subrepo empty clone command output is correct'
 }
 
 # Check that subrepo files look ok:
@@ -54,9 +54,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
     "$OWNER/foo/bar/" \
     "$OWNER/foo/bar/Bar" \
     "$gitrepo" \
-    "$OWNER/empty/bar/" \
-    "$OWNER/empty/bar/Bar" \
-    "$OWNER/empty/bar/.gitrepo"
+    "!$OWNER/empty/bar/"
 }
 
 # Test foo/bar/.gitrepo file contents:
@@ -119,6 +117,6 @@ gitrepo=$OWNER/foo/bar/.gitrepo
     'status is clean'
 }
 
-done_testing 22
+done_testing
 
 teardown

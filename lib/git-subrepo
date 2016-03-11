@@ -399,6 +399,11 @@ If you used 'make install' to install git-subrepo, then just do this:
 subrepo:clone() {
   re="$1"
 
+  FAIL=false RUN git rev-parse HEAD
+  if ! OK; then
+    error "You can't clone into an empty repository"
+  fi
+
   # Turn off force unless really a reclone:
   if $force_wanted && [[ ! -f $gitrepo ]]; then
     force_wanted=false
