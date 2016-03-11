@@ -16,6 +16,7 @@ subrepo-clone-bar-into-foo
   git push
 ) &> /dev/null || die
 
+
 # Do the pull and check output:
 {
   is "$(
