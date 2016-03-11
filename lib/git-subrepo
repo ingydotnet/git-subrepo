@@ -62,6 +62,7 @@ b,branch=   Specify an upstream branch
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
 r,remote=   Specify an upstream remote
+s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
  
 q,quiet     Show minimal output
@@ -87,6 +88,7 @@ main() {
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
+  local squash_wanted=false     # Squash commit on push
 
   local subdir=                 # Subdirectory of the subrepo being used
   local gitrepo=                # Path to .gitrepo file
@@ -535,6 +537,11 @@ subrepo:push() {
       RUN git branch -D "$branch_name"
     fi
 
+    if $squash_wanted; then
+      o "Squash commits"
+      subrepo_parent="HEAD^"
+    fi
+
     o "Create subrepo branch '$branch_name'."
     CALL subrepo:branch "$branch_name"
 
@@ -876,6 +883,7 @@ get-command-options() {
           override_remote="$1"
           commit_msg_args+=("--remote=$1")
           shift ;;
+      -s) squash_wanted=true ;;
       -u) update_wanted=true
           commit_msg_args+=("--update") ;;
       -q) quiet_wanted=true ;;
@@ -913,6 +921,9 @@ get-command-options() {
   if $force_wanted; then
     check_option force
   fi
+  if $squash_wanted; then
+    check_option squash
+  fi
   if $fetch_wanted; then
     check_option fetch
   fi
@@ -939,7 +950,7 @@ options_fetch='all branch remote'
 options_init='branch remote'
 options_merge_base='all'
 options_pull='all branch remote update'
-options_push='all branch force remote update'
+options_push='all branch force remote squash update'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"

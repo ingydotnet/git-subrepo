@@ -47,6 +47,14 @@ save-original-state "$OWNER/foo" "bar"
 }
 
 (
+  cd $OWNER/bar
+  git pull
+) &> /dev/null || die
+
+# Check that all commits arrived in subrepo
+test-commit-count "$OWNER/bar" HEAD 7
+
+(
   # In the main repo:
   cd $OWNER/foo
   add-new-files bar/FooBar2
