@@ -33,8 +33,7 @@ clone-foo-and-bar
     'First push message is correct '
 }
 
-# Do the subrepo push to another branch again, this time it should complain
-# that we need to pull first
+# Do the subrepo push to another branch again:
 {
   message="$(
     cd $OWNER/foo
@@ -43,7 +42,7 @@ clone-foo-and-bar
 
   # Test the output:
   is "$message" \
-    "Subrepo 'bar' has no new commits to push." \
+    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (newbar)." \
     'Second push message is correct'
 }
 

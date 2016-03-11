@@ -441,40 +441,14 @@ subrepo:init() {
   # Check if subdir is proper candidate for this init:
   assert-subdir-ready-for-init
 
-  o "Get commits specific to the subdir."
-  TTY=true FAIL=false RUN git filter-branch -f \
-    --subdirectory-filter "$subdir" \
-    HEAD
-  if ! $OK; then
-    RUN git reset --hard "$original_head_commit"
-    error "Failed to get subrepo content from '$subdir'."
-  fi
-
-  o "Note the HEAD commit."
-  FAIL=false OUT=true RUN git rev-parse HEAD
-  if ! $OK || [[ ! $output =~ ^[0-9a-f]{40}$ ]]; then
-    RUN git reset --hard "$original_head_commit"
-    error "Failed to get commit for new 'subrepo': $output"
-  fi
-
-  o "Create branch '$branch_name' for this new subrepo."
-  FAIL=false RUN git branch -D "$branch_name"
-  RUN git branch "$branch_name"
-
   if [[ $subrepo_remote != none ]]; then
     o "Create subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
     FAIL=false RUN git remote remove "subrepo/$subdir"
     RUN git remote add "subrepo/$subdir" "$subrepo_remote"
   fi
 
-  o "Reset to the commit we started at."
-  RUN git reset --hard "$original_head_commit"
-
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
-
-  o "Add the new '$subdir/.gitrepo' file."
-  RUN git add "$subdir/.gitrepo"
 
   o "Commit new subrepo to the '$original_head_branch' branch."
   subrepo_commit_ref="$original_head_commit"
@@ -611,7 +585,6 @@ subrepo:push() {
   subrepo_commit_ref="$upstream_head_commit"
   upstream_head_commit="$new_upstream_head_commit"
   update-gitrepo-file
-  RUN git add "$gitrepo"
   RUN git commit -m "$(get-commit-message)"
 }
 
@@ -657,18 +630,20 @@ subrepo:branch() {
   # TODO: Currently --first-parent avoids the branching
   # Should you create a more complex structure instead?
   o "Create new commits with parents into the subrepo fetch"
-  OUT=true RUN git rev-list --reverse --first-parent "$subrepo_parent"..HEAD
+  local parent_filter="HEAD"
+  [[ -n "$subrepo_parent" ]] && parent_filter="$subrepo_parent..HEAD"
+  OUT=true RUN git rev-list --reverse --first-parent "$parent_filter"
   local commit_list="$output"
   for commit in $commit_list; do
     
     o "Find out the .gitrepo reference"
-    OUT=true RUN git config --blob "$commit":"$subdir/.gitrepo" "subrepo.commit"
+    FAIL=false OUT=true RUN git config --blob "$commit":"$subdir/.gitrepo" "subrepo.commit"
     local gitrepo_commit="$output"
 
     o "Check for rebase"
     if git:rev-exists "$refs_subrepo_fetch"; then
-      if ! git:commit-in-rev-list  "$output" "$refs_subrepo_fetch"; then
-        error "Can't branch: 'FETCH_HEAD' doesn't contain $output."
+      if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
+        error "Can't branch: 'FETCH_HEAD' doesn't contain $gitrepo_commit."
       fi
     fi
 
@@ -684,10 +659,15 @@ subrepo:branch() {
     fi
 
     o "Create a new commit $first_parent $second_parent"
-    # TODO: This should use RUN
-    local output=$(git log -n 1 --format=%B "$commit" |
-      git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
-    prev_commit="$output"
+    FAIL=false RUN git cat-file -e "$commit":"$subdir"
+    if OK; then
+      o "Create with content"
+      prev_commit=$(git log -n 1 --format=%B "$commit" |
+        git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
+    else
+      o "Create empty placeholder"
+      prev_commit=$(git commit-tree -m "EMPTY" $first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+    fi
   done
 
 
@@ -729,7 +709,6 @@ subrepo:commit() {
 
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
-  RUN git add "$gitrepo"
 
   o "Commit to the '$original_head_branch' branch."
   if [[ $original_head_commit != none ]]; then
@@ -1087,7 +1066,8 @@ read-gitrepo-file() {
   subrepo_parent="$output"
 
   if [[ -z $subrepo_parent ]]; then
-    SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.former
+    FAIL=false \
+      SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.former
     subrepo_former="$output"
   fi
 }
@@ -1128,14 +1108,19 @@ update-gitrepo-file() {
   fi
 
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
-  # Only write new parent when we are at the tip
-  # TODO: Make it possible to override this
-  OUT=true FAIL=false RUN git rev-parse "$refs_subrepo_branch"
-  o "$newfile || $upstream_head_commit == $output"
-  if $newfile || [[ $upstream_head_commit == $output ]]; then
-    RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
+  # Only write new parent when we are at the head of upstream
+  local parent=
+  if [[ -n $upstream_head_commit && -n $subrepo_commit_ref ]]; then
+    OUT=true RUN git rev-parse "$subrepo_commit_ref"
+    o "$upstream_head_commit == $output"
+    if [[ $upstream_head_commit == $output ]]; then
+      parent="$original_head_commit"
+    fi
   fi
+  RUN git config --file="$gitrepo" subrepo.parent "$parent"
   RUN git config --file="$gitrepo" subrepo.cmdver "$VERSION"
+
+  RUN git add -f "$gitrepo"
 }
 
 #------------------------------------------------------------------------------
