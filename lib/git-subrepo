@@ -638,7 +638,7 @@ subrepo:branch() {
 
   # TODO: Currently --first-parent avoids the branching
   # Should you create a more complex structure instead?
-  o "XXX: $subrepo_parent"
+  o "Subrepo parent: $subrepo_parent"
   if [[ -n "$subrepo_parent" ]]; then
     local prev_commit=
     o "Create new commits with parents into the subrepo fetch"
@@ -653,7 +653,7 @@ subrepo:branch() {
       o "Check for rebase"
       if git:rev-exists "$refs_subrepo_fetch"; then
         if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
-          error "Can't branch: 'FETCH_HEAD' doesn't contain $gitrepo_commit."
+          error "Can't branch: '$refs_subrepo_fetch' doesn't contain $gitrepo_commit."
         fi
       fi
 
