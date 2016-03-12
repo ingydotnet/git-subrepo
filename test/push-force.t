@@ -19,15 +19,13 @@ subrepo-clone-bar-into-foo
 (
   cd $OWNER/foo
   add-new-files bar/Foo1
-  git subrepo push bar --force --debug
-)
-# &> /dev/null || die
+  git subrepo push bar --force
+) &> /dev/null || die
 
 (
   cd $OWNER/foo
   git subrepo pull bar
-)
-# &> /dev/null || die
+) &> /dev/null || die
 
 test-exists \
   "$OWNER/foo/bar/Foo1" \

@@ -593,9 +593,8 @@ subrepo:push() {
   fi
 
   o "Put updates into '$subdir/.gitrepo' file."
-  # Store this to shown in the commit message
-  subrepo_commit_ref="$upstream_head_commit"
   upstream_head_commit="$new_upstream_head_commit"
+  subrepo_commit_ref="$upstream_head_commit"
   update-gitrepo-file
   RUN git commit -m "$(get-commit-message)"
 }
