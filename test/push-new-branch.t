@@ -42,7 +42,7 @@ clone-foo-and-bar
 
   # Test the output:
   is "$message" \
-    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (newbar)." \
+    "Subrepo 'bar' has no new commits to push." \
     'Second push message is correct'
 }
 

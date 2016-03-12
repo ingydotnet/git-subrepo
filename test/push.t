@@ -30,8 +30,6 @@ clone-foo-and-bar
   git push
 ) &> /dev/null || die
 
-save-original-state "$OWNER/foo" "bar"
-
 # Do the subrepo push and test the output:
 {
   message="$(
@@ -53,6 +51,18 @@ save-original-state "$OWNER/foo" "bar"
 
 # Check that all commits arrived in subrepo
 test-commit-count "$OWNER/bar" HEAD 7
+
+# Test foo/bar/.gitrepo file contents:
+gitrepo=$OWNER/foo/bar/.gitrepo
+{
+  foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
+  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
+  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "parent" "$foo_pull_commit"
+  test-gitrepo-field "cmdver" "`git subrepo --version`"
+}
 
 (
   # In the main repo:
@@ -85,8 +95,6 @@ test-exists \
   "$OWNER/bar/bard/" \
   "$OWNER/bar/bargy" \
   "!$OWNER/bar/.gitrepo" \
-
-# assert-original-state "$OWNER/foo" "bar"
 
 (
   # In the main repo:
