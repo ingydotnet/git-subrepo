@@ -141,7 +141,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ ! $command =~ ^(help|merge-base)$ ]]; then
+  if $all_wanted && [[ ! $command =~ ^(help|merge-base|status)$ ]]; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
