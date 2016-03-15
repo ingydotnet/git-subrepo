@@ -139,9 +139,9 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ ! $command =~ ^(help|merge-base)$ ]]; then
+  if $all_wanted && [[ ! $command =~ ^(help|merge-base|status)$ ]]; then
     local args=( "${command_arguments[@]}" )
-    get-all-subrepos
+    get-all-top-level-subrepos
     for subdir in ${subrepos[*]}; do
       command-prepare
       subrepo_remote=
@@ -855,7 +855,11 @@ subrepo:merge-base() {
 
 subrepo:status() {
   if [[ ${#command_arguments[@]} -eq 0 ]]; then
-    get-all-subrepos
+    if "$all_wanted"; then
+      get-all-nested-subrepos
+    else
+      get-all-top-level-subrepos
+    fi
     local count=${#subrepos[@]}
     if ! "$quiet_wanted"; then
       if [[ $count -eq 0 ]]; then
@@ -1090,7 +1094,7 @@ options_init='branch remote'
 options_merge_base='all'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
-options_status='fetch'
+options_status='all fetch'
 check_option() {
   local var="options_${command//-/_}"
   [[ ${!var} =~ $1 ]] ||
@@ -1352,8 +1356,21 @@ assert-subdir-empty() {
 #------------------------------------------------------------------------------
 
 # Find all the current subrepos by looking for all the subdirectories that
-# contain a `.gitrepo` file.
-get-all-subrepos() {
+# contain a `.gitrepo` file, including nested subrepos.
+
+get-all-nested-subrepos() {
+  subrepos=($(
+    find . -name '.gitrepo' |
+      grep -v '/.git/' |
+      grep '/.gitrepo$' |
+      sed 's/.gitrepo$//' |
+      sort
+  ))
+}
+
+# Find all the current subrepos by looking for all the subdirectories that
+# contain a `.gitrepo` file, excluding nested subrepos.
+get-all-top-level-subrepos() {
 local paths=(); paths=($(
     find . -name '.gitrepo' |
       grep -v '/.git/' |
