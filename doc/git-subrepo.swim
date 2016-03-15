@@ -245,14 +245,14 @@ the same arguments. Keep reading…
 
 - `git subrepo status [<subdir>]`
 
-  Get the status of a subrepo. Show the status of all subrepos by default. If
-  the `--quiet` flag is used, just print the subrepo names, one per line.
+  Get the status of a subrepo. Uses the `--all` option by default. If the
+  `--quiet` flag is used, just print the subrepo names, one per line.
 
   The `--verbose` option will show all the recent local and upstream commits.
 
-  The `status` command accepts the `--fetch` option.
+  The `status` command accepts the `--ALL`, `--all`, and `--fetch` option.
 
-- `git subrepo clean <subdir>|--all`
+- `git subrepo clean <subdir>|--ALL|--all`
 
   Remove artifacts created by `fetch` and `branch` commands.
 
@@ -265,7 +265,7 @@ the same arguments. Keep reading…
 
     git subrepo clean --all --force
 
-  The `clean` command takes the `--all` and `--force` options.
+  The `clean` command accepts the `--ALL`, `--all`, and `--force` options.
 
 - `git subrepo help`
 
