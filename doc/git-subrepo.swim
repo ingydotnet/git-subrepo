@@ -298,6 +298,12 @@ the same arguments. Keep reading…
   If you have multiple subrepos, issue the command to all of them (if
   applicable).
 
+- `--ALL` (`-A`)
+
+  If you have subrepos that also have subrepos themselves, issue the command to
+  ALL of them. Note that the `--ALL` option only works for a subset of the
+  commands that `--all` works for.
+
 - `--branch=<branch-name>` (`-b <branch-name>`)
 
   Use a different branch-name than the remote HEAD or the one saved in
@@ -345,6 +351,11 @@ the same arguments. Keep reading…
 = Environment Variables
 
 The `git-subrepo` command exports and honors some environment variables:
+
+- `GIT_SUBREPO_ROOT`
+
+  This is set by the `.rc` file, if you use that method to install / enable
+  `git-subrepo`. It contains the path of the `git-subrepo` repository.
 
 - `GIT_SUBREPO_RUNNING`
 

@@ -7,7 +7,7 @@ set -e
 help:all() {
     cat <<'...'
 branch               branch <subdir>|--all
-clean                clean <subdir>|--all
+clean                clean <subdir>|--ALL|--all
 clone                clone <repository> [<subdir>] [-b <upstream-branch>] [-f]
 commit               commit <subdir> [<subrepo-ref>]
 fetch                fetch <subdir>|--all
@@ -44,7 +44,7 @@ help:branch() {
 help:clean() {
     cat <<'...'
 
-  Usage: git subrepo clean <subdir>|--all
+  Usage: git subrepo clean <subdir>|--ALL|--all
 
 
   Remove artifacts created by `fetch` and `branch` commands.
@@ -58,7 +58,7 @@ help:clean() {
 
     git subrepo clean --all --force
 
-  The `clean` command takes the `--all` and `--force` options.
+  The `clean` command accepts the `--ALL`, `--all`, and `--force` options.
 ...
 }
 
@@ -265,12 +265,12 @@ help:status() {
   Usage: git subrepo status [<subdir>]
 
 
-  Get the status of a subrepo. Show the status of all subrepos by default. If
-  the `--quiet` flag is used, just print the subrepo names, one per line.
+  Get the status of a subrepo. Uses the `--all` option by default. If the
+  `--quiet` flag is used, just print the subrepo names, one per line.
 
   The `--verbose` option will show all the recent local and upstream commits.
 
-  The `status` command accepts the `--fetch` option.
+  The `status` command accepts the `--ALL`, `--all`, and `--fetch` option.
 ...
 }
 
