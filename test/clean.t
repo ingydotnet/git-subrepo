@@ -77,7 +77,7 @@ Removed remote 'subrepo/bar/qux'." \
 
 test-exists \
   "!$OWNER/foo/.git/refs/heads/subrepo/bar/qux" \
-  "$OWNER/foo/.git/refs/subrepo/bar/qux/fetch" \
+  "$OWNER/foo/.git/refs/subrepo/bar/qux/fetch"
 
 (
   cd $OWNER/foo
@@ -85,8 +85,16 @@ test-exists \
 )
 
 test-exists \
-  "!$OWNER/foo/.git/refs/subrepo/bar/qux/fetch" \
+  "$OWNER/foo/.git/refs/subrepo/bar/qux/fetch" \
   "!$OWNER/foo/.git/refs/subrepo/baz/fetch"
+
+(
+  cd $OWNER/foo
+  git subrepo clean --ALL --force
+)
+
+test-exists \
+  "!$OWNER/foo/.git/refs/subrepo/bar/qux/fetch"
 
 done_testing
 
