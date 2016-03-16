@@ -934,7 +934,7 @@ subrepo:clean() {
   for prefix in subrepo subrepo-push; do
     local branch="$prefix/$subdir"
     local ref="refs/heads/$branch"
-    if [[ -e .git/$ref ]]; then
+    if [[ -f .git/$ref ]]; then
       o "Remove branch '$branch'."
       RUN git update-ref -d "$ref"
       clean_list+=("branch '$branch'")
