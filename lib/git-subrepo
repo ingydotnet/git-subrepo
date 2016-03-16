@@ -951,10 +951,10 @@ subrepo:clean() {
 
   if "$force_wanted"; then
     o "Remove all subrepo refs."
-    if "$all_wanted"; then
+    if "$ALL_wanted"; then
       RUN rm -fr .git/refs/subrepo/
     else
-      RUN rm -fr .git/refs/subrepo/$subdir/
+      FAIL=false RUN rm -f .git/refs/subrepo/$subdir/*
     fi
   fi
 }
