@@ -35,10 +35,12 @@ test-exists \
   "!$OWNER/foo/.git/refs/heads/subrepo/bar" \
   "$OWNER/foo/.git/refs/subrepo/bar/fetch"
 
-(
+is "$(
   cd $OWNER/foo
   git subrepo clean --force bar
-)
+)" \
+  "" \
+  "'subrepo clean --force bar' command output is correct"
 
 test-exists \
   "!$OWNER/foo/.git/refs/subrepo/bar/fetch" \
@@ -79,19 +81,23 @@ test-exists \
   "!$OWNER/foo/.git/refs/heads/subrepo/bar/qux" \
   "$OWNER/foo/.git/refs/subrepo/bar/qux/fetch"
 
-(
+is "$(
   cd $OWNER/foo
   git subrepo clean --all --force
-)
+)" \
+  "" \
+  "'subrepo clean --all --force' command output is correct"
 
 test-exists \
   "$OWNER/foo/.git/refs/subrepo/bar/qux/fetch" \
   "!$OWNER/foo/.git/refs/subrepo/baz/fetch"
 
-(
+is "$(
   cd $OWNER/foo
   git subrepo clean --ALL --force
-)
+)" \
+  "" \
+  "'subrepo clean --ALL --force' command output is correct"
 
 test-exists \
   "!$OWNER/foo/.git/refs/subrepo/bar/qux/fetch"
