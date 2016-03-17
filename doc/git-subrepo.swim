@@ -19,7 +19,7 @@ Git Submodule Alternative
   git subrepo commit <subdir>
   git subrepo merge-base <branch1> <branch2>
 
-  git subrepo status [<subdir>]
+  git subrepo show [<subdir>]
   git subrepo clean <subdir>
 
   git subrepo help [<command>]
@@ -243,14 +243,14 @@ the same arguments. Keep reading…
 
   The `merge-base` command accepts the `--all` option.
 
-- `git subrepo status [<subdir>]`
+- `git subrepo show [<subdir>]`
 
-  Get the status of a subrepo. Uses the `--all` option by default. If the
-  `--quiet` flag is used, just print the subrepo names, one per line.
+  Get some information about a subrepo. Uses the `--all` option by default. If
+  the `--quiet` flag is used, just print the subrepo names, one per line.
 
   The `--verbose` option will show all the recent local and upstream commits.
 
-  The `status` command accepts the `--ALL`, `--all`, and `--fetch` option.
+  The `show` command accepts the `--ALL`, `--all`, and `--fetch` option.
 
 - `git subrepo clean <subdir>|--ALL|--all`
 
