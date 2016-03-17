@@ -43,7 +43,7 @@ Commands:
   commit    Commit a merged subrepo branch into the mainline
   merge-base  Find the common ancestor of 2 commits (plumbing command)
 
-  status    Get status of a subrepo (or all of them)
+  show      Get some information about a subrepo (or all of them)
   clean     Remove branches, remotes and refs for a subrepo
 
   help      Documentation for git-subrepo (or specific command)
@@ -141,7 +141,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ ! $command =~ ^(help|merge-base|status)$ ]]; then
+  if $all_wanted && [[ ! $command =~ ^(help|merge-base|show)$ ]]; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -309,12 +309,12 @@ command:merge-base() {
   fi
 }
 
-# `git subrepo status [<subdir>]` command:
-command:status() {
-  subrepo:status | ${GIT_SUBREPO_PAGER}
+# `git subrepo show [<subdir>]` command:
+command:show() {
+  subrepo:show | ${GIT_SUBREPO_PAGER}
 }
 
-status-refs() {
+show-refs() {
   local output=
   while read line; do
     [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subdir/([a-z]+) ]] || continue
@@ -855,7 +855,7 @@ subrepo:merge-base() {
   return 1
 }
 
-subrepo:status() {
+subrepo:show() {
   if [[ ${#command_arguments[@]} -eq 0 ]]; then
     get-all-subrepos
     local count=${#subrepos[@]}
@@ -922,7 +922,7 @@ subrepo:status() {
     fi
 
     if "$verbose_wanted"; then
-      status-refs
+      show-refs
     fi
 
     echo
@@ -1097,7 +1097,7 @@ options_init='branch remote'
 options_merge_base='all'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
-options_status='ALL all fetch'
+options_show='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
   [[ ${!var} =~ $1 ]] ||
