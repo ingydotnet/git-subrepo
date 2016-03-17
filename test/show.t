@@ -7,60 +7,60 @@ source test/setup
 use Test::More
 
 {
-  output="$(git subrepo status)"
+  output="$(git subrepo show)"
 
   like "$output" "2 subrepos:" \
-    "'status' intro ok"
+    "'show' intro ok"
 
   like "$output" "Git subrepo 'ext/bashplus':" \
-    "ext/bashplus is in 'status'"
+    "ext/bashplus is in 'show'"
 
   like "$output" "Git subrepo 'ext/test-more-bash':" \
-    "ext/test-more-bash is in 'status'"
+    "ext/test-more-bash is in 'show'"
 
   unlike "$output" "Git subrepo 'ext/test-more-bash/ext/bashplus':" \
-    "ext/test-more-bash/ext/bashplus is not in 'status'"
+    "ext/test-more-bash/ext/bashplus is not in 'show'"
 
   unlike "$output" "Git subrepo 'ext/test-more-bash/ext/test-tap-bash':" \
-    "ext/test-more-bash/ext/test-tap-bash is not in 'status'"
+    "ext/test-more-bash/ext/test-tap-bash is not in 'show'"
 }
 
 {
-  output="$(git subrepo status --ALL)"
+  output="$(git subrepo show --ALL)"
 
   like "$output" "4 subrepos:" \
-    "'status --ALL' intro ok"
+    "'show --ALL' intro ok"
 
   like "$output" "Git subrepo 'ext/bashplus':" \
-    "ext/bashplus is in 'status --ALL'"
+    "ext/bashplus is in 'show --ALL'"
 
   like "$output" "Git subrepo 'ext/test-more-bash':" \
-    "ext/test-more-bash is in 'status --ALL'"
+    "ext/test-more-bash is in 'show --ALL'"
 
   like "$output" "Git subrepo 'ext/test-more-bash/ext/bashplus':" \
-    "ext/test-more-bash/ext/bashplus is in 'status --ALL'"
+    "ext/test-more-bash/ext/bashplus is in 'show --ALL'"
 
   like "$output" "Git subrepo 'ext/test-more-bash/ext/test-tap-bash':" \
-    "ext/test-more-bash/ext/test-tap-bash is in 'status --ALL'"
+    "ext/test-more-bash/ext/test-tap-bash is in 'show --ALL'"
 }
 
 {
-  output="$(git subrepo status --all)"
+  output="$(git subrepo show --all)"
 
   like "$output" "2 subrepos:" \
-    "'status --all' intro ok"
+    "'show --all' intro ok"
 
   like "$output" "Git subrepo 'ext/bashplus':" \
-    "ext/bashplus is in 'status --all'"
+    "ext/bashplus is in 'show --all'"
 
   like "$output" "Git subrepo 'ext/test-more-bash':" \
-    "ext/test-more-bash is in 'status --all'"
+    "ext/test-more-bash is in 'show --all'"
 
   unlike "$output" "Git subrepo 'ext/test-more-bash/ext/bashplus':" \
-    "ext/test-more-bash/ext/bashplus is not in 'status --all'"
+    "ext/test-more-bash/ext/bashplus is not in 'show --all'"
 
   unlike "$output" "Git subrepo 'ext/test-more-bash/ext/test-tap-bash':" \
-    "ext/test-more-bash/ext/test-tap-bash is not in 'status --all'"
+    "ext/test-more-bash/ext/test-tap-bash is not in 'show --all'"
 }
 
 done_testing 15

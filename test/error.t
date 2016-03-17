@@ -114,7 +114,7 @@ clone-foo-and-bar
   )
 
   # Test that certain commands don't run inside a subrepo branch:
-  for cmd in clone pull push fetch branch commit status clean; do
+  for cmd in clone pull push fetch branch commit show clean; do
     is "$(
         cd $OWNER/bar
         catch git subrepo $cmd
@@ -135,7 +135,7 @@ clone-foo-and-bar
   is "$(
       cd $OWNER/bar
       git checkout --quiet $(git rev-parse master)
-      catch git subrepo status
+      catch git subrepo show
     )" \
     "git-subrepo: Must be on a branch to run this command." \
     "Error OK: check repo is on a branch"
@@ -148,9 +148,9 @@ clone-foo-and-bar
 {
   is "$(
       cd .git
-      catch git subrepo status
+      catch git subrepo show
     )" \
-    "git-subrepo: Can't 'subrepo status' outside a working tree." \
+    "git-subrepo: Can't 'subrepo show' outside a working tree." \
     "Error OK: check inside working tree"
 }
 
@@ -172,7 +172,7 @@ clone-foo-and-bar
 {
   is "$(
       cd lib
-      catch git subrepo status
+      catch git subrepo show
     )" \
     "git-subrepo: Need to run subrepo command from top level directory of the repo." \
     "Error OK: check cwd is at top level"
