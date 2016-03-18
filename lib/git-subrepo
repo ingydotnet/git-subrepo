@@ -342,7 +342,6 @@ show-refs() {
 # `git subrepo status [<subdir>]` command:
 command:status() {
   subrepo:status | ${GIT_SUBREPO_PAGER}
-
   echo "See also: git subrepo show ..."
 }
 
@@ -938,7 +937,49 @@ subrepo:show() {
 }
 
 subrepo:status() {
-  return
+  if [[ ${#command_arguments[@]} -eq 0 ]]; then
+    get-all-subrepos
+    local count=${#subrepos[@]}
+      if [[ $count -eq 0 ]]; then
+      echo "No subrepos."
+      return
+    fi
+  else
+    subrepos=("${command_arguments[@]}")
+  fi
+
+  for subdir in "${subrepos[@]}"; do
+    subdir="${subdir#./}"
+    subdir="${subdir%/}"
+
+    if [[ ! -f $subdir/.gitrepo ]]; then
+      echo "'$subdir' is not a subrepo"
+      echo
+      continue
+    fi
+
+    read-gitrepo-file
+    refs_subrepo_branch="refs/subrepo/$subdir/branch"
+    refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
+
+    echo "Git subrepo '$subdir':"
+    if [[ ! -e ".git/${refs_subrepo_branch}" ]] &&
+       [[ ! -e ".git/${refs_subrepo_fetch}"  ]]; then
+      echo "  Status not available: missing branch and fetch refs."
+      echo
+      continue
+    elif [[ ! -e ".git/${refs_subrepo_branch}" ]]; then
+      echo "  Status not available: missing branch ref."
+      echo
+      continue
+    elif [[ ! -e ".git/${refs_subrepo_fetch}" ]]; then
+      echo "  Status not available: missing fetch ref."
+      echo
+      continue
+    fi
+    echo "  Subrepo is up-to-date with upstream."
+    echo
+  done
 }
 
 subrepo:clean() {
@@ -1110,7 +1151,7 @@ options_merge_base='all'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
 options_show='ALL all fetch'
-options_status=''
+options_status='all'
 check_option() {
   local var="options_${command//-/_}"
   [[ ${!var} =~ $1 ]] ||
