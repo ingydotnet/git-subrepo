@@ -19,6 +19,7 @@ _git-subrepo() {
         '--help[Help overview]' \
         '--version[Print the git-subrepo version number]' \
         '(-a --all)'{-a,--all}'[Perform command on all current subrepos]' \
+        '(-A --ALL)'{-A,--ALL}'[Perform command on all subrepos and subsubrepos]' \
         '(-b --branch)'{-b,--branch}'[Specify an upstream branch]:b' \
         '(-f --force)'{-f,--force}'[Force certain operations]' \
         '(-F --fetch)'{-F,--fetch}'[Fetch the upstream content first]' \

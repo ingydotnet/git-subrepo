@@ -57,6 +57,7 @@ help        Help overview
 version     Print the git-subrepo version number
  
 a,all       Perform command on all current subrepos
+A,ALL       Perform command on all subrepos and subsubrepos
 b,branch=   Specify an upstream branch
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
@@ -83,6 +84,7 @@ main() {
   local verbose_wanted=false    # Output should be verbose
   local debug_wanted=false      # Show debug messages
   local all_wanted=false        # Apply command to all subrepos
+  local ALL_wanted=false        # Apply command to all subrepos and subsubrepos
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
@@ -132,7 +134,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ ! $command =~ ^(help)$ ]]; then
+  if $all_wanted && [[ ! $command =~ ^(help|merge-base|status)$ ]]; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -872,6 +874,8 @@ get-command-options() {
     case "$option" in
       --) break ;;
       -a) all_wanted=true ;;
+      -A) ALL_wanted=true
+          all_wanted=true ;;
       -b) subrepo_branch="$1"
           override_branch="$1"
           commit_msg_args+=("--branch=$1")
@@ -915,6 +919,9 @@ get-command-options() {
   if $all_wanted; then
     check_option all
   fi
+  if $ALL_wanted; then
+    check_option ALL
+  fi
   if $force_wanted; then
     check_option force
   fi
@@ -940,15 +947,16 @@ get-command-options() {
 
 options_help='all'
 options_branch='all fetch force'
-options_clean='all force'
+options_clean='ALL all force'
 options_clone='branch force'
 options_commit='fetch force'
 options_fetch='all branch remote'
 options_init='branch remote'
 options_merge_base='all'
 options_pull='all branch remote update'
-options_push='all branch force remote update squash'
-options_status='fetch'
+options_push='all branch force remote squash update'
+options_status='ALL all fetch'
+
 check_option() {
   local var="options_${command//-/_}"
   [[ ${!var} =~ $1 ]] ||
@@ -1231,7 +1239,8 @@ assert-subdir-empty() {
 # Find all the current subrepos by looking for all the subdirectories that
 # contain a `.gitrepo` file.
 get-all-subrepos() {
-  local paths=($(
+  local paths=();
+  paths=($(
     find . -name '.gitrepo' |
       grep -v '/.git/' |
       grep '/.gitrepo$' |
@@ -1246,9 +1255,11 @@ get-all-subrepos() {
 }
 
 add-subrepo() {
-  for path in "${subrepos[@]}"; do
-    [[ $1 =~ ^$path ]] && return
-  done
+  if ! $ALL_wanted; then
+    for path in "${subrepos[@]}"; do
+      [[ $1 =~ ^$path ]] && return
+    done
+  fi
   subrepos+=("$1")
 }
 
