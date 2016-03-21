@@ -969,14 +969,17 @@ subrepo:status() {
     if [[ ! -e ".git/${refs_subrepo_branch}" ]] &&
        [[ ! -e ".git/${refs_subrepo_fetch}"  ]]; then
       echo "  Status not available: missing branch and fetch refs."
+      echo "    (use 'git subrepo branch' and 'git subrepo fetch' to update)"
       echo
       continue
     elif [[ ! -e ".git/${refs_subrepo_branch}" ]]; then
       echo "  Status not available: missing branch ref."
+      echo "    (use 'git subrepo branch' to update)"
       echo
       continue
     elif [[ ! -e ".git/${refs_subrepo_fetch}" ]]; then
       echo "  Status not available: missing fetch ref."
+      echo "    (use 'git subrepo fetch' to update)"
       echo
       continue
     fi
@@ -987,15 +990,20 @@ subrepo:status() {
         echo "  Subrepo is up-to-date with upstream."
       elif [[ -n $first_on_source ]]; then
         echo "  Subrepo is ahead of upstream."
+        echo "    (use 'git subrepo push' to publish your local commits)"
       elif [[ -n $first_on_target ]]; then
         echo "  Subrepo is behind upstream."
+        echo "    (use 'git subrepo pull' to update your local subrepo)"
       else
         local fetch_commit=$(git show-ref -s $refs_subrepo_fetch)
 
         if [[ "$fetch_commit" == "$subrepo_commit" ]]; then
           echo "  Subrepo is ahead of upstream."
+          echo "    (use 'git subrepo push' to publish your local commits)"
         else
           echo "  Subrepo and upstream have diverged."
+          echo "    (use 'git subrepo pull' to merge the remote subrepo into "\
+"yours)"
         fi
       fi
     else
