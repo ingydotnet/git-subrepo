@@ -25,6 +25,7 @@ subrepo-clone-bar-into-foo
   )" \
     "Git subrepo 'bar':
   Status not available: missing branch ref.
+    (use 'git subrepo branch' to update)
 
 See also: git subrepo show ..." \
     'subrepo status (missing branch ref) output is correct'
@@ -66,6 +67,7 @@ See also: git subrepo show ..." \
   )" \
     "Git subrepo 'bar':
   Subrepo is ahead of upstream.
+    (use 'git subrepo push' to publish your local commits)
 
 See also: git subrepo show ..." \
     'subrepo status (ahead, post-commit) output is correct'
@@ -92,6 +94,7 @@ See also: git subrepo show ..." \
   )" \
     "Git subrepo 'bar':
   Subrepo and upstream have diverged.
+    (use 'git subrepo pull' to merge the remote subrepo into yours)
 
 See also: git subrepo show ..." \
     'subrepo status (diverged) output is correct'
@@ -113,6 +116,7 @@ See also: git subrepo show ..." \
   )" \
     "Git subrepo 'bar':
   Subrepo is behind upstream.
+    (use 'git subrepo pull' to update your local subrepo)
 
 See also: git subrepo show ..." \
     'subrepo status (behind) output is correct'
@@ -136,6 +140,7 @@ See also: git subrepo show ..." \
   )" \
     "Git subrepo 'bar':
   Subrepo is ahead of upstream.
+    (use 'git subrepo push' to publish your local commits)
 
 See also: git subrepo show ..." \
     'subrepo status (ahead, post-pull) output is correct'
@@ -153,6 +158,7 @@ rm -f $OWNER/foo/.git/refs/subrepo/bar/fetch
   )" \
     "Git subrepo 'bar':
   Status not available: missing fetch ref.
+    (use 'git subrepo fetch' to update)
 
 See also: git subrepo show ..." \
     'subrepo status (missing fetch ref) output is correct'
@@ -170,6 +176,7 @@ rm -f $OWNER/foo/.git/refs/subrepo/bar/branch
   )" \
     "Git subrepo 'bar':
   Status not available: missing branch and fetch refs.
+    (use 'git subrepo branch' and 'git subrepo fetch' to update)
 
 See also: git subrepo show ..." \
     'subrepo status (missing branch and fetch refs) output is correct'
