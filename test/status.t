@@ -68,7 +68,7 @@ See also: git subrepo show ..." \
   Subrepo is ahead of upstream.
 
 See also: git subrepo show ..." \
-    'subrepo status (ahead) output is correct'
+    'subrepo status (ahead, post-commit) output is correct'
 }
 
 (
@@ -116,6 +116,29 @@ See also: git subrepo show ..." \
 
 See also: git subrepo show ..." \
     'subrepo status (behind) output is correct'
+}
+
+(
+  cd $OWNER/foo
+  add-new-files bar/Foo2
+  git subrepo pull --quiet bar
+  git subrepo --force --quiet branch bar
+) &> /dev/null || die
+
+{
+  test-exists \
+    "$OWNER/foo/bar/Bar2" \
+    "$OWNER/foo/bar/Foo2"
+
+  is "$(
+    cd $OWNER/foo
+    git subrepo status
+  )" \
+    "Git subrepo 'bar':
+  Subrepo is ahead of upstream.
+
+See also: git subrepo show ..." \
+    'subrepo status (ahead, post-pull) output is correct'
 }
 
 rm -f $OWNER/foo/.git/refs/subrepo/bar/fetch
