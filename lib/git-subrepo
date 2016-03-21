@@ -980,7 +980,22 @@ subrepo:status() {
       echo
       continue
     fi
-    echo "  Subrepo is up-to-date with upstream."
+
+    if subrepo:merge-base "$refs_subrepo_fetch" "$refs_subrepo_branch" \
+         false; then
+      if [[ -n $first_on_source ]] && [[ -n $first_on_target ]]; then
+        echo "  Subrepo is up-to-date with upstream."
+      elif [[ -n $first_on_source ]]; then
+        echo "  Subrepo is ahead of upstream."
+      elif [[ -n $first_on_target ]]; then
+        echo "  Subrepo is behind upstream."
+      else
+        echo "  Subrepo and upstream have diverged."
+      fi
+    else
+      echo "  Status not available: no common ancestor found"
+    fi
+
     echo
   done
 }
