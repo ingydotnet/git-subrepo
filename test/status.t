@@ -12,7 +12,6 @@ subrepo-clone-bar-into-foo
 
 (
   cd $OWNER/foo
-  add-new-files bar/file
 )
 
 {
@@ -49,6 +48,74 @@ See also: git subrepo show ..." \
 
 See also: git subrepo show ..." \
     'subrepo status (up-to-date) output is correct'
+}
+
+(
+  cd $OWNER/foo
+  add-new-files bar/Foo1
+  git subrepo --force --quiet branch bar
+) &> /dev/null || die
+
+{
+  test-exists \
+    "$OWNER/foo/bar/Foo1"
+
+  is "$(
+    cd $OWNER/foo
+    git subrepo status
+  )" \
+    "Git subrepo 'bar':
+  Subrepo is ahead of upstream.
+
+See also: git subrepo show ..." \
+    'subrepo status (ahead) output is correct'
+}
+
+(
+  cd $OWNER/bar
+  add-new-files Bar2
+  git push
+) &> /dev/null || die
+
+(
+  cd $OWNER/foo
+  git subrepo --quiet fetch bar
+) &> /dev/null || die
+
+{
+  test-exists \
+    "$OWNER/bar/Bar2"
+
+  is "$(
+    cd $OWNER/foo
+    git subrepo status
+  )" \
+    "Git subrepo 'bar':
+  Subrepo and upstream have diverged.
+
+See also: git subrepo show ..." \
+    'subrepo status (diverged) output is correct'
+}
+
+(
+    cd $OWNER/foo
+    git reset --quiet --hard HEAD^
+    git subrepo --force --quiet branch bar
+) &> /dev/null || die
+
+{
+  test-exists \
+    "!$OWNER/foo/bar/Foo1"
+
+  is "$(
+    cd $OWNER/foo
+    git subrepo status
+  )" \
+    "Git subrepo 'bar':
+  Subrepo is behind upstream.
+
+See also: git subrepo show ..." \
+    'subrepo status (behind) output is correct'
 }
 
 rm -f $OWNER/foo/.git/refs/subrepo/bar/fetch
