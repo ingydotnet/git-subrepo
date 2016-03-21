@@ -990,7 +990,13 @@ subrepo:status() {
       elif [[ -n $first_on_target ]]; then
         echo "  Subrepo is behind upstream."
       else
-        echo "  Subrepo and upstream have diverged."
+        local fetch_commit=$(git show-ref -s $refs_subrepo_fetch)
+
+        if [[ "$fetch_commit" == "$subrepo_commit" ]]; then
+          echo "  Subrepo is ahead of upstream."
+        else
+          echo "  Subrepo and upstream have diverged."
+        fi
       fi
     else
       echo "  Status not available: no common ancestor found"
