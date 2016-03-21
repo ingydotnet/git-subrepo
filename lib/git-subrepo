@@ -694,6 +694,9 @@ subrepo:push() {
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
 
+  o "Update ref '$refs_subrepo_fetch' to match '$refs_subrepo_push'."
+  git:make-ref "$refs_subrepo_fetch" "$branch_name"
+
   if [[ $branch_name == subrepo-push/$subdir ]]; then
     o "Remove branch '$branch_name'."
     RUN git branch -D "$branch_name"
