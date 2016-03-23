@@ -44,7 +44,7 @@ Commands:
   merge-base  Find the common ancestor of 2 commits (plumbing command)
 
   show      Get some information about a subrepo (or all of them)
-  status    Show the working tree status of a subrepo (or all of them)
+  status    Show the remote tracking status of a subrepo branch (or all of them)
   clean     Remove branches, remotes and refs for a subrepo
 
   help      Documentation for git-subrepo (or specific command)
