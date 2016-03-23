@@ -175,6 +175,27 @@ rm -f $OWNER/foo/.git/refs/subrepo/bar/branch
     git subrepo status
   )" \
     "Git subrepo 'bar':
+  Status not available: missing fetch ref.
+    (use 'git subrepo fetch' to update)
+
+See also: git subrepo show ..." \
+    'subrepo status (using branch head instead of branch ref) output is correct'
+}
+
+(
+  cd $OWNER/foo
+  git subrepo clean --force bar
+) &> /dev/null || die
+
+{
+  test-exists \
+    "!$OWNER/foo/.git/refs/heads/subrepo/bar"
+
+  is "$(
+    cd $OWNER/foo
+    git subrepo status
+  )" \
+    "Git subrepo 'bar':
   Status not available: missing branch and fetch refs.
     (use 'git subrepo branch' and 'git subrepo fetch' to update)
 
