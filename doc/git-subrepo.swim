@@ -259,7 +259,7 @@ the same arguments. Keep reading…
   by default. If the `--quiet` flag is used, don't print any subrepos that are
   up-to-date.
 
-  The `status` command accepts the `--all` and `--quiet` options.
+  The `status` command accepts the `--all`, `--fetch`, and `--quiet` options.
 
 - `git subrepo clean <subdir>|--ALL|--all`
 

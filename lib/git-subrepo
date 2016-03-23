@@ -958,12 +958,19 @@ subrepo:status() {
       continue
     fi
 
+    subrepo_remote=
+    subrepo_branch=
+
     read-gitrepo-file
     refs_subrepo_branch="refs/subrepo/$subdir/branch"
     if [[ ! -e ".git/${refs_subrepo_branch}" ]]; then
       refs_subrepo_branch="refs/heads/subrepo/$subdir"
     fi
     refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
+
+    if $fetch_wanted; then
+      subrepo:fetch
+    fi
 
     if [[ ! -e ".git/${refs_subrepo_branch}" ]] &&
        [[ ! -e ".git/${refs_subrepo_fetch}"  ]]; then
@@ -1201,7 +1208,7 @@ options_merge_base='all'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
 options_show='ALL all fetch'
-options_status='all quiet'
+options_status='all fetch quiet'
 check_option() {
   local var="options_${command//-/_}"
   [[ ${!var} =~ $1 ]] ||
