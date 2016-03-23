@@ -10,10 +10,6 @@ clone-foo-and-bar
 
 subrepo-clone-bar-into-foo
 
-(
-  cd $OWNER/foo
-)
-
 {
   test-exists \
     "!$OWNER/foo/.git/refs/subrepo/bar/branch" \
