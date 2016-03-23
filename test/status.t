@@ -51,6 +51,15 @@ See also: git subrepo show ..." \
     'subrepo status (up-to-date) output is correct'
 }
 
+{
+  is "$(
+    cd $OWNER/foo
+    git subrepo --quiet status
+  )" \
+    "See also: git subrepo show ..." \
+    'subrepo status (quiet) output is correct'
+}
+
 (
   cd $OWNER/foo
   add-new-files bar/Foo1
