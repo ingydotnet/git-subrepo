@@ -963,6 +963,9 @@ subrepo:status() {
 
     read-gitrepo-file
     refs_subrepo_branch="refs/subrepo/$subdir/branch"
+    if [[ ! -e ".git/${refs_subrepo_branch}" ]]; then
+      refs_subrepo_branch="refs/heads/subrepo/$subdir"
+    fi
     refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
 
     echo "Git subrepo '$subdir':"
