@@ -467,36 +467,31 @@ subrepo:init() {
   # Check if subdir is proper candidate for this init:
   assert-subdir-ready-for-init
 
+  o "Create branch '$branch_name' for this new subrepo."
+  FAIL=false RUN git branch -D "$branch_name"
+  RUN git branch "$branch_name" HEAD
+
   # filter-branch out the subdir
   o "Get commits specific to the subdir."
   TTY=true FAIL=false RUN git filter-branch -f \
     --subdirectory-filter "$subdir" \
-    HEAD
+    "$branch_name"
   if ! $OK; then
-    RUN git reset --hard "$original_head_commit"
     error "Failed to get subrepo content from '$subdir'."
   fi
 
-  o "Note the HEAD commit."
-  FAIL=false OUT=true RUN git rev-parse HEAD
+  o "Note the new subrepo commit."
+  FAIL=false OUT=true RUN git rev-parse "$branch_name"
   if ! $OK || [[ ! $output =~ ^[0-9a-f]{40}$ ]]; then
-    RUN git reset --hard "$original_head_commit"
     error "Failed to get commit for new 'subrepo': $output"
   fi
   local upstream_head_commit="$output"
-
-  o "Create branch '$branch_name' for this new subrepo."
-  FAIL=false RUN git branch -D "$branch_name"
-  RUN git branch "$branch_name"
 
   if [[ $subrepo_remote != none ]]; then
     o "Create subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
     FAIL=false RUN git remote remove "subrepo/$subdir"
     RUN git remote add "subrepo/$subdir" "$subrepo_remote"
   fi
-
-  o "Reset to the commit we started at."
-  RUN git reset --hard "$original_head_commit"
 
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
@@ -733,20 +728,18 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
+  o "Create branch '$branch' from HEAD."
+  RUN git branch "$branch" HEAD
+
   o "Get commits specific to the subdir."
   FAIL=false RUN git filter-branch -f \
     --subdirectory-filter "$subdir" \
-    HEAD
+    "$branch"
 
   o "Remove the .gitrepo file from the history."
   FAIL=false RUN git filter-branch -f \
-    --prune-empty --tree-filter "rm -f .gitrepo"
-
-  o "Create branch '$branch' for this new commit set."
-  RUN git branch "$branch"
-
-  o "Reset to the '$original_head_branch' branch."
-  RUN git reset --hard "$original_head_commit"
+    --prune-empty --tree-filter "rm -f .gitrepo" \
+    "$branch"
 }
 
 # Commit a merged subrepo branch:
@@ -1310,7 +1303,7 @@ assert-repo-is-ready() {
     RUN git rev-parse --verify HEAD
 
   # Repo is in a clean state:
-  if [[ $command =~ ^(clone|init|pull|push|branch|commit)$ ]]; then
+  if [[ $command =~ ^(clone|init|pull|push|commit)$ ]]; then
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
       error "Can't $command subrepo. Unstaged changes."
