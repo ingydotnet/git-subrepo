@@ -503,6 +503,9 @@ subrepo:init() {
   subrepo_commit_ref="$upstream_head_commit"
   RUN git commit -m "$(get-commit-message)"
 
+  o "Create ref '$refs_subrepo_branch'."
+  git:make-ref "$refs_subrepo_branch" "$branch_name"
+
   o "Create ref '$refs_subrepo_commit'."
   git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
 }
