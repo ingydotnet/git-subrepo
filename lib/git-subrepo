@@ -996,44 +996,45 @@ subrepo:status() {
       continue
     fi
 
-    if subrepo:merge-base "$refs_subrepo_fetch" "$refs_subrepo_branch" \
+    if ! subrepo:merge-base "$refs_subrepo_fetch" "$refs_subrepo_branch" \
          false; then
-      if [[ -n $first_on_source ]] && [[ -n $first_on_target ]]; then
-        if ! "$quiet_wanted"; then
-          echo "Git subrepo '$subdir':"
-          echo "  Subrepo is up-to-date with upstream."
-          echo
-        fi
-      elif [[ -n $first_on_source ]]; then
+      echo "Git subrepo '$subdir':"
+      echo "  Status not available: no common ancestor found"
+      echo
+      continue
+    fi
+
+    if [[ -n $first_on_source ]] && [[ -n $first_on_target ]]; then
+      if ! "$quiet_wanted"; then
+        echo "Git subrepo '$subdir':"
+        echo "  Subrepo is up-to-date with upstream."
+        echo
+      fi
+    elif [[ -n $first_on_source ]]; then
+      echo "Git subrepo '$subdir':"
+      echo "  Subrepo is ahead of upstream."
+      echo "    (use 'git subrepo push' to publish your local commits)"
+      echo
+    elif [[ -n $first_on_target ]]; then
+      echo "Git subrepo '$subdir':"
+      echo "  Subrepo is behind upstream."
+      echo "    (use 'git subrepo pull' to update your local subrepo)"
+      echo
+    else
+      local fetch_commit=$(git show-ref -s $refs_subrepo_fetch)
+
+      if [[ "$fetch_commit" == "$subrepo_commit" ]]; then
         echo "Git subrepo '$subdir':"
         echo "  Subrepo is ahead of upstream."
         echo "    (use 'git subrepo push' to publish your local commits)"
         echo
-      elif [[ -n $first_on_target ]]; then
-        echo "Git subrepo '$subdir':"
-        echo "  Subrepo is behind upstream."
-        echo "    (use 'git subrepo pull' to update your local subrepo)"
-        echo
       else
-        local fetch_commit=$(git show-ref -s $refs_subrepo_fetch)
-
-        if [[ "$fetch_commit" == "$subrepo_commit" ]]; then
-          echo "Git subrepo '$subdir':"
-          echo "  Subrepo is ahead of upstream."
-          echo "    (use 'git subrepo push' to publish your local commits)"
-          echo
-        else
-          echo "Git subrepo '$subdir':"
-          echo "  Subrepo and upstream have diverged."
-          echo "    (use 'git subrepo pull' to merge the remote subrepo into "\
+        echo "Git subrepo '$subdir':"
+        echo "  Subrepo and upstream have diverged."
+        echo "    (use 'git subrepo pull' to merge the remote subrepo into "\
 "yours)"
-          echo
-        fi
+        echo
       fi
-    else
-      echo "Git subrepo '$subdir':"
-      echo "  Status not available: no common ancestor found"
-      echo
     fi
   done
 }
