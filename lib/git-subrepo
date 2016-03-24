@@ -480,6 +480,14 @@ subrepo:init() {
     error "Failed to get subrepo content from '$subdir'."
   fi
 
+  o "Remove the .gitrepo file from the history."
+  TTY=true FAIL=false RUN git filter-branch -f \
+    --prune-empty --tree-filter "rm -f .gitrepo" \
+    "$branch_name"
+  if ! $OK; then
+    error "Failed to remove .gitrepo file from the history of '$subdir'."
+  fi
+
   o "Note the new subrepo commit."
   FAIL=false OUT=true RUN git rev-parse "$branch_name"
   if ! $OK || [[ ! $output =~ ^[0-9a-f]{40}$ ]]; then
