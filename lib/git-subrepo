@@ -966,7 +966,7 @@ subrepo:status() {
 
     read-gitrepo-file
     refs_subrepo_branch="refs/subrepo/$subdir/branch"
-    if [[ ! -e ".git/${refs_subrepo_branch}" ]]; then
+    if [[ ! -e .git/$refs_subrepo_branch ]]; then
       refs_subrepo_branch="refs/heads/subrepo/$subdir"
     fi
     refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
@@ -975,20 +975,20 @@ subrepo:status() {
       subrepo:fetch
     fi
 
-    if [[ ! -e ".git/${refs_subrepo_branch}" ]] &&
-       [[ ! -e ".git/${refs_subrepo_fetch}"  ]]; then
+    if [[ ! -e .git/$refs_subrepo_branch ]] &&
+       [[ ! -e .git/$refs_subrepo_fetch  ]]; then
       echo "Git subrepo '$subdir':"
       echo "  Status not available: missing branch and fetch refs."
       echo "    (use 'git subrepo branch' and 'git subrepo fetch' to update)"
       echo
       continue
-    elif [[ ! -e ".git/${refs_subrepo_branch}" ]]; then
+    elif [[ ! -e .git/$refs_subrepo_branch ]]; then
       echo "Git subrepo '$subdir':"
       echo "  Status not available: missing branch ref."
       echo "    (use 'git subrepo branch' to update)"
       echo
       continue
-    elif [[ ! -e ".git/${refs_subrepo_fetch}" ]]; then
+    elif [[ ! -e .git/$refs_subrepo_fetch ]]; then
       echo "Git subrepo '$subdir':"
       echo "  Status not available: missing fetch ref."
       echo "    (use 'git subrepo fetch' to update)"
