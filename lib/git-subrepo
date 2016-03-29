@@ -1191,6 +1191,7 @@ command-workdir() {
     cd .git/workdir/$subdir
     FAIL=false RUN git cherry-pick --abort
     FAIL=false RUN git rebase --abort
+    FAIL=false RUN git reset --hard ORIG_HEAD
     RUN git reset --hard HEAD
     using_workdir=true
   fi
