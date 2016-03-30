@@ -1192,7 +1192,13 @@ command-workdir() {
     FAIL=false RUN git cherry-pick --abort
     FAIL=false RUN git rebase --abort
     FAIL=false RUN git reset --hard ORIG_HEAD
-    RUN git reset --hard HEAD
+    FAIL=false RUN git reset --hard HEAD
+    if ! $OK; then
+      FAIL=false RUN git checkout "$original_head_branch"
+      if ! $OK; then
+        error "Failed to reset workdir at '.git/workdir/$subdir'."
+      fi
+    fi
     using_workdir=true
   fi
 }
