@@ -1314,7 +1314,7 @@ assert-repo-is-ready() {
     RUN git rev-parse --verify HEAD
 
   # Repo is in a clean state:
-  if [[ $command =~ ^(clone|init|pull|push|commit)$ ]]; then
+  if [[ $command =~ ^(clone|init|pull|push|branch|commit)$ ]]; then
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
       error "Can't $command subrepo. Unstaged changes."
