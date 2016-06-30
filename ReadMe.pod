@@ -574,7 +574,7 @@ This command has a test suite (run C<make test>), but surely has many bugs. If
 you have expertise with Git and subcommands, please review the code, and file
 issues on anything that seems wrong.
 
-If you want to chat about the C<git-subrepo> command, join C<#git-commands> on
+If you want to chat about the C<git-subrepo> command, join C<#gitcommands> on
 C<irc.freenode.net>.
 
 =head1 Notes

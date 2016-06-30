@@ -24,5 +24,5 @@ install: make install
 
 devel:
   git: git@github.org:ingydotnet/git-subrepo.git
-  irc: irc.freenode.net/git-commands
+  irc: irc.freenode.net/gitcommands
   bug: https://github.com/ingydotnet/git-subrepo/issues/
