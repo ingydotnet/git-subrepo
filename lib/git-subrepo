@@ -276,7 +276,7 @@ command:branch() {
   fi
 
   # Create the subrepo branch:
-  CALL subrepo:branch
+  subrepo:branch
 
   o "Checkout '$original_head_branch'."
   git checkout --quiet "$original_head_branch"
@@ -833,6 +833,11 @@ subrepo:commit() {
   else
     commit_message="$(get-commit-message)"
   fi
+
+  local edit_flag=
+  $edit_wanted && edit_flag=--edit
+
+  [[ -n $commit_message ]] || commit_message="$(get-commit-message)"
 
   local edit_flag=
   $edit_wanted && edit_flag=--edit
