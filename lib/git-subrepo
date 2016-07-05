@@ -59,6 +59,7 @@ version     Print the git-subrepo version number
 a,all       Perform command on all current subrepos
 A,ALL       Perform command on all subrepos and subsubrepos
 b,branch=   Specify an upstream branch
+e,edit      Edit commit message
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
 m,message=  Specify a commit message
@@ -112,6 +113,7 @@ main() {
   local override_remote=        # Remote specified with -r
   local override_branch=        # Remote specified with -b
 
+  local edit_commit=false       # Edit commit message using -e
   local commit_message=         # Custom commit message using -m
 
   local FAIL=true               # Flag for RUN: fail on error
@@ -731,15 +733,18 @@ subrepo:commit() {
 
   [[ -n $commit_message ]] || commit_message="$(get-commit-message)"
 
+  local edit_flag=
+  $edit_commit && edit_flag=--edit
+
   o "Commit to the '$original_head_branch' branch."
   if [[ $original_head_commit != none ]]; then
-    RUN git commit -m "$commit_message"
+    RUN git commit $edit_flag -m "$commit_message"
   else
     # We had cloned into an empty repo, side effect of prior git reset --mixed
     # command is that subrepo's history is now part of the index. Commit
     # without that history.
     OUT=true RUN git write-tree
-    OUT=true RUN git commit-tree -m "$commit_message" "$output"
+    OUT=true RUN git commit-tree $edit_flag -m "$commit_message" "$output"
     RUN git reset --hard "$output"
   fi
 
@@ -885,6 +890,7 @@ get-command-options() {
           override_branch="$1"
           commit_msg_args+=("--branch=$1")
           shift ;;
+      -e) edit_commit=true ;;
       -f) force_wanted=true
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
@@ -963,7 +969,7 @@ options_commit='fetch force'
 options_fetch='all branch remote'
 options_init='branch remote'
 options_merge_base='all'
-options_pull='all branch message remote update'
+options_pull='all branch edit message remote update'
 options_push='all branch force remote squash update'
 options_status='ALL all fetch'
 
