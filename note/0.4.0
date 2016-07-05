@@ -1,0 +1,12 @@
+- Update docs
+- Review issue/142
+  - Compare operations to master
+- Add a --no-push or --dry-run flag for push
+- Add a --rebase option for push
+- Add --message= and --edit to the init command ??
+  - Also add to doc
+- Update doc for steps of pull command to include merge and rebase
+- Test squashing on pull operations
+- Update push doc after understanding it more
+- Is --rebase for pull or push?
+  - Make sure docs are correct too.

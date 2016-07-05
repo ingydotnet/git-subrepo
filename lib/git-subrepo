@@ -58,10 +58,14 @@ version     Print the git-subrepo version number
  
 a,all       Perform command on all current subrepos
 A,ALL       Perform command on all subrepos and subsubrepos
-b,branch=   Specify an upstream branch
+b,branch=   Specify the upstream branch to push/pull/fetch
+e,edit      Edit commit message
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
-r,remote=   Specify an upstream remote
+m,message=  Specify a commit message
+N,dry-run   Don't push or commit (prints next commands to run)
+r,remote=   Specify the upstream remote to push/pull/fetch
+R,rebase    Rebase commits (rather than merge) on pull
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
  
@@ -80,15 +84,19 @@ main() {
   local command_arguments=()    # Command args after getopt parsing
   local commit_msg_args=()      # Arguments to show in the commit msg
   local subrepos=()             # List of multiple subrepos
+
+  local all_wanted=false        # Apply command to all subrepos
+  local ALL_wanted=false        # Apply command to all subrepos and subsubrepos
+  local dry_run_wanted=false    # Skip commits and pushes
+  local force_wanted=false      # Force certain operations
+  local fetch_wanted=false      # Fetch requested before a command
+  local rebase_wanted=false     # Rebase on pull (instead of merge)
+  local squash_wanted=false     # Squash commit on push
+  local update_wanted=false     # Update .gitrepo with --branch and/or --remote
+
   local quiet_wanted=false      # Output should be quiet
   local verbose_wanted=false    # Output should be verbose
   local debug_wanted=false      # Show debug messages
-  local all_wanted=false        # Apply command to all subrepos
-  local ALL_wanted=false        # Apply command to all subrepos and subsubrepos
-  local force_wanted=false      # Force certain operations
-  local fetch_wanted=false      # Fetch requested before a command
-  local update_wanted=false     # Update .gitrepo with --branch and/or --remote
-  local squash_wanted=false     # Squash commit on push
 
   local subdir=                 # Subdirectory of the subrepo being used
   local gitrepo=                # Path to .gitrepo file
@@ -110,6 +118,9 @@ main() {
 
   local override_remote=        # Remote specified with -r
   local override_branch=        # Remote specified with -b
+
+  local edit_wanted=false       # Edit commit message using -e
+  local commit_message=         # Custom commit message using -m
 
   local FAIL=true               # Flag for RUN: fail on error
   local OUT=false               # Flag for RUN: put output in $output
@@ -134,7 +145,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ ! $command =~ ^(help)$ ]]; then
+  if $all_wanted && [[ ! $command =~ ^(help|status)$ ]]; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -257,7 +268,7 @@ command:branch() {
   fi
 
   # Create the subrepo branch:
-  CALL subrepo:branch
+  subrepo:branch
 
   o "Checkout '$original_head_branch'."
   git checkout --quiet "$original_head_branch"
@@ -673,7 +684,7 @@ subrepo:branch() {
         second_parent="-p $gitrepo_commit"
         last_gitrepo_commit="$gitrepo_commit"
       fi
-    
+
       o "Create a new commit $first_parent $second_parent"
       FAIL=false RUN git cat-file -e "$commit":"$subdir"
       if OK; then
@@ -732,15 +743,20 @@ subrepo:commit() {
   update-gitrepo-file
   RUN git add -f "$gitrepo"
 
+  [[ -n $commit_message ]] || commit_message="$(get-commit-message)"
+
+  local edit_flag=
+  $edit_wanted && edit_flag=--edit
+
   o "Commit to the '$original_head_branch' branch."
   if [[ $original_head_commit != none ]]; then
-    RUN git commit -m "$(get-commit-message)"
+    RUN git commit $edit_flag -m "$commit_message"
   else
     # We had cloned into an empty repo, side effect of prior git reset --mixed
     # command is that subrepo's history is now part of the index. Commit
     # without that history.
     OUT=true RUN git write-tree
-    OUT=true RUN git commit-tree -m "$(get-commit-message)" "$output"
+    OUT=true RUN git commit-tree $edit_flag -m "$commit_message" "$output"
     RUN git reset --hard "$output"
   fi
 
@@ -748,7 +764,6 @@ subrepo:commit() {
   git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
 }
 
-<<<<<<< 7e3eff53f6200ee6ff933e3ddd3131db7f0c10c5
 subrepo:merge-base() {
   local merge_base_order=()
   local counter=0
@@ -812,8 +827,6 @@ subrepo:merge-base() {
   return 1
 }
 
-=======
->>>>>>> Redesign, trash the tree hash approach and use merges instead.
 subrepo:status() {
   if [[ ${#command_arguments[@]} -eq 0 ]]; then
     get-all-subrepos
@@ -952,13 +965,18 @@ get-command-options() {
           override_branch="$1"
           commit_msg_args+=("--branch=$1")
           shift ;;
+      -e) edit_wanted=true ;;
       -f) force_wanted=true
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
+      -m) commit_message="$1"
+          shift;;
+      -N) dry_run_wanted=true ;;
       -r) subrepo_remote="$1"
           override_remote="$1"
           commit_msg_args+=("--remote=$1")
           shift ;;
+      -R) rebase_wanted=true ;;
       -s) squash_wanted=true ;;
       -u) update_wanted=true
           commit_msg_args+=("--update") ;;
@@ -988,26 +1006,21 @@ get-command-options() {
   fi
   commit_msg_args+=("${command_arguments[@]}")
 
-  if $all_wanted; then
-    check_option all
-  fi
-  if $ALL_wanted; then
-    check_option ALL
-  fi
-  if $force_wanted; then
-    check_option force
-  fi
-  if $squash_wanted; then
-    check_option squash
-  fi
-  if $fetch_wanted; then
-    check_option fetch
-  fi
+  for option in all ALL dry_run edit fetch force rebase squash; do
+    var="${option}_wanted"
+    if ${!var}; then
+      check_option $option
+    fi
+  done
+
   if [[ -n $override_branch ]]; then
     check_option branch
   fi
   if [[ -n $override_remote ]]; then
     check_option remote
+  fi
+  if [[ -n $commit_message ]]; then
+    check_option message
   fi
   if $update_wanted; then
     check_option update
@@ -1020,13 +1033,12 @@ get-command-options() {
 options_help='all'
 options_branch='all fetch force'
 options_clean='ALL all force'
-options_clone='branch force'
-options_commit='fetch force'
+options_clone='branch edit force message'
+options_commit='edit fetch force message'
 options_fetch='all branch remote'
 options_init='branch remote'
-options_merge_base='all'
-options_pull='all branch remote update'
-options_push='all branch force remote squash update'
+options_pull='all branch edit message rebase remote update'
+options_push='all branch dry_run force remote squash update'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
@@ -1188,7 +1200,7 @@ update-gitrepo-file() {
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 ...
-    fi 
+    fi
   fi
 
 
@@ -1365,7 +1377,7 @@ get-commit-message() {
   if git:rev-exists "$upstream_head_commit"; then
     commit=$(git rev-parse --short "$upstream_head_commit")
   fi
-  
+
   local args=() debug_wanted=false
   if $all_wanted; then
     args+=("$subdir")
@@ -1382,11 +1394,18 @@ get-commit-message() {
     merged=$(git rev-parse --short "$subrepo_commit_ref")
   fi
 
+  local is_merge=""
+  if [[ $command != push ]]; then
+    if git:is_merge_commit "$subrepo_commit_ref"; then
+      is_merge=" (merge)"
+    fi
+  fi
+
   # TODO: Consider output for push!
 
   # Format subrepo commit message:
   cat <<...
-git subrepo $command ${args[@]}
+git subrepo $command$is_merge ${args[@]}
 
 subrepo:
   subdir:   "$subdir"
@@ -1517,6 +1536,11 @@ git:make-ref() {
   local ref_name="$1"
   local commit="$(git rev-parse "$2")"
   RUN git update-ref "$ref_name" "$commit"
+}
+
+git:is_merge_commit() {
+  local commit="$1"
+  git show --summary "$commit" | grep -q ^Merge:
 }
 
 
