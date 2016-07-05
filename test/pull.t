@@ -47,6 +47,18 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   test-gitrepo-field "cmdver" "`git subrepo --version`"
 }
 
+# Check commit messages
+{
+  foo_new_commit_message="$(cd $OWNER/foo; git log --format=%B -n 1)"
+  like "$foo_new_commit_message" \
+      "git subrepo pull bar" \
+      "Subrepo pull commit message OK"
+  bar_commit_short="$(git rev-parse --short $bar_head_commit)"
+  like "$foo_new_commit_message" \
+      'merged:   \"'$bar_commit_short \
+      "Pull commit contains merged"
+}
+
 # Test pull if we have rebased the original subrepo so that our clone
 # commit is no longer present in the history
 (
