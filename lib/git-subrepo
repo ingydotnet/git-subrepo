@@ -61,6 +61,7 @@ A,ALL       Perform command on all subrepos and subsubrepos
 b,branch=   Specify an upstream branch
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
+m,message=  Specify a commit message
 r,remote=   Specify an upstream remote
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
@@ -110,6 +111,8 @@ main() {
 
   local override_remote=        # Remote specified with -r
   local override_branch=        # Remote specified with -b
+
+  local commit_message=         # Custom commit message using -m
 
   local FAIL=true               # Flag for RUN: fail on error
   local OUT=false               # Flag for RUN: put output in $output
@@ -726,15 +729,17 @@ subrepo:commit() {
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
 
+  [[ -n $commit_message ]] || commit_message="$(get-commit-message)"
+
   o "Commit to the '$original_head_branch' branch."
   if [[ $original_head_commit != none ]]; then
-    RUN git commit -m "$(get-commit-message)"
+    RUN git commit -m "$commit_message"
   else
     # We had cloned into an empty repo, side effect of prior git reset --mixed
     # command is that subrepo's history is now part of the index. Commit
     # without that history.
     OUT=true RUN git write-tree
-    OUT=true RUN git commit-tree -m "$(get-commit-message)" "$output"
+    OUT=true RUN git commit-tree -m "$commit_message" "$output"
     RUN git reset --hard "$output"
   fi
 
@@ -883,6 +888,8 @@ get-command-options() {
       -f) force_wanted=true
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
+      -m) commit_message="$1"
+          shift;;
       -r) subrepo_remote="$1"
           override_remote="$1"
           commit_msg_args+=("--remote=$1")
@@ -937,6 +944,9 @@ get-command-options() {
   if [[ -n $override_remote ]]; then
     check_option remote
   fi
+  if [[ -n $commit_message ]]; then
+    check_option message
+  fi
   if $update_wanted; then
     check_option update
     if [[ -z $subrepo_branch && -z $subrepo_remote ]]; then
@@ -953,7 +963,7 @@ options_commit='fetch force'
 options_fetch='all branch remote'
 options_init='branch remote'
 options_merge_base='all'
-options_pull='all branch remote update'
+options_pull='all branch message remote update'
 options_push='all branch force remote squash update'
 options_status='ALL all fetch'
 
