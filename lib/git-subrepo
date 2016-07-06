@@ -139,7 +139,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ ! $command =~ ^(help|merge-base|status)$ ]]; then
+  if $all_wanted && [[ ! $command =~ ^(help|status)$ ]]; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -964,11 +964,10 @@ get-command-options() {
 options_help='all'
 options_branch='all fetch force'
 options_clean='ALL all force'
-options_clone='branch force'
-options_commit='fetch force'
+options_clone='branch edit force message'
+options_commit='edit fetch force message'
 options_fetch='all branch remote'
 options_init='branch remote'
-options_merge_base='all'
 options_pull='all branch edit message remote update'
 options_push='all branch force remote squash update'
 options_status='ALL all fetch'
