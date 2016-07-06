@@ -1327,8 +1327,10 @@ get-commit-message() {
   fi
 
   local is_merge=""
-  if git:is_merge_commit "$subrepo_commit_ref"; then
-    is_merge=" (merge)"
+  if [[ $command != push ]]; then
+    if git:is_merge_commit "$subrepo_commit_ref"; then
+      is_merge=" (merge)"
+    fi
   fi
 
   # TODO: Consider output for push!

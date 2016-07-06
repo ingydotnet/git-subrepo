@@ -66,7 +66,7 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
 {
   foo_new_commit_message="$(cd $OWNER/foo; git log --format=%B -n 1)"
   like "$foo_new_commit_message" \
-      "git subrepo commit \(merge\)" \
+      "git subrepo commit \(merge\) bar" \
       "subrepo pull should have merge message"
 }
 
@@ -82,6 +82,14 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
   cd $OWNER/foo
   git subrepo push bar
 ) &> /dev/null || die
+
+# Check commit messages
+{
+  foo_new_commit_message="$(cd $OWNER/foo; git log --format=%B -n 1)"
+  like "$foo_new_commit_message" \
+      "git subrepo push bar" \
+      "subrepo push should not have merge message"
+}
 
 (
   cd $OWNER/bar
