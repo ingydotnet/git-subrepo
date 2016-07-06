@@ -262,7 +262,7 @@ command:branch() {
   fi
 
   # Create the subrepo branch:
-  CALL subrepo:branch
+  subrepo:branch
 
   o "Checkout '$original_head_branch'."
   git checkout --quiet "$original_head_branch"
@@ -284,7 +284,7 @@ command:commit() {
 
   [[ -n $subrepo_commit_ref ]] ||
     subrepo_commit_ref="subrepo/$subdir"
-  CALL subrepo:commit
+  subrepo:commit
 
   say "Subrepo commit '$subrepo_commit_ref' committed as"
   say "subdir '$subdir/' to branch '$original_head_branch'."
