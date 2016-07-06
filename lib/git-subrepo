@@ -1326,11 +1326,16 @@ get-commit-message() {
     merged=$(git rev-parse --short "$subrepo_commit_ref")
   fi
 
+  local is_merge=""
+  if git:is_merge_commit "$subrepo_commit_ref"; then
+    is_merge=" (merge)"
+  fi
+
   # TODO: Consider output for push!
 
   # Format subrepo commit message:
   cat <<...
-git subrepo $command ${args[@]}
+git subrepo $command$is_merge ${args[@]}
 
 subrepo:
   subdir:   "$subdir"
@@ -1461,6 +1466,11 @@ git:make-ref() {
   local ref_name="$1"
   local commit="$(git rev-parse "$2")"
   RUN git update-ref "$ref_name" "$commit"
+}
+
+git:is_merge_commit() {
+  local commit="$1"
+  git show --summary "$commit" | grep -q ^Merge:
 }
 
 

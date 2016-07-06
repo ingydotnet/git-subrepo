@@ -62,6 +62,14 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
   "Merged Bar2" \
   "The readme file in the mainrepo is merged"
 
+# Check commit messages
+{
+  foo_new_commit_message="$(cd $OWNER/foo; git log --format=%B -n 1)"
+  like "$foo_new_commit_message" \
+      "git subrepo commit \(merge\)" \
+      "subrepo pull should have merge message"
+}
+
 # Test foo/bar/.gitrepo file contents:
 {
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
