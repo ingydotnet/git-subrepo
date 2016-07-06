@@ -284,7 +284,7 @@ command:commit() {
 
   [[ -n $subrepo_commit_ref ]] ||
     subrepo_commit_ref="subrepo/$subdir"
-  subrepo:commit
+  CALL subrepo:commit
 
   say "Subrepo commit '$subrepo_commit_ref' committed as"
   say "subdir '$subdir/' to branch '$original_head_branch'."
