@@ -1291,7 +1291,7 @@ get-upstream-head-branch() {
   )"
   local branch="$(
     echo "$remotes" |
-    grep "$commit" |
+    grep -E "$commit[[:space:]]+refs/heads/" |
     grep -v HEAD |
     head -n1 |
     cut -f2

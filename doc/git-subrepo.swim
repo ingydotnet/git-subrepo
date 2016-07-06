@@ -507,7 +507,7 @@ This command has a test suite (run `make test`), but surely has many bugs. If
 you have expertise with Git and subcommands, please review the code, and file
 issues on anything that seems wrong.
 
-If you want to chat about the `git-subrepo` command, join `#git-commands` on
+If you want to chat about the `git-subrepo` command, join `#gitcommands` on
 `irc.freenode.net`.
 
 = Notes
