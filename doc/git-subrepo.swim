@@ -17,13 +17,13 @@ Git Submodule Alternative
   git subrepo fetch <subdir>
   git subrepo branch <subdir>
   git subrepo commit <subdir>
-  git subrepo merge-base <branch1> <branch2>
 
   git subrepo status [<subdir>]
   git subrepo clean <subdir>
 
-  git subrepo help [<command>]
+  git subrepo help [--all | <command>]
   git subrepo version
+  git subrepo upgrade
 
 = Description
 
@@ -60,7 +60,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Your git history is kept squeaky clean.
 * Upstream history (clone/pull) is condensed into a single commit.
 * You can see the subrepo history with `git log subrepo/<subdir>/fetch`.
-* Commits pushed back upstream are *not* condensed.
+* Commits pushed back upstream are *not* condensed (by default).
 * Trivial to try any subrepo operations and then reset back.
 * No configuration required.
 * Does not introduce history that messes up other git commands.
@@ -85,7 +85,7 @@ experienced Git users.
 Please note that the commands are /not/ exact equivalents, and do not take all
 the same arguments. Keep reading…
 
-- `git subrepo clone <repository> [<subdir>] [-b <upstream-branch>] [-f]`
+- `git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [-e]`
 
   Add a repository as a subrepo in a subdir of your repository.
 
@@ -104,7 +104,8 @@ the same arguments. Keep reading…
 
   The `--force` option will "reclone" (completely replace) an existing subdir.
 
-  The `clone` command accepts the `--branch=` and `--force` options.
+  The `clone` command accepts the `--branch=` `--edit`, `--force` and
+  `--message=` options.
 
 - `git subrepo init <subdir> [-r <remote>] [-b <branch>]`
 
@@ -118,17 +119,17 @@ the same arguments. Keep reading…
 
   If you specify the `--remote` (and optionally the `--branch`) option, the
   values will be added to the `<subdir>/.gitrepo` file. The `--remote` option
-  is the upstream URL, and the `--branch` option is the upstream branch to
-  push to. These values will be needed to do a `git subrepo push` command, but
-  they can be provided later on the `push` command (and saved to
-  `<subdir>/.gitrepo` if you also specify the `--update` option).
+  is the upstream URL, and the `--branch` option is the upstream branch to push
+  to. These values will be needed to do a `git subrepo push` command, but they
+  can be provided later on the `push` command (and saved to `<subdir>/.gitrepo`
+  if you also specify the `--update` option).
 
   Note: You will need to create the empty upstream repo and push to it on your
   own, using `git subrepo push <subdir>`.
 
   The `init` command accepts the `--branch=` and `--remote=` options.
 
-- `git subrepo pull <subdir>|--all [-b <branch>] [-r <remote>] [-u]`
+- `git subrepo pull <subdir>|-a [-R] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u]`
 
   Update the subrepo subdir with the latest upstream changes.
 
@@ -136,18 +137,16 @@ the same arguments. Keep reading…
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git subrepo merge-base subrepo/<subdir>/fetch subrepo/<subdir>
     git rebase --onto <new_parent> <old_parent> subrepo/<subdir>
     git rebase subrepo/<subdir>/fetch subrepo/<subdir>
     git checkout ORIG_HEAD
     git subrepo commit <subdir>
 
   In other words, you could do all the above commands yourself, for the same
-  effect. If any of the commands fail, subrepo will stop and tell you to
-  finish this by hand. Generally a failure would be in the rebase, where
-  conflicts can happen. Since Git has lots of ways to resolve conflicts to
-  your personal tastes, the subrepo command defers to letting you do this by
-  hand.
+  effect. If any of the commands fail, subrepo will stop and tell you to finish
+  this by hand. Generally a failure would be in the rebase, where conflicts can
+  happen. Since Git has lots of ways to resolve conflicts to your personal
+  tastes, the subrepo command defers to letting you do this by hand.
 
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
@@ -157,10 +156,10 @@ the same arguments. Keep reading…
 
   The set of commands used above are described in detail below.
 
-  The `pull` command accepts the `--all`, `--branch=`, `--remote=` and
-  `--update` options.
+  The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--message=`,
+  `--rebase`, `--remote=` and `--update` options.
 
-- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u]`
+- `git subrepo push <subdir>|-a [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N]`
 
   Push a properly merged subrepo branch back upstream.
 
@@ -180,36 +179,34 @@ the same arguments. Keep reading…
   discouraged. Only use this option if you fully understand it. (The `--force`
   option will NOT check for a proper merge. ANY branch will be force pushed!)
 
-  The `push` command accepts the `--all`, `--branch=`, `--force`, `--remote=`
-  and `--update` options.
+  The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
+  `--remote=`, `--squash` and `--update` options.
 
-- `git subrepo fetch <subdir>|--all`
+- `git subrepo fetch <subdir>|--all [<branch>] [-r <remote>]`
 
   Fetch the remote/upstream content for a subrepo.
 
-  It will create a Git reference called `subrepo/<subdir>/fetch` that
-  points at the same commit as `FETCH_HEAD`. It will also create a remote
-  called `subrepo/<subdir>`. These are temporary and you can remove them
-  easily with the subrepo `clean` command.
+  It will create a Git reference called `subrepo/<subdir>/fetch` that points at
+  the same commit as `FETCH_HEAD`. It will also create a remote called
+  `subrepo/<subdir>`. These are temporary and you can easily remove them with
+  the subrepo `clean` command.
 
-  The `fetch` command accepts the `--all`, `--branch=` and `--remote=`
-  options.
+  The `fetch` command accepts the `--all`, `--branch=` and `--remote=` options.
 
-- `git subrepo branch <subdir>|--all`
+- `git subrepo branch <subdir>|--all [-f] [-F]`
 
   Create a branch with local subrepo commits.
 
-  Scan the history of the mainline for all the commits that affect the
-  `subdir` and create a new branch from them called `subrepo/<subdir>`.
+  Scan the history of the mainline for all the commits that affect the `subdir`
+  and create a new branch from them called `subrepo/<subdir>`.
 
   This is useful for doing `pull` and `push` commands by hand.
 
-  Use the `--force` option to write over an existing `subrepo/<subdir>`
-  branch.
+  Use the `--force` option to write over an existing `subrepo/<subdir>` branch.
 
-  The `branch` command accepts the `--all` and `--force` options.
+  The `branch` command accepts the `--all`, `--fetch` and `--force` options.
 
-- `git subrepo commit <subdir> [<subrepo-ref>]`
+- `git subrepo commit <subdir> [<subrepo-ref>] [-m <msg>] [-e] [-f] [-F]`
 
   Add subrepo branch to current history as a single commit.
 
@@ -222,35 +219,20 @@ the same arguments. Keep reading…
   branch history. That way the same branch can push upstream. Use the
   `--force` option to commit anyway.
 
-  The `commit` command accepts the `--force` option.
+  The `commit` command accepts the `--edit`, `--fetch`, `--force` and
+  `--message=` options.
 
-- `git subrepo merge-base <branch1> <branch2>`
-
-  This "plumbing" command finds a common ancestor between two branches. It will
-  look at the referenced tree hash in the commits to see if it can locate a
-  common one.
-
-  This is used for pull and push before the rebase step. In this case we look
-  at all the local commits and then try to find a tree hash that is available
-  in the subrepo.
-
-  Note: This is different from the `git merge-base` command which looks at the
-  object structure.
-
-  Use the `--all` option to list all possible common ancestors. (This differs
-  from other commands which use `--all` to apply the same command to all
-  subrepos).
-
-  The `merge-base` command accepts the `--all` option.
-
-- `git subrepo status [<subdir>]`
+- `git subrepo status [<subdir>|--all|--ALL] [-F] [-q]`
 
   Get the status of a subrepo. Uses the `--all` option by default. If the
   `--quiet` flag is used, just print the subrepo names, one per line.
 
   The `--verbose` option will show all the recent local and upstream commits.
 
-  The `status` command accepts the `--ALL`, `--all`, and `--fetch` option.
+  Use `--ALL` to show the subrepos of the subrepos (ie the "subsubrepos"), if
+  any.
+
+  The `status` command accepts the `--ALL`, `--all`, and `--fetch` options.
 
 - `git subrepo clean <subdir>|--ALL|--all`
 
@@ -261,22 +243,37 @@ the same arguments. Keep reading…
   removes all those things.
 
   Use `--force` to remove refs. Refs are not removed by default because they
-  are sometimes needed between commands. To remove all subrepo artifacts:
+  are sometimes needed between commands.
 
-    git subrepo clean --all --force
+  Use `--all` to clean up after all the current subrepos. Sometimes you might
+  change to a branch where a subrepo doesn't exist, and then `--all` won't find
+  it. Use `--ALL` to remove any artifacts that were ever created by subrepo.
+
+  To remove ALL subrepo artifacts:
+
+    git subrepo clean --ALL --force
 
   The `clean` command accepts the `--ALL`, `--all`, and `--force` options.
 
-- `git subrepo help`
+- `git subrepo help [--all]`
 
   Same as `git help subrepo`. Will launch the manpage. For the shorter usage,
-  use `git subrepo -h`.
+  use `git subrepo -h`. Use `--all` to get a summary of all commands.
+
+  The `help` command accepts the `--all` option.
 
 - `git subrepo version [--verbose] [--quiet]`
 
   This command will display version information about git-subrepo and its
   environment. For just the version number, use `git subrepo --version`. Use
   `--verbose` for more version info, and `--quiet` for less.
+
+- `git subrepo upgrade`
+
+  Upgrade the `git-subrepo` software itself. This simply does a `git pull` on
+  the git repository that the code is running from. It only works if you are on
+  the `master` branch. It won't work if you installed `git-subrepo` using `make
+  install`; in that case you'll need to `make install` from the latest code.
 
 = Command Options
 
@@ -306,8 +303,13 @@ the same arguments. Keep reading…
 
 - `--branch=<branch-name>` (`-b <branch-name>`)
 
-  Use a different branch-name than the remote HEAD or the one saved in
+  Use a different upstream branch-name than the remote HEAD or the one saved in
   `.gitrepo` locally.
+
+- `--dry-run` (`-N`)
+
+  For the push command, do everything up until the push and then print out the
+  actual `git push` command needed to finish the operation.
 
 - `--force` (`-f`)
 
@@ -317,13 +319,21 @@ the same arguments. Keep reading…
 
   Use this option to fetch the upstream commits, before running the command.
 
+- `--rebase` (`-R`)
+
+  Use a rebase strategy to merge upstream subrepo commits on a pull.
+
 - `--remote=<remote-url>` (`-r <remote-url>`)
 
   Use a different remote-url than the one saved in `.gitrepo` locally.
 
+- `--squash` (`-s`)
+
+  Squash all commits on a push into one new commit.
+
 - `--update` (`-u`)
 
-  If `-b` or `-r` are used, and the command updates the `.gitrepo` file,
+  If `--branch` or `--r` are used, and the command updates the `.gitrepo` file,
   include these values to the update.
 
 = Output Options
@@ -397,8 +407,7 @@ line like this one to your shell startup script:
 
   source /path/to/git-subrepo/.rc
 
-That will modify your `PATH` and `MANPATH`, and also enable command
-completion.
+That will modify your `PATH` and `MANPATH`, and also enable command completion.
 
 The second method is to do these things by hand. This might afford you more
 control of your shell environment. Simply add the `lib` and `man` directories
@@ -409,8 +418,8 @@ to your `PATH` and `MANPATH`:
 
 See below for info on how to turn on Command Completion.
 
-The third method is a standard system install, which puts `git-subrepo` next
-to your other git commands:
+The third method is a standard system install, which puts `git-subrepo` next to
+your other git commands:
 
   make install        # Possibly with 'sudo'
 
@@ -439,8 +448,8 @@ or if you don't have `make` on your system:
 
 = Upgrading
 
-If you used the `PATH` method of installation, just run this to upgrade
-`git-subrepo`:
+If you used the `.rc` or `PATH` method of installation, just run this to
+upgrade `git-subrepo`:
 
   git subrepo upgrade
 
