@@ -15,9 +15,9 @@ SHARE = share
 
 # Install variables:
 PREFIX ?= /usr/local
-INSTALL_LIB  ?= $(shell git --exec-path)
+INSTALL_LIB  ?= $(DESTDIR)$(shell git --exec-path)
 INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
-INSTALL_MAN1 ?= $(PREFIX)/share/man/man1
+INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
 
 # Basic targets:
 default: help
@@ -36,6 +36,7 @@ test:
 
 # Install support:
 install:
+	install -C -d -m 0755 $(INSTALL_LIB)/
 	install -C -m 0755 $(LIB) $(INSTALL_LIB)/
 	install -C -d -m 0755 $(INSTALL_EXT)/
 	install -C -m 0755 $(EXTS) $(INSTALL_EXT)/
