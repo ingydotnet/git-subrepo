@@ -415,8 +415,8 @@ for instance, can use this information to adjust accordingly.
 
 =item C<GIT_SUBREPO_COMMAND>
 
-This variable is exported when C<git-subrepo> is running. It is set to the pid
-of the name of the C<git-subrepo> subcommand that is running.
+This variable is exported when C<git-subrepo> is running. It is set to the
+name of the C<git-subrepo> subcommand that is running.
 
 =item C<GIT_SUBREPO_PAGER>
 
