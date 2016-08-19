@@ -684,7 +684,20 @@ subrepo:branch() {
       FAIL=false RUN git cat-file -e "$commit":"$subdir"
       if OK; then
         o "Create with content"
+        local PREVIOUS_IFS=$IFS
+        IFS=$'\n'
+        local author_info=( $(git log -1 --format=%ad%n%ae%n%an "$commit") )
+        IFS=$PREVIOUS_IFS
+
+        # When we create new commits we leave the author information unchanged
+        # the committer will though be updated to the current user
+        # This should be analog how cherrypicking is handled allowing git
+        # to store both the original author but also the responsible committer
+        # that created the local version of the commit and pushed it.
         prev_commit=$(git log -n 1 --format=%B "$commit" |
+          GIT_AUTHOR_DATE="${author_info[0]}" \
+          GIT_AUTHOR_EMAIL="${author_info[1]}" \
+          GIT_AUTHOR_NAME="${author_info[2]}" \
           git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
       else
         o "Create empty placeholder"
