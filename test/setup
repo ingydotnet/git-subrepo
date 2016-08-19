@@ -38,10 +38,20 @@ clone-foo-and-bar() {
   (
     # foo will act as the main repo
     git clone $UPSTREAM/foo $OWNER/foo
-    (cd $OWNER/foo; git config core.autocrlf input)
+    (
+        cd $OWNER/foo
+        git config core.autocrlf input
+        git config user.name "FooUser"
+        git config user.email "foo@foo"
+    )
     # bar will act as the subrepo
     git clone $UPSTREAM/bar $OWNER/bar
-    (cd $OWNER/bar; git config core.autocrlf input)
+    (
+        cd $OWNER/bar
+        git config core.autocrlf input
+        git config user.name "BarUser"
+        git config user.email "bar@bar"
+    )
   ) &> /dev/null || die
 }
 
