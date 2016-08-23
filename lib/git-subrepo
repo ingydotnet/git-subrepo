@@ -1163,7 +1163,7 @@ get-params() {
   local num=${#command_arguments[@]}
   for arg in $@; do
     # If arg starts with '+' then it is required
-    if [[ $arg =~ ^\+ ]]; then
+    if [[ $arg == +* ]]; then
       if [[ $i -ge $num ]]; then
         usage-error "Command '$command' requires arg '${arg#+}'."
       fi
