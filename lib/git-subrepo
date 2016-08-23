@@ -1168,7 +1168,7 @@ get-params() {
     local value="${command_arguments[i]}"
     value="${value//%/%%}"
     # If arg starts with '+' then it is required
-    if (shopt -s compat31&>/dev/null||:; [[ $arg =~ ^\\+ ]]); then
+    if [[ $arg == +* ]]; then
       if [[ $i -ge $num ]]; then
         usage-error "Command '$command' requires arg '${arg#+}'."
       fi
