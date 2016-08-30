@@ -502,7 +502,8 @@ subrepo:init() {
   update-gitrepo-file
 
   o "Add the new '$subdir/.gitrepo' file."
-  RUN git add "$subdir/.gitrepo"
+  # -f from pull request #219. TODO needs test.
+  RUN git add -f "$subdir/.gitrepo"
 
   o "Commit new subrepo to the '$original_head_branch' branch."
   subrepo_commit_ref="$upstream_head_commit"
@@ -776,7 +777,7 @@ subrepo:commit() {
 
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
-  RUN git add "$gitrepo"
+  RUN git add -f "$gitrepo"
 
   o "Commit to the '$original_head_branch' branch."
   if [[ $original_head_commit != none ]]; then
