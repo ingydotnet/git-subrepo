@@ -1206,7 +1206,7 @@ guess-subdir() {
   dir="${dir%.git}"
   dir="${dir%/}"
   dir="${dir##*/}"
-  [[ $dir =~ ^[-a-zA-Z0-9]+$ ]] ||
+  [[ $dir =~ ^[-_a-zA-Z0-9]+$ ]] ||
     error "Can't determine subdir from '$subrepo_remote'."
   subdir="$dir"
   check-and-normalize-subdir
