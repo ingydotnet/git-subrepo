@@ -809,7 +809,7 @@ subrepo:merge-base() {
   for entry in ${merge_base_order[@]}; do
     local source_key="${source}_$entry"
     local source_value="${!source_key}"
-    if [[ ${#source_value} > 40 ]]; then
+    if [[ ${#source_value} -gt 40 ]]; then
       if $list_all; then
         say "Multiple on $1: $source_value"
       fi
@@ -820,7 +820,7 @@ subrepo:merge-base() {
         :
       else
         local target_value=${!target_key};
-        if [[ ${#target_value} > 40 ]]; then
+        if [[ ${#target_value} -gt 40 ]]; then
           if $list_all; then
             say "Multiple on $2: $target_value"
           fi
