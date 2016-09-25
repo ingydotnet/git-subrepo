@@ -6,6 +6,8 @@ source test/setup
 
 use Test::More
 
+unset GIT_{AUTHOR,COMMITTER}_{EMAIL,NAME}
+
 clone-foo-and-bar
 
 # Make various changes to the repos for testing subrepo push:
