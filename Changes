@@ -1,4 +1,9 @@
 ---
+version: x.x.x
+date:    Mon Sep 26 14:39:32 PDT 2016
+changes:
+- Fix #192
+---
 version: 0.3.0
 date:    Wed Dec  2 19:19:43 PST 2015
 changes:
