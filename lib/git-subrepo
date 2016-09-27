@@ -1162,16 +1162,18 @@ get-params() {
   local i=0
   local num=${#command_arguments[@]}
   for arg in $@; do
+    local value="${command_arguments[i]}"
+    value="${value//%/%%}"
     # If arg starts with '+' then it is required
     if (shopt -s compat31&>/dev/null||:; [[ $arg =~ ^\\+ ]]); then
       if [[ $i -ge $num ]]; then
         usage-error "Command '$command' requires arg '${arg#+}'."
       fi
-      printf -v ${arg#+} "${command_arguments[i]}"
+      printf -v ${arg#+} "$value"
     # Look for function name after ':' to provide a default value
     else
       if [[ $i -lt $num ]]; then
-        printf -v ${arg%:*} "${command_arguments[i]}"
+        printf -v ${arg%:*} "$value"
       elif [[ $arg =~ : ]]; then
         "${arg#*:}"
       fi
