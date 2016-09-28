@@ -122,6 +122,8 @@ main() {
   local edit_wanted=false       # Edit commit message using -e
   local commit_message=         # Custom commit message using -m
 
+  local join_method="merge"     # Current join method (rebase/merge)
+
   local FAIL=true               # Flag for RUN: fail on error
   local OUT=false               # Flag for RUN: put output in $output
   local TTY=false               # Flag for RUN: print output directly
@@ -503,14 +505,26 @@ subrepo:pull() {
 
   subrepo_commit_ref="$branch_name"
 
-  o "Merge in changes from $refs_subrepo_fetch"
-  FAIL=false OUT=true RUN git merge "$refs_subrepo_fetch"
-  if ! OK; then
-    say "The \"git merge\" command failed:"
-    say
-    say "  ${output//$'\n'/$'\n'  }"
-    CODE=1
-    return
+  if [[ "$join_method" == "rebase" ]]; then
+    o "Rebase changes to $refs_subrepo_fetch"
+    FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
+    if ! OK; then
+      say "The \"git rebase\" command failed:"
+      say
+      say "  ${output//$'\n'/$'\n'  }"
+      CODE=1
+      return
+    fi
+  else
+    o "Merge in changes from $refs_subrepo_fetch"
+    FAIL=false OUT=true RUN git merge "$refs_subrepo_fetch"
+    if ! OK; then
+      say "The \"git merge\" command failed:"
+      say
+      say "  ${output//$'\n'/$'\n'  }"
+      CODE=1
+      return
+    fi
   fi
 
   o "Checkout '$original_head_branch'."
@@ -565,6 +579,18 @@ subrepo:push() {
 
     o "Create subrepo branch '$branch_name'."
     CALL subrepo:branch "$branch_name"
+
+    if [[ "$join_method" == "rebase" ]]; then
+      o "Rebase changes to $refs_subrepo_fetch"
+      FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
+      if ! OK; then
+        say "The \"git rebase\" command failed:"
+        say
+        say "  ${output//$'\n'/$'\n'  }"
+        CODE=1
+        return
+      fi
+    fi
 
     RUN git checkout "$original_head_branch"
   else
@@ -674,15 +700,21 @@ subrepo:branch() {
         fi
       fi
 
-      [[ -z "$first_gitrepo_commit" ]] && first_gitrepo_commit="$gitrepo_commit"
-
       o "Find parents"
       local first_parent=
       [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
       local second_parent=
-      if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
+      if [[ -z "$first_gitrepo_commit" ]]; then
+        first_gitrepo_commit="$gitrepo_commit"
         second_parent="-p $gitrepo_commit"
-        last_gitrepo_commit="$gitrepo_commit"
+      fi
+
+      if [[ "$join_method" != "rebase" ]]; then
+        # In the rebase case we don't create merge commits
+        if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
+          second_parent="-p $gitrepo_commit"
+          last_gitrepo_commit="$gitrepo_commit"
+        fi
       fi
 
       o "Create a new commit $first_parent $second_parent"
