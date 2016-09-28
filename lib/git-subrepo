@@ -222,7 +222,7 @@ command:pull() {
   elif [[ $CODE -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date."
   elif [[ $CODE -eq 1 ]]; then
-    error-pull-merge
+    error-join
     return "$CODE"
   else
     die "Unknown pull error code: '$CODE'"
@@ -240,6 +240,9 @@ command:push() {
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
   elif [[ $CODE -eq -2 ]]; then
     say "Subrepo '$subdir' has no new commits to push."
+  elif [[ $CODE -eq 1 ]]; then
+    error-join
+    return "$CODE"
   else
     die "Unknown push error code: '$CODE'"
   fi
@@ -1542,7 +1545,7 @@ get-command-info() {
 # Instructional errors:
 #------------------------------------------------------------------------------
 
-error-pull-merge() {
+error-join() {
   cat <<...
 
 You will need to finish the $command by hand. Your working tree has been
@@ -1553,16 +1556,28 @@ This is the common conflict resolution workflow:
 
   1. Resolve the conflicts (see "git status").
   2. "git add" the resolved files.
+...
+
+  if [[ "$join_method" == "rebase" ]]; then
+    cat <<...
+  3. git rebase --continue
+...
+  else
+    cat <<...
   3. git commit
+...
+  fi
+
+  cat <<...
   4. If there are more conflicts, restart at step 1.
   5. git checkout $original_head_branch
   6. git subrepo commit $subdir
 
-See "git help merge" for details.
+See "git help $join_method" for details.
 
 Alternatively, you can abort the $command and reset back to where you started:
 
-  1. git merge --abort
+  1. git $join_method --abort
   2. git checkout $original_head_branch
   3. git subrepo clean $subdir
 
