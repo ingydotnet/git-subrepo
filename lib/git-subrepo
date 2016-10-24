@@ -123,7 +123,7 @@ main() {
   local override_branch=        # Remote specified with -b
 
   local edit_wanted=false       # Edit commit message using -e
-  local commit_message=         # Custom commit message using -m
+  local wanted_commit_message=  # Custom commit message using -m
 
   local join_method="merge"     # Current join method (rebase/merge)
 
@@ -794,7 +794,12 @@ subrepo:commit() {
   update-gitrepo-file
   RUN git add -f "$gitrepo"
 
-  [[ -n $commit_message ]] || commit_message="$(get-commit-message)"
+  local commit_message
+  if [[ -n "$wanted_commit_message" ]]; then
+    commit_message="$wanted_commit_message"
+  else
+    commit_message="$(get-commit-message)"
+  fi
 
   local edit_flag=
   $edit_wanted && edit_flag=--edit
@@ -1020,7 +1025,7 @@ get-command-options() {
       -f) force_wanted=true
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
-      -m) commit_message="$1"
+      -m) wanted_commit_message="$1"
           shift;;
       -N) dry_run_wanted=true ;;
       -r) subrepo_remote="$1"
@@ -1070,7 +1075,7 @@ get-command-options() {
   if [[ -n $override_remote ]]; then
     check_option remote
   fi
-  if [[ -n $commit_message ]]; then
+  if [[ -n $wanted_commit_message ]]; then
     check_option message
   fi
   if $update_wanted; then
