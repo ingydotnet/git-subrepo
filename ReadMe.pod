@@ -456,6 +456,7 @@ The second method is to do these things by hand. This might afford you more
 control of your shell environment. Simply add the C<lib> and C<man>
 directories to your C<PATH> and C<MANPATH>:
 
+    export GIT_SUBREPO_ROOT="/path/to/git-subrepo"
     export PATH="/path/to/git-subrepo/lib:$PATH"
     export MANPATH="/path/to/git-subrepo/man:$MANPATH"
 
