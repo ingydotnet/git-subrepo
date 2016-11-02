@@ -404,6 +404,7 @@ The second method is to do these things by hand. This might afford you more
 control of your shell environment. Simply add the `lib` and `man` directories
 to your `PATH` and `MANPATH`:
 
+  export GIT_SUBREPO_ROOT="/path/to/git-subrepo"
   export PATH="/path/to/git-subrepo/lib:$PATH"
   export MANPATH="/path/to/git-subrepo/man:$MANPATH"
 
