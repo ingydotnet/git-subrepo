@@ -13,10 +13,10 @@
 #
 #------------------------------------------------------------------------------
 
-[[ -n ${ZSH_VERSION-} ]] &&
+[[ -n "${ZSH_VERSION-}" ]] &&
   GIT_SUBREPO_ROOT="$0" ||
   GIT_SUBREPO_ROOT="$BASH_SOURCE"
-[[ $GIT_SUBREPO_ROOT =~ ^/ ]] ||
+[[ "$GIT_SUBREPO_ROOT" =~ ^/ ]] ||
   GIT_SUBREPO_ROOT="$PWD/$GIT_SUBREPO_ROOT"
 export GIT_SUBREPO_ROOT="$(cd "$(dirname "$GIT_SUBREPO_ROOT")"; pwd)"
 
