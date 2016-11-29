@@ -14,7 +14,7 @@ fetch                fetch <subdir>|--all [-r <remote>] [-b <branch>]
 help                 help [<command>|--all]
 init                 init <subdir> [-r <remote>] [-b <branch>]
 pull                 pull <subdir>|--all [-M|-R|-f] [-e|-m <msg>] [-b <branch>] [-r <remote>] [-u]
-push                 push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N]
+push                 push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
 status               status [<subdir>|--all|--ALL] [-F] [-q|-v]
 upgrade              upgrade
 version              version [-q|-v]
@@ -220,6 +220,10 @@ help:pull() {
   resulting `subrepo/<subdir>` branch, which is often used for a subrepo `push`
   command. See 'push' below for more information.
 
+  When you pull you can assume a fast-forward strategy (default) or you can
+  specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
+  as a `clone --force` operation, using the current remote and branch.
+
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
   clean. You can easily see the subrepo's history with the `git log` command:
@@ -236,7 +240,7 @@ help:pull() {
 help:push() {
     cat <<'...'
 
-  Usage: git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N]
+  Usage: git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
 
 
   Push a properly merged subrepo branch back upstream.
@@ -262,7 +266,7 @@ help:push() {
   option will NOT check for a proper merge. ANY branch will be force pushed!)
 
   The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
-  `--remote=`, `--squash` and `--update` options.
+  `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
 ...
 }
 
