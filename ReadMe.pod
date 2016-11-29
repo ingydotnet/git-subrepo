@@ -29,7 +29,7 @@ git-subrepo - Git Submodule Alternative
     git subrepo status [<subdir>]
     git subrepo clean <subdir>
 
-    git subrepo help [<command> | --all]
+    git subrepo help [<command>|--all]
     git subrepo version
     git subrepo upgrade
 
@@ -71,7 +71,11 @@ The C<git-subrepo> command benefits these roles in the following ways:
 
 =item * Collaborators know when a subdir is a subrepo (it has a C<.gitrepo> file).
 
+=over
+
 =item * The C<.gitrepo> file never gets pushed back to the subrepo upstream.
+
+=back
 
 =item * Well named branches and remotes are generated for manual operations.
 
@@ -176,24 +180,39 @@ The C<init> command accepts the C<--branch=> and C<--remote=> options.
 
 Update the subrepo subdir with the latest upstream changes.
 
+The C<pull> command fetches the latest content from the remote branch pointed
+to by the subrepo's C<.gitrepo> file, and then tries to merge the changes into
+the corresponding subdir. It does this by making a branch of the local commits
+to the subdir and then merging or rebasing (see below) it with the fetched
+upstream content. After the merge, the content of the new branch replaces your
+subdir, the C<.gitrepo> file is updated and a single 'pull' commit is added to
+your mainline history.
+
 The C<pull> command will attempt to do the following commands in one go:
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git rebase --onto <new_parent> <old_parent> subrepo/<subdir>
     git rebase subrepo/<subdir>/fetch subrepo/<subdir>
     git checkout ORIG_HEAD
     git subrepo commit <subdir>
+    # Only needed for a consequential push:
+    git update-ref refs/subrepo/<subdir>/pull subrepo/<subdir>
 
 In other words, you could do all the above commands yourself, for the same
 effect. If any of the commands fail, subrepo will stop and tell you to finish
-this by hand. Generally a failure would be in the rebase, where conflicts can
-happen. Since Git has lots of ways to resolve conflicts to your personal
-tastes, the subrepo command defers to letting you do this by hand.
+this by hand. Generally a failure would be in the merge or rebase part, where
+conflicts can happen. Since Git has lots of ways to resolve conflicts to your
+personal tastes, the subrepo command defers to letting you do this by hand.
 
 When you pull you can assume a fast-forward strategy (default) or you can
-specify a C<--rebase>, C<--merge> or C<--force> strategy. The latter is the
-same as a C<clone --force> operation, using the current remote and branch.
+specify a C<--rebase>, C<--merge> or C<--force> strategy. The C<--force>
+option is the same as a C<clone --force> operation, using the current remote
+and branch.
+
+Choosing between C<--merge> and C<--rebase> has no effect on the final result
+of the pull, since it becomes a single commit. But it does affect the
+resulting C<< subrepo/<subdir> >> branch, which is often used for a subrepo
+C<push> command. See 'push' below for more information.
 
 Like the C<clone> command, C<pull> will squash all the changes (since the last
 pull or clone) into one commit. This keeps your mainline history nice and
@@ -206,18 +225,22 @@ The set of commands used above are described in detail below.
 The C<pull> command accepts the C<--all>, C<--branch=>, C<--edit>, C<--force>,
 C<--merge>, C<--message=>, C<--rebase>, C<--remote=> and C<--update> options.
 
-=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N] >>
+=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N] >>
 
 Push a properly merged subrepo branch back upstream.
+
+This command takes the subrepo branch from a successful pull command and
+pushes the history back to its designated remote and branch. You can also use
+the C<branch> command and merge things yourself before pushing if you want to
+(although that is probably a rare use case).
 
 The C<push> command requires a branch that has been properly merged/rebased
 with the upstream HEAD (unless the upstream HEAD is empty, which is common
 when doing a first C<push> after an C<init>). That means the upstream HEAD is
-one of the commits in the branch. If you don't specify a branch to push, one
-will be created for you using the same techniques as a pull (except it won't
-be committed locally). Otherwise you can name a properly merged branch to
-push. Often times you can use the branch commit from the last pull, which is
-saved as C<< refs/subrepo/<subdir>/pull >>.
+one of the commits in the branch.
+
+By default the branch ref C<< refs/subrepo/<subdir>/pull >> will be pushed,
+but you can specify a (properly merged) branch to push.
 
 After that, the C<push> command just checks that the branch contains the
 upstream HEAD and then pushes it upstream.
@@ -227,8 +250,7 @@ discouraged. Only use this option if you fully understand it. (The C<--force>
 option will NOT check for a proper merge. ANY branch will be force pushed!)
 
 The C<push> command accepts the C<--all>, C<--branch=>, C<--dry-run>, C<--
-force>, C<--merge>, C<--rebase>, C<--remote=>, C<--squash> and C<--
-update> options.
+force>, C<--remote=>, C<--squash> and C<--update> options.
 
 =item C<< git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>] >>
 
