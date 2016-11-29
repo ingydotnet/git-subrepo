@@ -128,32 +128,36 @@ experienced Git users.
 Please note that the commands are I<not> exact equivalents, and do not take
 all the same arguments. Keep reading…
 
+<<<<<<< HEAD <<<<<<< HEAD
+- `git subrepo clone <repository> L<< <subdir> >> [-b <branch>] L<-f> [-e|-m <msg>] [--method <merge|rebase>]C< ======= - >git subrepo clone <repository> L<< <subdir> >> [-b <branch>] L<-f> [-m <msg>] L<-e> >>>>>>> Make it possible to specify commit messages. ======= - git subrepo clone <repository> L<< <subdir> >> [-b <branch>] L<-f> [-e|-m <msg>]` >>>>>>> Update docs to reflect how things should work
+    Add a repository as a subrepo in a subdir of your repository.
+
+    This is similar in feel to `git clone`. You just specify the remote repo
+    url, and optionally a sub-directory and/or branch name. The repo will be
+    fetched and merged into the subdir.
+
+    The subrepo history is /squashed/ into a single commit that contains the
+    reference information. This information is also stored in a special file
+    called `<subdir>/.gitrepo`. The presence of this file indicates that the
+    directory is a subrepo.
+
+    All subsequent commands refer to the subrepo by the name of the /subdir/.
+    From the subdir, all the current information about the subrepo can be
+    obtained.
+
+    The `--force` option will "reclone" (completely replace) an existing subdir.
+
+<<<<<<< HEAD
+
+    The `--method` option will decide how the join process between branches are
+     performed. The default option is merge.
+
+======= >>>>>>> Make it possible to specify commit messages.
+
+    The `clone` command accepts the `--branch=` `--edit`, `--force` and
+    `--message=` options.
+
 =over
-
-=item C<< git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>] [--method <merge|rebase>] >>
-
-Add a repository as a subrepo in a subdir of your repository.
-
-This is similar in feel to C<git clone>. You just specify the remote repo url,
-and optionally a sub-directory and/or branch name. The repo will be fetched
-and merged into the subdir.
-
-The subrepo history is I<squashed> into a single commit that contains the
-reference information. This information is also stored in a special file
-called C<< <subdir>/.gitrepo >>. The presence of this file indicates that the
-directory is a subrepo.
-
-All subsequent commands refer to the subrepo by the name of the
-I<subdir>. From the subdir, all the current information about the subrepo
-can be obtained.
-
-The C<--force> option will "reclone" (completely replace) an existing subdir.
-
-The C<--method> option will decide how the join process between branches are
-performed. The default option is merge.
-
-The C<clone> command accepts the C<--branch=> C<--edit>, C<--force> and C<--
-message=> options.
 
 =item C<< git subrepo init <subdir> [-r <remote>] [-b <branch>] [--method <merge|rebase>] >>
 
@@ -180,93 +184,181 @@ performed. The default option is merge.
 
 The C<init> command accepts the C<--branch=> and C<--remote=> options.
 
-=item C<< git subrepo pull <subdir>|--all [-M|-R|-f] [-e|-m <msg>] [-b <branch>] [-r <remote>] [-u] >>
+=back
 
-Update the subrepo subdir with the latest upstream changes.
+<<<<<<< HEAD <<<<<<< HEAD
+- `git subrepo pull <subdir>|--all L<-M|-R|-f> [-e|-m <msg>] [-b <branch>] [-r <remote>] L<-u>C< ======= - >git subrepo pull <subdir>|-a L<-R> [-m <msg>] L<-e> [-b <branch>] [-r <remote>] L<-u> >>>>>>> Make it possible to specify commit messages. ======= - git subrepo pull <subdir>|--all L<-M|-R|-f> [-e|-m <msg>] [-b <branch>] [-r <remote>] L<-u>` >>>>>>> Update docs to reflect how things should work
+    Update the subrepo subdir with the latest upstream changes.
 
-The C<pull> command fetches the latest content from the remote branch pointed
-to by the subrepo's C<.gitrepo> file, and then tries to merge the changes into
-the corresponding subdir. It does this by making a branch of the local commits
-to the subdir and then merging or rebasing (see below) it with the fetched
-upstream content. After the merge, the content of the new branch replaces your
-subdir, the C<.gitrepo> file is updated and a single 'pull' commit is added to
-your mainline history.
+    The `pull` command fetches the latest content from the remote branch pointed
+    to by the subrepo's `.gitrepo` file, and then tries to merge the changes into
+    the corresponding subdir. It does this by making a branch of the local
+    commits to the subdir and then merging or rebasing (see below) it with the
+    fetched upstream content. After the merge, the content of the new branch
+    replaces your subdir, the `.gitrepo` file is updated and a single 'pull'
+    commit is added to your mainline history.
 
-The C<pull> command will attempt to do the following commands in one go:
+    The `pull` command will attempt to do the following commands in one go:
 
-    git subrepo fetch <subdir>
-    git subrepo branch <subdir>
-    git merge/rebase subrepo/<subdir>/fetch subrepo/<subdir>
-    git subrepo commit <subdir>
-    # Only needed for a consequential push:
-    git update-ref refs/subrepo/<subdir>/pull subrepo/<subdir>
+      git subrepo fetch <subdir>
+      git subrepo branch <subdir>
 
-In other words, you could do all the above commands yourself, for the same
-effect. If any of the commands fail, subrepo will stop and tell you to finish
-this by hand. Generally a failure would be in the merge or rebase part, where
-conflicts can happen. Since Git has lots of ways to resolve conflicts to your
-personal tastes, the subrepo command defers to letting you do this by hand.
+<<<<<<< HEAD
 
-When pulling new data, the method selected in clone/init is used. This has no
-effect on the final result of the pull, since it becomes a single commit. But
-it does affect the resulting C<< subrepo/<subdir> >> branch, which is often
-used for a subrepo C<push> command. See 'push' below for more information. If
-you want to change the method you can use the C<config> command for this.
+      git merge/rebase subrepo/<subdir>/fetch subrepo/<subdir>
 
-When you pull you can assume a fast-forward strategy (default) or you can
-specify a C<--rebase>, C<--merge> or C<--force> strategy. The latter is the
-same as a C<clone --force> operation, using the current remote and branch.
+=======
 
-Like the C<clone> command, C<pull> will squash all the changes (since the last
-pull or clone) into one commit. This keeps your mainline history nice and
-clean. You can easily see the subrepo's history with the C<git log> command:
+      git rebase --onto <new_parent> <old_parent> subrepo/<subdir>
+      git rebase subrepo/<subdir>/fetch subrepo/<subdir>
+      git checkout ORIG_HEAD
 
-    git log refs/subrepo/<subdir>/fetch
+>>>>>>> Make it possible to specify commit messages.
 
-The set of commands used above are described in detail below.
+      git subrepo commit <subdir>
+      # Only needed for a consequential push:
+      git update-ref refs/subrepo/<subdir>/pull subrepo/<subdir>
 
-The C<pull> command accepts the C<--all>, C<--branch=>, C<--edit>, C<--force>,
-C<--message=>, C<--remote=> and C<--update> options.
+    In other words, you could do all the above commands yourself, for the same
+    effect. If any of the commands fail, subrepo will stop and tell you to finish
+
+<<<<<<< HEAD
+
+    this by hand. Generally a failure would be in the merge or rebase part, where
+    conflicts can happen. Since Git has lots of ways to resolve conflicts to your
+    personal tastes, the subrepo command defers to letting you do this by hand.
+
+    When pulling new data, the method selected in clone/init is used. This has
+    no effect on the final result of the pull, since it becomes a single commit.
+    But it does affect the resulting `subrepo/<subdir>` branch, which is often
+    used for a subrepo `push` command. See 'push' below for more information.
+    If you want to change the method you can use the `config` command for this.
+
+    When you pull you can assume a fast-forward strategy (default) or you can
+    specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
+    as a `clone --force` operation, using the current remote and branch.
+
+=======
+
+    this by hand. Generally a failure would be in the rebase, where conflicts can
+    happen. Since Git has lots of ways to resolve conflicts to your personal
+    tastes, the subrepo command defers to letting you do this by hand.
+
+>>>>>>> Make it possible to specify commit messages.
+
+    When you pull you can assume a fast-forward strategy (default) or you can
+    specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
+    as a `clone --force` operation, using the current remote and branch.
+
+    Like the `clone` command, `pull` will squash all the changes (since the last
+    pull or clone) into one commit. This keeps your mainline history nice and
+    clean. You can easily see the subrepo's history with the `git log` command:
+
+      git log refs/subrepo/<subdir>/fetch
+
+    The set of commands used above are described in detail below.
+
+<<<<<<< HEAD <<<<<<< HEAD
+
+    The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
+    `--message=`, `--remote=` and `--update` options.
+
+=over
 
 =item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N] >>
 
-Push a properly merged subrepo branch back upstream.
+=back
 
-This command takes the subrepo branch from a successful pull command and
-pushes the history back to its designated remote and branch. You can also use
-the C<branch> command and merge things yourself before pushing if you want to
-(although that is probably a rare use case).
+=======
 
-The C<push> command requires a branch that has been properly merged/rebased
-with the upstream HEAD (unless the upstream HEAD is empty, which is common
-when doing a first C<push> after an C<init>). That means the upstream HEAD is
-one of the commits in the branch.
+    The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--message=`,
+    `--rebase`, `--remote=` and `--update` options.
 
-By default the branch ref C<< refs/subrepo/<subdir>/pull >> will be pushed,
-but you can specify a (properly merged) branch to push.
+=over
 
-After that, the C<push> command just checks that the branch contains the
-upstream HEAD and then pushes it upstream.
+=item C<< git subrepo push <subdir>|-a [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N] >>
 
-The C<--force> option will do a force push. Force pushes are typically
-discouraged. Only use this option if you fully understand it. (The C<--force>
-option will NOT check for a proper merge. ANY branch will be force pushed!)
+=back
 
-The C<push> command accepts the C<--all>, C<--branch=>, C<--dry-run>, C<--
-force>, C<--merge>, C<--rebase>, C<--remote=>, C<--squash> and C<--
-update> options.
+=head1 >>>>>>> Make it possible to specify commit messages.
+
+    The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
+    `--merge`, `--message=`, `--rebase`, `--remote=` and `--update` options.
+
+=over
+
+=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N] >>
+
+=back
+
+>>>>>>> Update docs to reflect how things should work
+
+    Push a properly merged subrepo branch back upstream.
+
+    This command takes the subrepo branch from a successful pull command and
+    pushes the history back to its designated remote and branch. You can also use
+    the `branch` command and merge things yourself before pushing if you want to
+    (although that is probably a rare use case).
+
+    The `push` command requires a branch that has been properly merged/rebased
+    with the upstream HEAD (unless the upstream HEAD is empty, which is common
+    when doing a first `push` after an `init`). That means the upstream HEAD is
+    one of the commits in the branch.
+
+    By default the branch ref `refs/subrepo/<subdir>/pull` will be pushed, but
+    you can specify a (properly merged) branch to push.
+
+    After that, the `push` command just checks that the branch contains the
+    upstream HEAD and then pushes it upstream.
+
+    The `--force` option will do a force push. Force pushes are typically
+    discouraged. Only use this option if you fully understand it. (The `--force`
+    option will NOT check for a proper merge. ANY branch will be force pushed!)
+
+    The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
+
+<<<<<<< HEAD <<<<<<< HEAD
+
+    `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
+
+=over
 
 =item C<< git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>] >>
 
-Fetch the remote/upstream content for a subrepo.
+=back
 
-It will create a Git reference called C<< subrepo/<subdir>/fetch >> that
-points at the same commit as C<FETCH_HEAD>. It will also create a remote
-called C<< subrepo/<subdir> >>. These are temporary and you can easily remove
-them with the subrepo C<clean> command.
+=======
 
-The C<fetch> command accepts the C<--all>, C<--branch=> and C<--
-remote=> options.
+    `--remote=`, `--squash` and `--update` options.
+
+=over
+
+=item C<< git subrepo fetch <subdir>|--all [<branch>] [-r <remote>] >>
+
+=back
+
+=head1 >>>>>>> Make it possible to specify commit messages.
+
+    `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
+
+=over
+
+=item C<< git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>] >>
+
+=back
+
+>>>>>>> Update docs to reflect how things should work
+
+    Fetch the remote/upstream content for a subrepo.
+
+    It will create a Git reference called `subrepo/<subdir>/fetch` that points at
+    the same commit as `FETCH_HEAD`. It will also create a remote called
+    `subrepo/<subdir>`. These are temporary and you can easily remove them with
+    the subrepo `clean` command.
+
+    The `fetch` command accepts the `--all`, `--branch=` and `--remote=` options.
+
+=over
 
 =item C<< git subrepo branch <subdir>|--all [-f] [-F] >>
 
@@ -282,34 +374,51 @@ Use the C<--force> option to write over an existing C<< subrepo/<subdir>
 
 The C<branch> command accepts the C<--all>, C<--fetch> and C<--force> options.
 
-=item C<< git subrepo commit <subdir> [<subrepo-ref>] [-e|-m <msg>] [-f] [-F] >>
+=back
 
-Add subrepo branch to current history as a single commit.
+<<<<<<< HEAD <<<<<<< HEAD
+- `git subrepo commit <subdir> L<< <subrepo-ref> >> [-e|-m <msg>] L<-f> L<-F>C< ======= - >git subrepo commit <subdir> L<< <subrepo-ref> >> [-m <msg>] L<-e> L<-f> L<-F> >>>>>>> Make it possible to specify commit messages. ======= - git subrepo commit <subdir> L<< <subrepo-ref> >> [-e|-m <msg>] L<-f> L<-F>` >>>>>>> Update docs to reflect how things should work
+    Add subrepo branch to current history as a single commit.
 
-This command is generally used after a hand-merge. You have done a C<subrepo
-branch> and merged (rebased) it with the upstream. This command takes the HEAD
-of that branch, puts its content into the subrepo subdir and adds a new commit
-for it to the top of your mainline history.
+    This command is generally used after a hand-merge. You have done a `subrepo
+    branch` and merged (rebased) it with the upstream. This command takes the
+    HEAD of that branch, puts its content into the subrepo subdir and adds a new
+    commit for it to the top of your mainline history.
 
-This command requires that the upstream HEAD be in the C<< subrepo/<subdir> >>
-branch history. That way the same branch can push upstream. Use the C<--force>
-option to commit anyway.
+    This command requires that the upstream HEAD be in the `subrepo/<subdir>`
+    branch history. That way the same branch can push upstream. Use the
+    `--force` option to commit anyway.
 
-The C<commit> command accepts the C<--edit>, C<--fetch>, C<--force> and C<--
-message=> options.
+    The `commit` command accepts the `--edit`, `--fetch`, `--force` and
+    `--message=` options.
 
-=item C<< git subrepo status [<subdir>|--all|--ALL] [-F] [-q|-v] >>
+<<<<<<< HEAD <<<<<<< HEAD
+- `git subrepo status [<subdir>|--all|--ALL] L<-F> L<-q|-v>C< ======= - >git subrepo status L<< <subdir>|--all|--ALL >> L<-F> L<-q> >>>>>>> Make it possible to specify commit messages. ======= - git subrepo status L<< <subdir>|--all|--ALL >> L<-F> L<-q|-v>` >>>>>>> Update docs to reflect how things should work
+    Get the status of a subrepo. Uses the `--all` option by default. If the
+    `--quiet` flag is used, just print the subrepo names, one per line.
 
-Get the status of a subrepo. Uses the C<--all> option by default. If the C<--
-quiet> flag is used, just print the subrepo names, one per line.
+    The `--verbose` option will show all the recent local and upstream commits.
 
-The C<--verbose> option will show all the recent local and upstream commits.
+    Use `--ALL` to show the subrepos of the subrepos (ie the "subsubrepos"), if
+    any.
 
-Use C<--ALL> to show the subrepos of the subrepos (ie the
-"subsubrepos"), if any.
+<<<<<<< HEAD <<<<<<< HEAD
 
-The C<status> command accepts the C<--all>, C<--ALL>, C<--fetch>, C<--quiet>
-and C<--verbose> options.
+    The `status` command accepts the `--all`, `--ALL`, `--fetch`, `--quiet` and
+    `--verbose` options.
+
+=======
+
+    The `status` command accepts the `--ALL`, `--all`, and `--fetch` options.
+
+=head1 >>>>>>> Make it possible to specify commit messages.
+
+    The `status` command accepts the `--all`, `--ALL`, `--fetch`, `--quiet` and
+    `--verbose` options.
+
+>>>>>>> Update docs to reflect how things should work
+
+=over
 
 =item C<< git subrepo clean <subdir>|--all|--ALL [-f] >>
 
@@ -328,49 +437,80 @@ it. Use C<--ALL> to remove any artifacts that were ever created by subrepo.
 
 To remove ALL subrepo artifacts:
 
-    git subrepo clean --ALL --force
+=back
 
-The C<clean> command accepts the C<--all>, C<--ALL>, and C<--force> options.
+<<<<<<< HEAD
 
-=item C<< git subrepo config <subdir> <option> [<value>] [-f] >>
+      git subrepo clean --ALL --force
 
-Read or update configuration values in the subdir/.gitrepo file.
+    The `clean` command accepts the `--all`, `--ALL`, and `--force` options.
 
-Because most of the values stored in the .gitrepo file are generated you
-will need to use C<--force> if you want to change anything else then the
-C<method> option.
+<<<<<<< HEAD
+- `git subrepo config <subdir> <option> L<< <value> >> L<-f>`
+    Read or update configuration values in the subdir/.gitrepo file.
 
-Example to update the C<method> option for a subrepo:
+=======
 
-    git subrepo config foo method rebase
+      git subrepo clean --ALL --force
+
+>>>>>>> Make it possible to specify commit messages.
+
+    Because most of the values stored in the .gitrepo file are generated you
+    will need to use `--force` if you want to change anything else then the
+    `method` option.
+
+<<<<<<< HEAD
+
+    Example to update the `method` option for a subrepo:
+
+      git subrepo config foo method rebase
+
+=over
 
 =item C<< git subrepo help [<command>|--all] >>
 
-Same as C<git help subrepo>. Will launch the manpage. For the shorter usage,
-use C<git subrepo -h>.
-
-Use C<< git subrepo help <command> to get help for a specific command. Use >>--
-all` to get a summary of all commands.
-
-The C<help> command accepts the C<--all> option.
-
-=item C<git subrepo version [-q|-v]>
-
-This command will display version information about git-subrepo and its
-environment. For just the version number, use C<git subrepo --version>. Use
-C<--verbose> for more version info, and C<--quiet> for less.
-
-The C<version> command accepts the C<--quiet> and C<--verbose> options.
-
-=item C<git subrepo upgrade>
-
-Upgrade the C<git-subrepo> software itself. This simply does a C<git pull>
-on the git repository that the code is running from. It only works if you
-are on the C<master> branch. It won't work if you installed C<git-subrepo>
-using C<make install>; in that case you'll need to C<make install> from the
-latest code.
-
 =back
+
+======= - C<git subrepo help [--all]> >>>>>>> Make it possible to specify
+=======   commit messages. ======= - C<< git subrepo help [<command>|--all] >>
+=======   >>>>>>> Update docs to reflect how things should work
+
+    Same as `git help subrepo`. Will launch the manpage. For the shorter usage,
+    use `git subrepo -h`.
+
+    Use `git subrepo help <command> to get help for a specific command. Use
+    `--all` to get a summary of all commands.
+
+    The `help` command accepts the `--all` option.
+
+<<<<<<< HEAD
+
+    Use `git subrepo help <command> to get help for a specific command. Use
+    `--all` to get a summary of all commands.
+
+    The `help` command accepts the `--all` option.
+
+======= >>>>>>> Update docs to reflect how things should work - C<git subrepo
+======= >>>>>>> version [-q|-v]>
+
+    This command will display version information about git-subrepo and its
+    environment. For just the version number, use `git subrepo --version`. Use
+    `--verbose` for more version info, and `--quiet` for less.
+
+<<<<<<< HEAD <<<<<<< HEAD
+
+    The `version` command accepts the `--quiet` and `--verbose` options.
+
+======= >>>>>>> Make it possible to specify commit messages. =======
+
+    The `version` command accepts the `--quiet` and `--verbose` options.
+
+>>>>>>> Update docs to reflect how things should work - C<git subrepo upgrade>
+
+    Upgrade the `git-subrepo` software itself. This simply does a `git pull` on
+    the git repository that the code is running from. It only works if you are on
+    the `master` branch. It won't work if you installed `git-subrepo` using `make
+    install`; in that case you'll need to `make install` from the latest code.
 
 =head1 Command Options
 
@@ -407,27 +547,79 @@ C<.gitrepo> locally.
 
 =item C<--dry-run> (C<-N>)
 
-For the push command, do everything up until the push and then print out the
-actual C<git push> command needed to finish the operation.
+=back
+
+=head1 <<<<<<< HEAD
+
+    For the push command, do everything up until the push and then print out the
+    actual `git push` command needed to finish the operation.
+
+<<<<<<< HEAD
+- `--force` (`-f`)
+>>>>>>> Make it possible to specify commit messages.
+    For the push command, do everything up until the push and then print out the
+    actual `git push` command needed to finish the operation.
+
+=over
 
 =item C<--edit> (C<-e>)
 
-Edit the commit message before committing.
+
+=back
+
+======= - C<--edit> (C<-e>)
+
+>>>>>>> Update docs to reflect how things should work
+
+    Edit the commit message before committing.
+
+=over
 
 =item C<--fetch> (C<-F>)
 
 Use this option to fetch the upstream commits, before running the command.
 
-=item C<--force> (C<-f>)
+=back
 
-Use this option to force certain commands that fail in the general case.
+<<<<<<< HEAD <<<<<<< HEAD
+=======
+>>>>>>> Update docs to reflect how things should work - C<--force> (C<-f>)
+    Use this option to force certain commands that fail in the general case.
 
-NOTE: The C<--force> option means different things for different commands.
-      Read the command specific doc for the exact meaning.
+    NOTE: The `--force` option means different things for different commands.
+    Read the command specific doc for the exact meaning.
+
+<<<<<<< HEAD
+- `--message=<message>C< (>-m <message>`)
+    Specify your own commit message on the command line.
+
+======= - C<--rebase> (C<-R>)
+
+    Use a rebase strategy to merge upstream subrepo commits on a pull.
+
+=head1 >>>>>>> Make it possible to specify commit messages.
+
+=over
+
+=item C<--merge> (C<-M>)
+
+Use a C<merge> strategy to include upstream subrepo commits on a pull (or
+setup for push).
 
 =item C<< --message=<message> >> (C<< -m <message> >>)
 
 Specify your own commit message on the command line.
+
+=item C<--rebase> (C<-R>)
+
+Use a C<rebase> strategy to include upstream subrepo commits on a pull (or
+setup for push).
+
+=back
+
+>>>>>>> Update docs to reflect how things should work
+
+=over
 
 =item C<< --remote=<remote-url> >> (C<< -r <remote-url> >>)
 
@@ -439,10 +631,25 @@ Squash all commits on a push into one new commit.
 
 =item C<--update> (C<-u>)
 
-If C<--branch> or C<--remote> are used, and the command updates the
-C<.gitrepo> file, include these values to the update.
 
 =back
+
+<<<<<<< HEAD <<<<<<< HEAD
+
+    If `--branch` or `--remote` are used, and the command updates the `.gitrepo`
+    file, include these values to the update.
+
+=======
+
+    If `--branch` or `--r` are used, and the command updates the `.gitrepo` file,
+    include these values to the update.
+
+=head1 >>>>>>> Make it possible to specify commit messages.
+
+    If `--branch` or `--remote` are used, and the command updates the `.gitrepo`
+    file, include these values to the update.
+
+>>>>>>> Update docs to reflect how things should work
 
 =head1 Output Options
 

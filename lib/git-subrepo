@@ -64,11 +64,19 @@ b,branch=   Specify the upstream branch to push/pull/fetch
 e,edit      Edit commit message
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
+<<<<<<< HEAD
 M,method=   Method when you join, valid options are 'merge' or 'rebase'
             Default is 'merge'
 m,message=  Specify a commit message
 N,dry-run   Don't push or commit (prints next commands to run)
 r,remote=   Specify the upstream remote to push/pull/fetch
+=======
+M,merge     Use 'merge' strategy for pull
+m,message=  Specify a commit message
+N,dry-run   Don't push or commit (prints next commands to run)
+r,remote=   Specify the upstream remote to push/pull/fetch
+R,rebase    Use 'rebase' strategy for pull
+>>>>>>> Update docs to reflect how things should work
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
  
@@ -93,6 +101,11 @@ main() {
   local dry_run_wanted=false    # Skip commits and pushes
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
+<<<<<<< HEAD
+=======
+  local merge_wanted=false      # Merge on pull (instead of fast-forward)
+  local rebase_wanted=false     # Rebase on pull (instead of fast-forward)
+>>>>>>> Update docs to reflect how things should work
   local squash_wanted=false     # Squash commits on push
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
 
@@ -1038,7 +1051,11 @@ get-command-options() {
   fi
   commit_msg_args+=("${command_arguments[@]}")
 
+<<<<<<< HEAD
   for option in all ALL dry_run edit fetch force squash; do
+=======
+  for option in all ALL dry_run edit fetch force merge rebase squash; do
+>>>>>>> Update docs to reflect how things should work
     var="${option}_wanted"
     if ${!var}; then
       check_option $option
@@ -1069,9 +1086,15 @@ options_clone='branch edit force message method'
 options_config='force'
 options_commit='edit fetch force message'
 options_fetch='all branch remote'
+<<<<<<< HEAD
 options_init='branch remote method'
 options_pull='all branch edit force message remote update'
 options_push='all branch dry_run force remote squash update'
+=======
+options_init='branch remote'
+options_pull='all branch edit force merge message rebase remote update'
+options_push='all branch dry_run force merge rebase remote squash update'
+>>>>>>> Update docs to reflect how things should work
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
