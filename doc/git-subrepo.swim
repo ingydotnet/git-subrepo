@@ -21,7 +21,7 @@ Git Submodule Alternative
   git subrepo status [<subdir>]
   git subrepo clean <subdir>
 
-  git subrepo help [<command> | --all]
+  git subrepo help [<command>|--all]
   git subrepo version
   git subrepo upgrade
 
@@ -50,7 +50,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Users do not need to install `git-subrepo`, ever.
 * Collaborators do not need to install unless they want to push/pull.
 * Collaborators know when a subdir is a subrepo (it has a `.gitrepo` file).
-* The `.gitrepo` file never gets pushed back to the subrepo upstream.
+  * The `.gitrepo` file never gets pushed back to the subrepo upstream.
 * Well named branches and remotes are generated for manual operations.
 * Owners do not deal with the complications of keeping submodules in sync.
 * Subrepo repositories can contain subrepos themselves.
@@ -135,24 +135,39 @@ the same arguments. Keep reading…
 
   Update the subrepo subdir with the latest upstream changes.
 
+  The `pull` command fetches the latest content from the remote branch pointed
+  to by the subrepo's `.gitrepo` file, and then tries to merge the changes into
+  the corresponding subdir. It does this by making a branch of the local
+  commits to the subdir and then merging or rebasing (see below) it with the
+  fetched upstream content. After the merge, the content of the new branch
+  replaces your subdir, the `.gitrepo` file is updated and a single 'pull'
+  commit is added to your mainline history.
+
   The `pull` command will attempt to do the following commands in one go:
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git rebase --onto <new_parent> <old_parent> subrepo/<subdir>
     git rebase subrepo/<subdir>/fetch subrepo/<subdir>
     git checkout ORIG_HEAD
     git subrepo commit <subdir>
+    # Only needed for a consequential push:
+    git update-ref refs/subrepo/<subdir>/pull subrepo/<subdir>
 
   In other words, you could do all the above commands yourself, for the same
   effect. If any of the commands fail, subrepo will stop and tell you to finish
-  this by hand. Generally a failure would be in the rebase, where conflicts can
-  happen. Since Git has lots of ways to resolve conflicts to your personal
-  tastes, the subrepo command defers to letting you do this by hand.
+  this by hand. Generally a failure would be in the merge or rebase part, where
+  conflicts can happen. Since Git has lots of ways to resolve conflicts to your
+  personal tastes, the subrepo command defers to letting you do this by hand.
 
   When you pull you can assume a fast-forward strategy (default) or you can
-  specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
-  as a `clone --force` operation, using the current remote and branch.
+  specify a `--rebase`, `--merge` or `--force` strategy. The `--force` option
+  is the same as a `clone --force` operation, using the current remote and
+  branch.
+
+  Choosing between `--merge` and `--rebase` has no effect on the final result
+  of the pull, since it becomes a single commit. But it does affect the
+  resulting `subrepo/<subdir>` branch, which is often used for a subrepo `push`
+  command. See 'push' below for more information.
 
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
@@ -165,18 +180,22 @@ the same arguments. Keep reading…
   The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
   `--merge`, `--message=`, `--rebase`, `--remote=` and `--update` options.
 
-- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]`
+- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N]`
 
   Push a properly merged subrepo branch back upstream.
+
+  This command takes the subrepo branch from a successful pull command and
+  pushes the history back to its designated remote and branch. You can also use
+  the `branch` command and merge things yourself before pushing if you want to
+  (although that is probably a rare use case).
 
   The `push` command requires a branch that has been properly merged/rebased
   with the upstream HEAD (unless the upstream HEAD is empty, which is common
   when doing a first `push` after an `init`). That means the upstream HEAD is
-  one of the commits in the branch. If you don't specify a branch to push, one
-  will be created for you using the same techniques as a pull (except it won't
-  be committed locally). Otherwise you can name a properly merged branch to
-  push. Often times you can use the branch commit from the last pull, which is
-  saved as `refs/subrepo/<subdir>/pull`.
+  one of the commits in the branch.
+
+  By default the branch ref `refs/subrepo/<subdir>/pull` will be pushed, but
+  you can specify a (properly merged) branch to push.
 
   After that, the `push` command just checks that the branch contains the
   upstream HEAD and then pushes it upstream.
@@ -186,7 +205,7 @@ the same arguments. Keep reading…
   option will NOT check for a proper merge. ANY branch will be force pushed!)
 
   The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
-  `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
+  `--remote=`, `--squash` and `--update` options.
 
 - `git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>]`
 
