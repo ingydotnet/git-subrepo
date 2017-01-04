@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #
-# Copyright 2013-2016 - Ingy döt Net <ingy@ingy.net>
+# Copyright 2013-2017 - Ingy döt Net <ingy@ingy.net>
 #
 
 
@@ -26,7 +26,7 @@ else
 fi
 bash+:import :std can
 
-VERSION=0.3.0
+VERSION=0.3.1
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
@@ -373,7 +373,7 @@ command:help() {
 command:version() {
   cat <<...
 git-subrepo Version: $VERSION
-Copyright 2013-2016 Ingy döt Net
+Copyright 2013-2017 Ingy döt Net
 https://github.com/git-commands/git-subrepo
 $BASH_SOURCE
 Git Version: $git_version

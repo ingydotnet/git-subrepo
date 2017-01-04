@@ -1,7 +1,8 @@
 ---
-version: x.x.x
-date:    Mon Sep 26 14:39:32 PDT 2016
+version: 0.3.1
+date:    Tue Jan  3 23:08:56 PST 2017
 changes:
+- Updated release for homebrew
 - Fix #192
 ---
 version: 0.3.0
