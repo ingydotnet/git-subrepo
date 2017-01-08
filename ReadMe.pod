@@ -195,8 +195,8 @@ clean. You can easily see the subrepo's history with the C<git log> command:
 
 The set of commands used above are described in detail below.
 
-The C<pull> command accepts the C<--all>, C<--branch=>, C<--remote=> and C<--
-update> options.
+The C<pull> command accepts the C<--all>, C<--branch=>, C<--remote=> 
+and C<--update> options.
 
 =item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] >>
 
