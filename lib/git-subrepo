@@ -43,7 +43,8 @@ Commands:
   commit    Commit a merged subrepo branch into the mainline
   merge-base  Find the common ancestor of 2 commits (plumbing command)
 
-  status    Get status of a subrepo (or all of them)
+  show      Get some information about a subrepo (or all of them)
+  status    Show the remote tracking status of a subrepo branch (or all of them)
   clean     Remove branches, remotes and refs for a subrepo
 
   help      Documentation for git-subrepo (or specific command)
@@ -141,7 +142,7 @@ main() {
   command-init
 
   # Run the command:
-  if $all_wanted && [[ ! $command =~ ^(help|merge-base|status)$ ]]; then
+  if $all_wanted && [[ ! $command =~ ^(help|merge-base|show|status)$ ]]; then
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -309,12 +310,12 @@ command:merge-base() {
   fi
 }
 
-# `git subrepo status [<subdir>]` command:
-command:status() {
-  subrepo:status | ${GIT_SUBREPO_PAGER}
+# `git subrepo show [<subdir>]` command:
+command:show() {
+  subrepo:show | ${GIT_SUBREPO_PAGER}
 }
 
-status-refs() {
+show-refs() {
   local output=
   while read line; do
     [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subdir/([a-z]+) ]] || continue
@@ -336,6 +337,14 @@ status-refs() {
   if [[ -n $output ]]; then
     printf "  Refs:\n$output"
   fi
+}
+
+# `git subrepo status [<subdir>]` command:
+command:status() {
+  local branch_required=false
+  local fetch_required=false
+  subrepo:status | ${GIT_SUBREPO_PAGER}
+  echo "See also: git subrepo show ..."
 }
 
 # `git subrepo clean <subdir>` command
@@ -688,6 +697,9 @@ subrepo:push() {
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
 
+  o "Update ref '$refs_subrepo_fetch' to match '$refs_subrepo_push'."
+  git:make-ref "$refs_subrepo_fetch" "$refs_subrepo_push"
+
   if [[ $branch_name == subrepo-push/$subdir ]]; then
     o "Remove branch '$branch_name'."
     RUN git branch -D "$branch_name"
@@ -856,7 +868,7 @@ subrepo:merge-base() {
   return 1
 }
 
-subrepo:status() {
+subrepo:show() {
   if [[ ${#command_arguments[@]} -eq 0 ]]; then
     get-all-subrepos
     local count=${#subrepos[@]}
@@ -885,11 +897,6 @@ subrepo:status() {
     fi
 
     refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
-    upstream_head_commit="$(
-      git rev-parse --short "$refs_subrepo_fetch" 2> /dev/null || true
-    )"
-    subrepo_remote=
-    subrepo_branch=
 
     read-gitrepo-file
     if $fetch_wanted; then
@@ -923,10 +930,114 @@ subrepo:status() {
     fi
 
     if "$verbose_wanted"; then
-      status-refs
+      show-refs
     fi
 
     echo
+  done
+}
+
+subrepo:status() {
+  if [[ ${#command_arguments[@]} -eq 0 ]]; then
+    get-all-subrepos
+    local count=${#subrepos[@]}
+      if [[ $count -eq 0 ]]; then
+      echo "No subrepos."
+      return
+    fi
+  else
+    subrepos=("${command_arguments[@]}")
+  fi
+
+  for subdir in "${subrepos[@]}"; do
+    subdir="${subdir#./}"
+    subdir="${subdir%/}"
+
+    if [[ ! -f $subdir/.gitrepo ]]; then
+      echo "'$subdir' is not a subrepo"
+      echo
+      continue
+    fi
+
+    subrepo_remote=
+    subrepo_branch=
+
+    read-gitrepo-file
+    refs_subrepo_branch="refs/subrepo/$subdir/branch"
+    if [[ ! -e .git/$refs_subrepo_branch ]]; then
+      refs_subrepo_branch="refs/heads/subrepo/$subdir"
+    fi
+    refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
+
+    if $fetch_wanted; then
+      subrepo:fetch
+    fi
+
+    if [[ ! -e .git/$refs_subrepo_branch ]] &&
+       [[ ! -e .git/$refs_subrepo_fetch  ]]; then
+      branch_required=true
+      fetch_required=true
+      echo "Git subrepo '$subdir':"
+      echo "  Status not available: missing branch and fetch refs."
+      echo "    (use 'git subrepo branch' and 'git subrepo fetch' to update)"
+      echo
+      continue
+    elif [[ ! -e .git/$refs_subrepo_branch ]]; then
+      branch_required=true
+      echo "Git subrepo '$subdir':"
+      echo "  Status not available: missing branch ref."
+      echo "    (use 'git subrepo branch' to update)"
+      echo
+      continue
+    elif [[ ! -e .git/$refs_subrepo_fetch ]]; then
+      fetch_required=true
+      echo "Git subrepo '$subdir':"
+      echo "  Status not available: missing fetch ref."
+      echo "    (use 'git subrepo fetch' to update)"
+      echo
+      continue
+    fi
+
+    if ! subrepo:merge-base "$refs_subrepo_fetch" "$refs_subrepo_branch" \
+         false; then
+      echo "Git subrepo '$subdir':"
+      echo "  Status not available: no common ancestor found"
+      echo
+      continue
+    fi
+
+    if [[ -n $first_on_source ]] && [[ -n $first_on_target ]]; then
+      if ! "$quiet_wanted"; then
+        echo "Git subrepo '$subdir':"
+        echo "  Subrepo is up-to-date with upstream."
+        echo
+      fi
+    elif [[ -n $first_on_source ]]; then
+      echo "Git subrepo '$subdir':"
+      echo "  Subrepo is ahead of upstream."
+      echo "    (use 'git subrepo push' to publish your local commits)"
+      echo
+    elif [[ -n $first_on_target ]]; then
+      echo "Git subrepo '$subdir':"
+      echo "  Subrepo is behind upstream."
+      echo "    (use 'git subrepo pull' to update your local subrepo)"
+      echo
+    else
+      local fetch_commit=$(git show-ref -s $refs_subrepo_fetch)
+
+      if [[ "$fetch_commit" == "$subrepo_commit" ]]; then
+        echo "Git subrepo '$subdir':"
+        echo "  Subrepo is ahead of upstream."
+        echo "    (use 'git subrepo push' to publish your local commits)"
+        echo
+      else
+        echo "Git subrepo '$subdir':"
+        echo "  Subrepo and upstream have diverged."
+        echo "    (use 'git subrepo pull' to merge the remote subrepo into "\
+"yours)"
+        echo
+      fi
+    fi
   done
 }
 
@@ -1098,7 +1209,8 @@ options_init='branch remote'
 options_merge_base='all'
 options_pull='all branch remote update'
 options_push='all branch force remote update'
-options_status='ALL all fetch'
+options_show='ALL all fetch'
+options_status='all fetch quiet'
 check_option() {
   local var="options_${command//-/_}"
   [[ ${!var} =~ $1 ]] ||
