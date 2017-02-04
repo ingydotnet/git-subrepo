@@ -88,7 +88,7 @@ modify-files-ex() {
 }
 
 test-exists() {
-  for f in $*; do
+  for f in "$@"; do
     if [[ $f =~ ^! ]]; then
       f="${f#!}"
       if [[ $f =~ /$ ]]; then

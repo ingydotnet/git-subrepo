@@ -1170,6 +1170,7 @@ get-params() {
   for arg in $@; do
     local value="${command_arguments[i]}"
     value="${value//%/%%}"
+    value="${value//\\/\\\\}"
     # If arg starts with '+' then it is required
     if [[ $arg == +* ]]; then
       if [[ $i -ge $num ]]; then
