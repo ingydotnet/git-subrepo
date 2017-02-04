@@ -878,8 +878,7 @@ subrepo:status() {
   fi
 
   for subdir in "${subrepos[@]}"; do
-    subdir="${subdir#./}"
-    subdir="${subdir%/}"
+    check-and-normalize-subdir
     encode-subdir
 
     if [[ ! -f $subdir/.gitrepo ]]; then
@@ -1138,13 +1137,7 @@ command-prepare() {
 command-setup() {
   get-params "$@"
 
-  # Sanity check subdir:
-  [[ -n $subdir ]] ||
-    die "subdir not set"
-  [[ $subdir =~ ^/ || $subdir =~ ^[A-Z]: ]] &&
-    usage-error "The subdir '$subdir' should not be absolute path."
-  subdir="${subdir#./}"
-  subdir="${subdir%/}"
+  check-and-normalize-subdir
   encode-subdir
 
   # Set refs_ variables:
@@ -1196,6 +1189,17 @@ get-params() {
   fi
 }
 
+check-and-normalize-subdir() {
+  # Sanity check subdir:
+  [[ -n $subdir ]] ||
+    die "subdir not set"
+  [[ $subdir =~ ^/ || $subdir =~ ^[A-Z]: ]] &&
+    usage-error "The subdir '$subdir' should not be absolute path."
+  subdir="${subdir#./}"
+  subdir="${subdir%/}"
+  subdir=$(tr -s '/' <<< "$subdir")
+}
+
 # Determine the correct subdir path to use:
 guess-subdir() {
   local dir="$subrepo_remote"
@@ -1205,6 +1209,7 @@ guess-subdir() {
   [[ $dir =~ ^[-a-zA-Z0-9]+$ ]] ||
     error "Can't determine subdir from '$subrepo_remote'."
   subdir="$dir"
+  check-and-normalize-subdir
   encode-subdir
 }
 
@@ -1263,8 +1268,9 @@ encode-subdir() {
   subref=${subref//$'\n'/%0a}
 
   ## 6. They cannot begin or end with a slash / or contain multiple
-  ##    consecutive slashes. This rule is not revertable.
-  subdir_ref_enc=$(sed 's,^/\+\|/\+$,,g' <<< "$subdir_ref_enc")
+  ##    consecutive slashes.
+  ##    Note: This rule is not revertable.
+  subdir=$(tr -s '/' <<< "$subdir")
 
   ## 7. They cannot end with a dot ..
   case "$subref" in
