@@ -97,6 +97,7 @@ main() {
   local branch_first_commit=    # Return value from prepare_merge_base
 
   local subdir=                 # Subdirectory of the subrepo being used
+  local subref=                 # Valid git ref format of subdir
   local gitrepo=                # Path to .gitrepo file
 
   local original_head_commit=   # HEAD commit id at start of command
@@ -258,10 +259,10 @@ command:branch() {
   fi
 
   if $force_wanted; then
-    FAIL=false RUN git branch -D "subrepo/$subdir"
+    FAIL=false RUN git branch -D "subrepo/$subref"
   fi
 
-  local branch="subrepo/$subdir"
+  local branch="subrepo/$subref"
   if git:branch-exists "$branch"; then
     error "Branch '$branch' already exists. Use '--force' to override."
   fi
@@ -288,7 +289,7 @@ command:commit() {
   upstream_head_commit="$(git rev-parse "$refs_subrepo_fetch")"
 
   [[ -n $subrepo_commit_ref ]] ||
-    subrepo_commit_ref="subrepo/$subdir"
+    subrepo_commit_ref="subrepo/$subref"
   subrepo:commit
 
   say "Subrepo commit '$subrepo_commit_ref' committed as"
@@ -317,10 +318,10 @@ command:status() {
 status-refs() {
   local output=
   while read line; do
-    [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subdir/([a-z]+) ]] || continue
+    [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subref/([a-z]+) ]] || continue
     local sha1=; sha1="$(git rev-parse --short "${BASH_REMATCH[1]}")"
     local type="${BASH_REMATCH[2]}"
-    local ref="refs/subrepo/$subdir/$type"
+    local ref="refs/subrepo/$subref/$type"
     if [[ $type == branch ]]; then
       output+="    Branch Ref:    $sha1 ($ref)"$'\n'
     elif [[ $type == commit ]]; then
@@ -441,7 +442,7 @@ subrepo:clone() {
       return
     fi
     o "Remove the old subdir."
-    RUN git rm -r "$subdir"
+    RUN git rm -r -- "$subdir"
   else
     assert-subdir-empty
     if [[ -z $subrepo_branch ]]; then
@@ -454,7 +455,7 @@ subrepo:clone() {
   fi
 
   o "Make the directory '$subdir/' for the clone."
-  RUN mkdir -p "$subdir"
+  RUN mkdir -p -- "$subdir"
 
   o "Commit the new '$subdir/' content."
   subrepo_commit_ref="$upstream_head_commit"
@@ -463,7 +464,7 @@ subrepo:clone() {
 
 # Init a new subrepo from current repo:
 subrepo:init() {
-  local branch_name="subrepo/${subdir:??}"
+  local branch_name="subrepo/${subref:??}"
   # Check if subdir is proper candidate for this init:
   assert-subdir-ready-for-init
 
@@ -490,9 +491,9 @@ subrepo:init() {
   RUN git branch "$branch_name"
 
   if [[ $subrepo_remote != none ]]; then
-    o "Create subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
-    FAIL=false RUN git remote remove "subrepo/$subdir"
-    RUN git remote add "subrepo/$subdir" "$subrepo_remote"
+    o "Create subrepo remote 'subrepo/$subref' -> '$subrepo_remote'."
+    FAIL=false RUN git remote remove "subrepo/$subref"
+    RUN git remote add "subrepo/$subref" "$subrepo_remote"
   fi
 
   o "Reset to the commit we started at."
@@ -503,7 +504,7 @@ subrepo:init() {
 
   o "Add the new '$subdir/.gitrepo' file."
   # -f from pull request #219. TODO needs test.
-  RUN git add -f "$subdir/.gitrepo"
+  RUN git add -f -- "$subdir/.gitrepo"
 
   o "Commit new subrepo to the '$original_head_branch' branch."
   subrepo_commit_ref="$upstream_head_commit"
@@ -524,7 +525,7 @@ subrepo:pull() {
     OK=false; CODE=-1; return
   fi
 
-  local branch_name="subrepo/$subdir"
+  local branch_name="subrepo/$subref"
   if git:branch-exists "$branch_name"; then
     o "Deleting old '$branch_name' branch."
     RUN git branch -D "$branch_name"
@@ -601,7 +602,7 @@ subrepo:push() {
       fi
     fi
 
-    branch_name="subrepo-push/$subdir"
+    branch_name="subrepo-push/$subref"
     if git:branch-exists "$branch_name"; then
       error "There is a previous push branch '$branch_name'. "\
 "Delete it first."
@@ -715,14 +716,14 @@ subrepo:fetch() {
   OUT=true RUN git rev-parse FETCH_HEAD^0
   upstream_head_commit="$output"
 
-  local output=; output=$(git config "remote.subrepo/$subdir.url" || true)
+  local output=; output=$(git config "remote.subrepo/$subref.url" || true)
   if [[ -z $output ]]; then
-    o "Create subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
-    RUN git remote add "subrepo/$subdir" "$subrepo_remote"
+    o "Create subrepo remote 'subrepo/$subref' -> '$subrepo_remote'."
+    RUN git remote add "subrepo/$subref" "$subrepo_remote"
   else
     if [[ $output != $subrepo_remote ]]; then
-      o "Change subrepo remote 'subrepo/$subdir' -> '$subrepo_remote'."
-      git remote set-url "subrepo/$subdir" "$subrepo_remote"
+      o "Change subrepo remote 'subrepo/$subref' -> '$subrepo_remote'."
+      git remote set-url "subrepo/$subref" "$subrepo_remote"
     fi
   fi
 
@@ -732,7 +733,7 @@ subrepo:fetch() {
 
 # Create a subrepo branch containing all changes
 subrepo:branch() {
-  local branch="${1:-"subrepo/$subdir"}"
+  local branch="${1:-"subrepo/$subref"}"
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
@@ -767,9 +768,9 @@ subrepo:commit() {
     fi
   fi
 
-  if git ls-files "$subdir" | grep -q .; then
+  if git ls-files -- "$subdir" | grep -q .; then
     o "Remove old content of the subdir."
-    RUN git rm -r "$subdir"
+    RUN git rm -r -- "$subdir"
   fi
 
   o "Put remote subrepo content into '$subdir/'."
@@ -777,7 +778,7 @@ subrepo:commit() {
 
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
-  RUN git add -f "$gitrepo"
+  RUN git add -f -- "$gitrepo"
 
   o "Commit to the '$original_head_branch' branch."
   if [[ $original_head_commit != none ]]; then
@@ -877,8 +878,8 @@ subrepo:status() {
   fi
 
   for subdir in "${subrepos[@]}"; do
-    subdir="${subdir#./}"
-    subdir="${subdir%/}"
+    check-and-normalize-subdir
+    encode-subdir
 
     if [[ ! -f $subdir/.gitrepo ]]; then
       echo "'$subdir' is not a subrepo"
@@ -886,7 +887,7 @@ subrepo:status() {
       continue
     fi
 
-    refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
+    refs_subrepo_fetch="refs/subrepo/$subref/fetch"
     upstream_head_commit="$(
       git rev-parse --short "$refs_subrepo_fetch" 2> /dev/null || true
     )"
@@ -904,12 +905,12 @@ subrepo:status() {
     fi
 
     echo "Git subrepo '$subdir':"
-    git:branch-exists "subrepo/$subdir" &&
-      echo "  Subrepo Branch:  subrepo/$subdir"
-    local remote="subrepo/$subdir"
+    git:branch-exists "subrepo/$subref" &&
+      echo "  Subrepo Branch:  subrepo/$subref"
+    local remote="subrepo/$subref"
     FAIL=false OUT=true RUN git config "remote.$remote.url"
     [[ -n $output ]] &&
-      echo "  Remote Name:     subrepo/$subdir"
+      echo "  Remote Name:     subrepo/$subref"
     echo "  Remote URL:      $subrepo_remote"
     [[ -n $upstream_head_commit ]] &&
       echo "  Upstream Ref:    $upstream_head_commit"
@@ -944,7 +945,7 @@ subrepo:clean() {
     fi
   done
 
-  local remote="subrepo/$subdir"
+  local remote="subrepo/$subref"
   FAIL=false OUT=true RUN git config "remote.$remote.url"
   if [[ -n $output ]]; then
     o "Remove remote '$remote'."
@@ -957,7 +958,7 @@ subrepo:clean() {
     if "$all_wanted"; then
       RUN rm -fr .git/refs/subrepo/
     else
-      RUN rm -fr .git/refs/subrepo/$subdir/
+      RUN rm -fr .git/refs/subrepo/$subref/
     fi
   fi
 }
@@ -1136,20 +1137,15 @@ command-prepare() {
 command-setup() {
   get-params "$@"
 
-  # Sanity check subdir:
-  [[ -n $subdir ]] ||
-    die "subdir not set"
-  [[ $subdir =~ ^/ || $subdir =~ ^[A-Z]: ]] &&
-    usage-error "The subdir '$subdir' should not be absolute path."
-  subdir="${subdir#./}"
-  subdir="${subdir%/}"
+  check-and-normalize-subdir
+  encode-subdir
 
   # Set refs_ variables:
-  refs_subrepo_branch="refs/subrepo/$subdir/branch"
-  refs_subrepo_commit="refs/subrepo/$subdir/commit"
-  refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
-  refs_subrepo_pull="refs/subrepo/$subdir/pull"
-  refs_subrepo_push="refs/subrepo/$subdir/push"
+  refs_subrepo_branch="refs/subrepo/$subref/branch"
+  refs_subrepo_commit="refs/subrepo/$subref/commit"
+  refs_subrepo_fetch="refs/subrepo/$subref/fetch"
+  refs_subrepo_pull="refs/subrepo/$subref/pull"
+  refs_subrepo_push="refs/subrepo/$subref/push"
 
   # Read/parse the .gitrepo file (unless clone; doesn't exist yet)
   gitrepo="$subdir/.gitrepo"
@@ -1167,16 +1163,17 @@ get-params() {
   for arg in $@; do
     local value="${command_arguments[i]}"
     value="${value//%/%%}"
+    value="${value//\\/\\\\}"
     # If arg starts with '+' then it is required
     if [[ $arg == +* ]]; then
       if [[ $i -ge $num ]]; then
         usage-error "Command '$command' requires arg '${arg#+}'."
       fi
-      printf -v ${arg#+} "$value"
+      printf -v ${arg#+} -- "$value"
     # Look for function name after ':' to provide a default value
     else
       if [[ $i -lt $num ]]; then
-        printf -v ${arg%:*} "$value"
+        printf -v ${arg%:*} -- "$value"
       elif [[ $arg =~ : ]]; then
         "${arg#*:}"
       fi
@@ -1192,6 +1189,17 @@ get-params() {
   fi
 }
 
+check-and-normalize-subdir() {
+  # Sanity check subdir:
+  [[ -n $subdir ]] ||
+    die "subdir not set"
+  [[ $subdir =~ ^/ || $subdir =~ ^[A-Z]: ]] &&
+    usage-error "The subdir '$subdir' should not be absolute path."
+  subdir="${subdir#./}"
+  subdir="${subdir%/}"
+  while [[ $subdir =~ (//+) ]]; do subdir=${subdir//${BASH_REMATCH[1]}/\/}; done
+}
+
 # Determine the correct subdir path to use:
 guess-subdir() {
   local dir="$subrepo_remote"
@@ -1201,6 +1209,87 @@ guess-subdir() {
   [[ $dir =~ ^[-a-zA-Z0-9]+$ ]] ||
     error "Can't determine subdir from '$subrepo_remote'."
   subdir="$dir"
+  check-and-normalize-subdir
+  encode-subdir
+}
+
+# Encode the subdir as a valid git ref format
+#
+# Input: env $subdir
+# Output: env $subref
+#
+# For detail rules about valid git refs, see the manual of git-check-ref-format:
+# URL:  https://www.kernel.org/pub/software/scm/git/docs/git-check-ref-format.html
+# Shell: git check-ref-format --help
+#
+encode-subdir() {
+  subref=$subdir
+  if [[ ! $subdir ]] || git check-ref-format "subrepo/$subdir"; then
+    return
+  fi
+
+  ## 0. escape %, ensure the subref can be (almost) decoded back to subdir
+  subref=${subref//%/%25}
+
+  ## 1. They can include slash / for hierarchical (directory) grouping,
+  ##    but no slash-separated component can begin with a dot .  or
+  ##    end with the sequence .lock.
+  subref=/$subref/
+  subref=${subref//\/.//%2e}
+  subref=${subref//.lock\//%2elock/}
+  subref=${subref#/}
+  subref=${subref%/}
+
+  ## 2. They must contain at least one /.
+  ##    Note: 'subrepo/' be will prefixed, so this is always true.
+  ## 3. They cannot have two consecutive dots ..  anywhere.
+  subref=${subref//../%2e%2e}
+  subref=${subref//%2e./%2e%2e}
+  subref=${subref//.%2e/%2e%2e}
+
+  ## 4. They cannot have ASCII control characters
+  ##    (i.e. bytes whose values are lower than \040, or \177 DEL), space,
+  ##    tilde ~, caret ^, or colon : anywhere.
+  ## 5. They cannot have question-mark ?, asterisk *,
+  ##    or open bracket [ anywhere.
+  local i
+  for (( i = 1; i < 32; ++i )); do
+    local x=$(printf "%02x" $i)
+    subref=${subref//$(printf "%b" "\x$x")/%$x}
+  done
+  subref=${subref//$'\177'/%7f}
+  subref=${subref// /%20}
+  subref=${subref//\~/%7e}
+  subref=${subref//^/%5e}
+  subref=${subref//:/%3a}
+  subref=${subref//\?/%3f}
+  subref=${subref//\*/%2a}
+  subref=${subref//\[/%5b}
+  subref=${subref//$'\n'/%0a}
+
+  ## 6. They cannot begin or end with a slash / or contain multiple
+  ##    consecutive slashes.
+  ##    Note: This rule is not revertable.
+  while [[ $subref =~ (//+) ]]; do subref=${subref//${BASH_REMATCH[1]}/\/}; done
+
+  ## 7. They cannot end with a dot ..
+  case "$subref" in
+  *.) subref=${subref%.}
+      subref+=%2e
+      ;;
+  esac
+
+  ## 8. They cannot contain a sequence @\{.
+  subref=${subref//@\{/%40\{}
+
+  ## 9. They cannot be the single character @.
+  ##    Note: 'subrepo/' be will prefixed, so this is always true.
+
+  ## 10. They cannot contain a \.
+  subref=${subref//\\/%5c}
+
+  subref=$(git check-ref-format --normalize --allow-onelevel "$subref") ||
+    error "Can't determine valid subref from '$subdir'."
 }
 
 #------------------------------------------------------------------------------
