@@ -442,7 +442,7 @@ subrepo:clone() {
       return
     fi
     o "Remove the old subdir."
-    RUN git rm -r "$subdir"
+    RUN git rm -r -- "$subdir"
   else
     assert-subdir-empty
     if [[ -z $subrepo_branch ]]; then
@@ -455,7 +455,7 @@ subrepo:clone() {
   fi
 
   o "Make the directory '$subdir/' for the clone."
-  RUN mkdir -p "$subdir"
+  RUN mkdir -p -- "$subdir"
 
   o "Commit the new '$subdir/' content."
   subrepo_commit_ref="$upstream_head_commit"
@@ -504,7 +504,7 @@ subrepo:init() {
 
   o "Add the new '$subdir/.gitrepo' file."
   # -f from pull request #219. TODO needs test.
-  RUN git add -f "$subdir/.gitrepo"
+  RUN git add -f -- "$subdir/.gitrepo"
 
   o "Commit new subrepo to the '$original_head_branch' branch."
   subrepo_commit_ref="$upstream_head_commit"
@@ -768,9 +768,9 @@ subrepo:commit() {
     fi
   fi
 
-  if git ls-files "$subdir" | grep -q .; then
+  if git ls-files -- "$subdir" | grep -q .; then
     o "Remove old content of the subdir."
-    RUN git rm -r "$subdir"
+    RUN git rm -r -- "$subdir"
   fi
 
   o "Put remote subrepo content into '$subdir/'."
@@ -778,7 +778,7 @@ subrepo:commit() {
 
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
-  RUN git add -f "$gitrepo"
+  RUN git add -f -- "$gitrepo"
 
   o "Commit to the '$original_head_branch' branch."
   if [[ $original_head_commit != none ]]; then
@@ -1169,11 +1169,11 @@ get-params() {
       if [[ $i -ge $num ]]; then
         usage-error "Command '$command' requires arg '${arg#+}'."
       fi
-      printf -v ${arg#+} "$value"
+      printf -v ${arg#+} -- "$value"
     # Look for function name after ':' to provide a default value
     else
       if [[ $i -lt $num ]]; then
-        printf -v ${arg%:*} "$value"
+        printf -v ${arg%:*} -- "$value"
       elif [[ $arg =~ : ]]; then
         "${arg#*:}"
       fi
