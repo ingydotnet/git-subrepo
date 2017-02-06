@@ -1197,7 +1197,7 @@ check-and-normalize-subdir() {
     usage-error "The subdir '$subdir' should not be absolute path."
   subdir="${subdir#./}"
   subdir="${subdir%/}"
-  subdir=$(tr -s '/' <<< "$subdir")
+  [[ $subdir != *//* ]] || subdir=$(tr -s / <<< "$subdir")
 }
 
 # Determine the correct subdir path to use:
@@ -1224,7 +1224,7 @@ guess-subdir() {
 #
 encode-subdir() {
   subref=$subdir
-  if [[ ! $subdir ]] || git check-ref-format "subrepo/$subdir"; then
+  if [[ ! $subref ]] || git check-ref-format "subrepo/$subref"; then
     return
   fi
 
@@ -1254,6 +1254,7 @@ encode-subdir() {
   ##    or open bracket [ anywhere.
   local i
   for (( i = 1; i < 32; ++i )); do
+    # skip substitute NUL char (i=0), as bash will skip NUL in env
     local x=$(printf "%02x" $i)
     subref=${subref//$(printf "%b" "\x$x")/%$x}
   done
@@ -1270,7 +1271,7 @@ encode-subdir() {
   ## 6. They cannot begin or end with a slash / or contain multiple
   ##    consecutive slashes.
   ##    Note: This rule is not revertable.
-  subdir=$(tr -s '/' <<< "$subdir")
+  [[ $subref != *//* ]] || subref=$(tr -s / <<< "$subref")
 
   ## 7. They cannot end with a dot ..
   case "$subref" in
