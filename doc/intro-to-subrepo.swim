@@ -320,10 +320,10 @@ The resulting history is:
 
 Compare that to *subtree*. This:
 
-  $ git subrepo add abc git@github.com:user/abc master
-  $ git subrepo add xyz git@github.com:user/def master
-  $ git subrepo pull abc git@github.com:user/abc master
-  $ git subrepo pull xyz git@github.com:user/def master
+  $ git subtree add abc git@github.com:user/abc master
+  $ git subtree add xyz git@github.com:user/def master
+  $ git subtree pull abc git@github.com:user/abc master
+  $ git subtree pull xyz git@github.com:user/def master
 
 Produces this:
 
