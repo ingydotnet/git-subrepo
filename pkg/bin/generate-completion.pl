@@ -138,7 +138,7 @@ $options_string && ret=0
 
 _compadd_subdirs() {
     local subrepos
-    IFS=\$'\\n' set -A subrepos `git subrepo status -q`
+    IFS=\$'\\n' set -A subrepos `git subrepo show -q`
     compadd -X "subrepos: " \$subrepos
 }
 ...
@@ -197,7 +197,7 @@ _git_subrepo() {
 
         local subdircommand="\$(__git_find_on_cmdline "\$subdircommands")"
         if [ ! -z "\$subdircommand" ]; then
-            local git_subrepos=`git subrepo status -q`
+            local git_subrepos=`git subrepo show -q`
             __gitcomp "\$git_subrepos"
         fi
 
