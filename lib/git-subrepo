@@ -312,7 +312,7 @@ command:merge-base() {
 
 # `git subrepo status [<subdir>]` command:
 command:status() {
-  subrepo:status | ${GIT_SUBREPO_PAGER}
+  subrepo:status | eval ${GIT_SUBREPO_PAGER}
 }
 
 status-refs() {
