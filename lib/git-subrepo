@@ -88,6 +88,7 @@ main() {
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
+  local workdir_wanted=false    # Use a separate working directory
 
   local old_parent=             # Old subrepo parent commit
   local new_parent=             # New subrepo parent commit
@@ -102,7 +103,10 @@ main() {
 
   local original_head_commit=   # HEAD commit id at start of command
   local original_head_branch=   # HEAD ref at start of command
+  local original_working_dir=   # Path of working dir at start of command
   local upstream_head_commit=   # HEAD commit id from a subrepo fetch
+
+  local using_workdir=false     # Currently using a workdir
 
   local subrepo_remote=         # Remote url for subrepo's upstream repo
   local subrepo_branch=         # Upstream branch to clone/push/pull
@@ -533,6 +537,8 @@ subrepo:pull() {
   o "Create subrepo branch '$branch_name'."
   CALL subrepo:branch
 
+  command-workdir
+
   o "Find common ancestor (with same treehash)."
   if ! subrepo:merge-base "$refs_subrepo_fetch" "$branch_name" false; then
     error "Can't find a common ancestor between $refs_subrepo_fetch "\
@@ -559,8 +565,14 @@ subrepo:pull() {
     fi
   fi
 
-  o "Checkout '$original_head_branch'."
-  git checkout --quiet "$original_head_branch"
+  if $using_workdir; then
+    o "Change directory to original '$original_working_dir'."
+    cd $original_working_dir
+    using_workdir=false
+  else
+    o "Checkout '$original_head_branch'."
+    RUN git checkout "$original_head_branch"
+  fi
 
   o "Commit the new '$subrepo_commit_ref' content."
   CALL subrepo:commit
@@ -646,6 +658,8 @@ subrepo:push() {
 "'--force' to always trust local branch in conflicts"
     fi
 
+    command-workdir
+
     o "Set a common ancestor."
     RUN git rebase --onto "$new_parent" "$old_parent" "$branch_name"
 
@@ -664,7 +678,14 @@ subrepo:push() {
       fi
     fi
 
-    RUN git checkout "$original_head_branch"
+    if $using_workdir; then
+      o "Change directory to original '$original_working_dir'."
+      cd $original_working_dir
+      using_workdir=false
+    else
+      o "Checkout '$original_head_branch'."
+      RUN git checkout "$original_head_branch"
+    fi
   else
     if ! git:rev-exists "$branch_name"; then
       error "'$branch_name' is not a valid commit."
@@ -1011,6 +1032,7 @@ get-command-options() {
 
   [[ -n $GIT_SUBREPO_QUIET ]] && quiet_wanted=true
   [[ -n $GIT_SUBREPO_VERBOSE ]] && verbose_wanted=true
+  [[ -n $GIT_SUBREPO_WORKDIR ]] && workdir_wanted=true
   [[ -n $GIT_SUBREPO_DEBUG ]] && debug_wanted=true
 
   eval "$(
@@ -1131,6 +1153,7 @@ command-prepare() {
     git:get-head-branch-commit
   fi
   original_head_commit="${output:-none}"
+  original_working_dir=${PWD}
 }
 
 # Do the setup steps needed by most of the subrepo subcommands:
@@ -1154,6 +1177,29 @@ command-setup() {
   fi
 
   true
+}
+
+command-workdir() {
+  if $workdir_wanted; then
+    if [[ ! -e .git/workdir/$subdir ]]; then
+      o "Create new workdir for '$subdir' at '.git/workdir/$subdir'."
+      RUN git new-workdir "$original_working_dir" ".git/workdir/$subdir"
+    fi
+
+    o "Change directory to '.git/workdir/$subdir'."
+    cd .git/workdir/$subdir
+    FAIL=false RUN git cherry-pick --abort
+    FAIL=false RUN git rebase --abort
+    FAIL=false RUN git reset --hard ORIG_HEAD
+    FAIL=false RUN git reset --hard HEAD
+    if ! $OK; then
+      FAIL=false RUN git checkout "$original_head_branch"
+      if ! $OK; then
+        error "Failed to reset workdir at '.git/workdir/$subdir'."
+      fi
+    fi
+    using_workdir=true
+  fi
 }
 
 # Parse command line args according to a simple dsl spec:
