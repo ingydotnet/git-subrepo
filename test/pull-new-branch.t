@@ -44,6 +44,15 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   test-gitrepo-field cmdver "$(git subrepo --version)"
 }
 
+{
+  is "$(
+    cd $OWNER/foo
+    git subrepo pull bar
+  )" \
+    "Subrepo 'bar' is up to date." \
+    'subrepo detects that we dont need to pull'
+}
+
 done_testing
 
 teardown

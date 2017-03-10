@@ -59,6 +59,16 @@ gitrepo=$OWNER/foo/bar/.gitrepo
       "Pull commit contains merged"
 }
 
+# Check that we detect that we don't need to pull
+{
+  is "$(
+    cd $OWNER/foo
+    git subrepo pull bar 
+  )" \
+    "Subrepo 'bar' is up to date." \
+    'subrepo detects that we dont need to pull'
+}
+
 # Test pull if we have rebased the original subrepo so that our clone
 # commit is no longer present in the history
 (
