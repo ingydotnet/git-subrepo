@@ -494,9 +494,9 @@ subrepo:pull() {
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
   CALL subrepo:fetch
 
-  # Check if we already are up to date:
-  if [[ $upstream_head_commit == $subrepo_commit ]] &&
-     [[ -z $subrepo_branch ]]; then
+  # Check if we already are up to date
+  # If the -u flag is present, always perform the operation
+  if [[ $upstream_head_commit == $subrepo_commit ]] && ! $update_wanted; then
     OK=false; CODE=-1; return
   fi
 
