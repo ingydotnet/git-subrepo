@@ -28,6 +28,10 @@ bash+:import :std can
 
 VERSION=0.3.1
 
+# export an environment variable so that git hooks can detect that they're running inside 
+# of git-subrepo and modulate their behavior appropriately
+export IS_GIT_SUBREPO=true
+
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
 git subrepo <command> <arguments> <options>
