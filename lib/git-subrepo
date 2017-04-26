@@ -737,14 +737,11 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
-  o "Get commits specific to the subdir."
+  o "Get commits specific to the subdir, excluding the .gitrepo file."
   FAIL=false RUN git filter-branch -f \
-    --subdirectory-filter "$subdir" \
+    --index-filter "git rm -f --cached --ignore-unmatch .gitrepo" \
+    --prune-empty --subdirectory-filter "$subdir" \
     HEAD
-
-  o "Remove the .gitrepo file from the history."
-  FAIL=false RUN git filter-branch -f \
-    --prune-empty --tree-filter "rm -f .gitrepo"
 
   o "Create branch '$branch' for this new commit set."
   RUN git branch "$branch"
