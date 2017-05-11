@@ -38,17 +38,25 @@ note "Pull - Conflict - Use ours - Push"
   git push
 ) &> /dev/null || die
 
+before="$(stat $OWNER/foo/Foo | grep Modify)"
+
 (
   cd $OWNER/foo
   git subrepo pull bar || {
+      cd .git/tmp/subrepo/bar
       git checkout --ours Bar2
       git add Bar2
-      git commit --file .git/MERGE_MSG
-      git checkout master
+      git commit --file ../../../../.git/worktrees/bar/MERGE_MSG
+      cd ../../../..
       git subrepo commit bar
       git subrepo clean bar
   }
 ) &> /dev/null || die
+
+after="$(stat $OWNER/foo/Foo | grep Modify)"
+
+is "$before" "$after" \
+  "No modification on Foo"
 
 test-exists \
   "$OWNER/foo/bar/Bar2" \

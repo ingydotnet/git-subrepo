@@ -27,10 +27,14 @@ ok "$(
   git:branch-exists subrepo/two
 )" "The 'subrepo/two' branch exists"
 
+test-exists "$OWNER/foo/.git/tmp/subrepo/two/"
+
 ok "$(
   cd $OWNER/foo
   git:branch-exists subrepo/one
 )" "The 'subrepo/one' branch exists"
+
+test-exists "$OWNER/foo/.git/tmp/subrepo/one/"
 
 done_testing
 

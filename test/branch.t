@@ -10,43 +10,30 @@ clone-foo-and-bar
 
 subrepo-clone-bar-into-foo
 
+before="$(stat $OWNER/foo/Foo | grep Modify)"
 
 is "$(
   cd $OWNER/foo
   add-new-files bar/file
   git subrepo branch bar
 )" \
-  "Created branch 'subrepo/bar'." \
+  "Created branch 'subrepo/bar' and worktree '.git/tmp/subrepo/bar'." \
   "subrepo branch command output is correct"
 
-# is "$(
-#   cd $OWNER/foo
-#   git rev-list subrepo/bar | wc -l
-# )" \
-#   "1" \
-#   "subrepo branch has one commit"
+after="$(stat $OWNER/foo/Foo | grep Modify)"
+
+is "$before" "$after" \
+  "No modification on Foo"
+
+test-exists "$OWNER/foo/.git/tmp/subrepo/bar/"
+
+is "$(
+  cd $OWNER/foo/.git/tmp/subrepo/bar
+  git branch | grep \*
+)" \
+  "* subrepo/bar" \
+  "Correct branch is checked out"
 
 done_testing
 
 teardown
-
-#### Note: 'clone' no longer makes branches and remotes. But these tests
-#### should be applied to branch tests.
-# remote="$(
-#   cd $OWNER/foo
-#   git remote -v | grep 'subrepo/bar'
-#   true
-# )"
-# 
-# ok "`[ -n "$remote" ]`" \
-#   'subrepo/bar remote exists'
-# 
-# remote_branch="$(
-#   cd $OWNER/foo
-#   git branch -a | grep 'subrepo/remote/bar'
-#   true
-# )"
-# 
-# ok "`[ -n "$remote" ]`" \
-#   'subrepo/remote/bar branch exists'
-

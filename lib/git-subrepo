@@ -258,8 +258,12 @@ command:push() {
 # `git subrepo fetch <subdir>` command
 command:fetch() {
   command-setup +subdir
-  subrepo:fetch
-  say "Fetched '$subrepo_remote' ($subrepo_branch)."
+  if [[ $subrepo_remote == "none" ]]; then
+    say "Ignored '$subdir', no remote."
+  else
+    subrepo:fetch
+    say "Fetched '$subdir' from '$subrepo_remote' ($subrepo_branch)."
+  fi
 }
 
 # `git subrepo branch <subdir>` command:
@@ -537,6 +541,7 @@ subrepo:pull() {
 
   o "Create subrepo branch '$branch_name'."
   CALL subrepo:branch
+  cd "$worktree";
 
   if [[ "$join_method" == "rebase" ]]; then
     o "Rebase changes to $refs_subrepo_fetch"
@@ -608,6 +613,7 @@ subrepo:push() {
 
     o "Create subrepo branch '$branch_name'."
     CALL subrepo:branch "$branch_name"
+    cd "$worktree";
 
     if [[ "$join_method" == "rebase" ]]; then
       o "Rebase changes to $refs_subrepo_fetch"
@@ -788,7 +794,6 @@ subrepo:branch() {
     "rm -f .gitrepo" "$filter" "$branch"
 
   git:create-worktree "$branch"
-  cd "$worktree";
 
   o "Create ref '$refs_subrepo_branch'."
   git:make-ref "$refs_subrepo_branch" "$branch"
@@ -1284,7 +1289,7 @@ read-gitrepo-file() {
   gitrepo="$subdir/.gitrepo"
 
   if [[ ! -f $gitrepo ]]; then
-    error "'$subdir' is not a subrepo."
+    error "No '$gitrepo' file."
   fi
 
   # Read .gitrepo values:
@@ -1715,7 +1720,7 @@ git:create-worktree() {
 }
 
 git:remove-worktree() {
-  if [[ -e "$worktree" ]]; then
+  if [[ -d "$worktree" ]]; then
     o "Check worktree for unsaved changes"
     cd "$worktree"
     assert-working-copy-is-clean

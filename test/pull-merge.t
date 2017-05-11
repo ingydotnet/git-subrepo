@@ -45,10 +45,11 @@ foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
 (
   cd $OWNER/foo
   git subrepo pull bar || {
+      cd .git/tmp/subrepo/bar
       echo "Merged Bar2" > Bar2
       git add Bar2
-      git commit --file .git/MERGE_MSG
-      git checkout master
+      git commit --file ../../../../.git/worktrees/bar/MERGE_MSG
+      cd ../../../..
       git subrepo commit bar
       git subrepo clean bar
   }

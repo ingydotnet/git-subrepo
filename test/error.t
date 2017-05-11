@@ -97,38 +97,8 @@ clone-foo-and-bar
       cd $OWNER/bar
       catch git subrepo pull lala
     )" \
-    "git-subrepo: 'lala' is not a subrepo." \
+    "git-subrepo: No 'lala/.gitrepo' file." \
     "Error OK: check for valid subrepo subdir"
-}
-
-# Test errors while subrepo branch checked out:
-{
-  # Clone a subrepo and check it out:
-  (
-    cd $OWNER/bar
-    git reset --quiet --hard HEAD^
-    git subrepo --quiet clone ../../../$UPSTREAM/foo
-    add-new-files foo/file
-    git subrepo --quiet branch foo
-    git checkout --quiet subrepo/foo
-  )
-
-  # Test that certain commands don't run inside a subrepo branch:
-  for cmd in clone pull push fetch branch commit status clean; do
-    is "$(
-        cd $OWNER/bar
-        catch git subrepo $cmd
-      )" \
-      "git-subrepo: Can't '$cmd' while subrepo branch is checked out." \
-      "Error OK: '$cmd' fails when subrepo checked out"
-  done
-
-  (
-    cd $OWNER/bar
-    git checkout --quiet master
-    git subrepo --quiet clean foo
-    git reset --quiet --hard HEAD^
-  )
 }
 
 {
@@ -155,7 +125,7 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd $OWNER/bar
       touch me
       git add me
@@ -196,6 +166,6 @@ clone-foo-and-bar
     "Error OK: clone non-repo"
 }
 
-done_testing 29
+done_testing
 
 teardown
