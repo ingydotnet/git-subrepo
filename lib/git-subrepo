@@ -27,6 +27,7 @@ fi
 bash+:import :std can
 
 VERSION=0.3.1
+GIT_TMP=.git/tmp
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
@@ -64,19 +65,11 @@ b,branch=   Specify the upstream branch to push/pull/fetch
 e,edit      Edit commit message
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
-<<<<<<< HEAD
 M,method=   Method when you join, valid options are 'merge' or 'rebase'
             Default is 'merge'
 m,message=  Specify a commit message
 N,dry-run   Don't push or commit (prints next commands to run)
 r,remote=   Specify the upstream remote to push/pull/fetch
-=======
-M,merge     Use 'merge' strategy for pull
-m,message=  Specify a commit message
-N,dry-run   Don't push or commit (prints next commands to run)
-r,remote=   Specify the upstream remote to push/pull/fetch
-R,rebase    Use 'rebase' strategy for pull
->>>>>>> Update docs to reflect how things should work
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
  
@@ -101,11 +94,6 @@ main() {
   local dry_run_wanted=false    # Skip commits and pushes
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
-<<<<<<< HEAD
-=======
-  local merge_wanted=false      # Merge on pull (instead of fast-forward)
-  local rebase_wanted=false     # Rebase on pull (instead of fast-forward)
->>>>>>> Update docs to reflect how things should work
   local squash_wanted=false     # Squash commits on push
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
 
@@ -116,6 +104,8 @@ main() {
   local subdir=                 # Subdirectory of the subrepo being used
   local subref=                 # Valid git ref format of subdir
   local gitrepo=                # Path to .gitrepo file
+  local worktree=               # Worktree created by 'git worktree'
+  local start_pwd=$(pwd)        # Store the original directory
 
   local original_head_commit=   # HEAD commit id at start of command
   local original_head_branch=   # HEAD ref at start of command
@@ -162,8 +152,8 @@ main() {
 
   command-init
 
-  # Run the command:
   if $all_wanted && [[ ! $command =~ ^(help|status)$ ]]; then
+    # Run the command on all subrepos
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
@@ -174,6 +164,7 @@ main() {
       "command:$command"
     done
   else
+    # Run the command on a specific subrepo
     command-prepare
     "command:$command"
   fi
@@ -183,8 +174,8 @@ main() {
 # API command functions.
 #
 # Most of these commands call a subrepo:$command function to do the actual
-# work. The user facing output is done  (via `say`) is done up here. The
-# subrepo:* worker functions are meant to be called interally and don't print
+# work. The user facing output (via `say`) is done up here. The
+# subrepo:* worker functions are meant to be called internally and don't print
 # info to the user.
 #------------------------------------------------------------------------------
 
@@ -275,15 +266,14 @@ command:fetch() {
 command:branch() {
   command-setup +subdir
   if $fetch_wanted; then
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     CALL subrepo:fetch
   fi
 
+  local branch="subrepo/$subref"
   if $force_wanted; then
-    FAIL=false RUN git branch -D "subrepo/$subref"
+    git:delete-branch "$branch"
   fi
 
-  local branch="subrepo/$subref"
   if git:branch-exists "$branch"; then
     error "Branch '$branch' already exists. Use '--force' to override."
   fi
@@ -291,10 +281,7 @@ command:branch() {
   # Create the subrepo branch:
   subrepo:branch
 
-  o "Checkout '$original_head_branch'."
-  git checkout --quiet "$original_head_branch"
-
-  say "Created branch '$branch'."
+  say "Created branch '$branch' and worktree '$worktree'."
 }
 
 # `git subrepo commit <subdir>` command
@@ -302,7 +289,6 @@ command:commit() {
   command-setup +subdir subrepo_commit_ref
 
   if "$fetch_wanted"; then
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     CALL subrepo:fetch
   fi
   git:rev-exists "$refs_subrepo_fetch" ||
@@ -478,7 +464,6 @@ subrepo:clone() {
 
   if $force_wanted; then
     o "--force indicates a reclone."
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     CALL subrepo:fetch
     read-gitrepo-file
     o "Check if we already are up to date."
@@ -495,7 +480,7 @@ subrepo:clone() {
       get-upstream-head-branch
       subrepo_branch="$output"
     fi
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
+
     CALL subrepo:fetch
   fi
 
@@ -536,7 +521,6 @@ subrepo:init() {
 
 # Properly merge a local subrepo branch with upstream and commit to mainline:
 subrepo:pull() {
-  o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
   CALL subrepo:fetch
 
   # Check if we already are up to date
@@ -546,16 +530,13 @@ subrepo:pull() {
   fi
 
   local branch_name="subrepo/$subref"
-  if git:branch-exists "$branch_name"; then
-    o "Deleting old '$branch_name' branch."
-    RUN git branch -D "$branch_name"
-  fi
+  git:delete-branch "$branch_name"
 
   subrepo_parent="HEAD^"
+  subrepo_commit_ref="$branch_name"
+
   o "Create subrepo branch '$branch_name'."
   CALL subrepo:branch
-
-  subrepo_commit_ref="$branch_name"
 
   if [[ "$join_method" == "rebase" ]]; then
     o "Rebase changes to $refs_subrepo_fetch"
@@ -579,8 +560,8 @@ subrepo:pull() {
     fi
   fi
 
-  o "Checkout '$original_head_branch'."
-  git checkout --quiet "$original_head_branch"
+  o "Back to $start_pwd"
+  cd "$start_pwd";
 
   o "Create ref '$refs_subrepo_branch' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_branch" "$branch_name"
@@ -595,7 +576,6 @@ subrepo:push() {
   local new_upstream=false
 
   if [[ -z $branch_name ]]; then
-    o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
     FAIL=false OUT=false CALL subrepo:fetch
 
     if ! OK; then
@@ -619,10 +599,7 @@ subrepo:push() {
     fi
 
     branch_name="subrepo-push/$subref"
-    if git:branch-exists "$branch_name"; then
-      o "Deleting old '$branch_name' branch."
-      RUN git branch -D "$branch_name"
-    fi
+    git:delete-branch "$branch_name"
 
     if $squash_wanted; then
       o "Squash commits"
@@ -644,7 +621,7 @@ subrepo:push() {
       fi
     fi
 
-    RUN git checkout "$original_head_branch"
+    cd "$start_pwd"
   else
     if ! git:rev-exists "$branch_name"; then
       error "'$branch_name' is not a valid commit."
@@ -683,7 +660,7 @@ subrepo:push() {
 
   if [[ $branch_name == subrepo-push/$subdir ]]; then
     o "Remove branch '$branch_name'."
-    RUN git branch -D "$branch_name"
+    git:delete-branch "$branch_name"
   fi
 
   o "Put updates into '$subdir/.gitrepo' file."
@@ -699,7 +676,7 @@ subrepo:fetch() {
     error "Can't fetch subrepo. Remote is 'none' in '$subdir/.gitrepo'."
   fi
 
-  o "Fetch '$subrepo_remote' ($subrepo_branch)."
+  o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
   RUN git fetch --quiet "$subrepo_remote" "$subrepo_branch"
   OK || return
 
@@ -796,21 +773,25 @@ subrepo:branch() {
     done
 
     o "Create branch '$branch' for this new commit set $output."
-    RUN git checkout -B "$branch" "$prev_commit"
+    RUN git branch "$branch" "$prev_commit"
   else
-    o "Create a new branch"
-    RUN git checkout -B "$branch"
-    TTY=true FAIL=false RUN git filter-branch -f --subdirectory-filter "$subdir" HEAD
+    o "No parent setting, use the subdir content."
+    RUN git branch "$branch" HEAD
+    TTY=true FAIL=false RUN git filter-branch -f --subdirectory-filter \
+      "$subdir" "$branch"
   fi
 
-  o "Remove the .gitrepo file from $first_gitrepo_commit..HEAD"
+  o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
   local filter="HEAD"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..HEAD"
   FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-    "rm -f .gitrepo" "$filter"
+    "rm -f .gitrepo" "$filter" "$branch"
+
+  git:create-worktree "$branch"
+  cd "$worktree";
 
   o "Create ref '$refs_subrepo_branch'."
-  git:make-ref "$refs_subrepo_branch" HEAD
+  git:make-ref "$refs_subrepo_branch" "$branch"
 }
 
 # Commit a merged subrepo branch:
@@ -866,6 +847,9 @@ subrepo:commit() {
     OUT=true RUN git commit-tree $edit_flag -m "$commit_message" "$output"
     RUN git reset --hard "$output"
   fi
+
+  # Clean up worktree to indicate that we are ready
+  git:remove-worktree "$branch_name"
 
   o "Create ref '$refs_subrepo_commit'."
   git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
@@ -950,6 +934,9 @@ subrepo:clean() {
   for prefix in subrepo subrepo-push; do
     local branch="$prefix/$subdir"
     local ref="refs/heads/$branch"
+
+    o "Clean $subdir"
+    git:remove-worktree "$branch"
     if [[ -e .git/$ref ]]; then
       o "Remove branch '$branch'."
       RUN git update-ref -d "$ref"
@@ -1051,11 +1038,7 @@ get-command-options() {
   fi
   commit_msg_args+=("${command_arguments[@]}")
 
-<<<<<<< HEAD
   for option in all ALL dry_run edit fetch force squash; do
-=======
-  for option in all ALL dry_run edit fetch force merge rebase squash; do
->>>>>>> Update docs to reflect how things should work
     var="${option}_wanted"
     if ${!var}; then
       check_option $option
@@ -1086,15 +1069,9 @@ options_clone='branch edit force message method'
 options_config='force'
 options_commit='edit fetch force message'
 options_fetch='all branch remote'
-<<<<<<< HEAD
 options_init='branch remote method'
 options_pull='all branch edit force message remote update'
 options_push='all branch dry_run force remote squash update'
-=======
-options_init='branch remote'
-options_pull='all branch edit force merge message rebase remote update'
-options_push='all branch dry_run force merge rebase remote squash update'
->>>>>>> Update docs to reflect how things should work
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
@@ -1133,6 +1110,18 @@ command-setup() {
 
   check-and-normalize-subdir
   encode-subdir
+
+  if ! $force_wanted; then
+    o "Check for worktree with branch subrepo/$subdir"
+    local _worktree=$(git worktree list | grep "\[subrepo/$subdir\]")
+    if [[ $command =~ ^(commit)$ && -z $_worktree ]]; then
+      error "There is no worktree available, use the branch command first"
+    elif [[ ! $command =~ ^(branch|clean|commit)$ && -n $_worktree ]]; then
+      error "There is already a worktree with branch subrepo/$subdir.
+Use the --force flag to override this check or perform a subrepo clean
+to remove the worktree."
+    fi
+  fi
 
   # Set refs_ variables:
   refs_subrepo_branch="refs/subrepo/$subref/branch"
@@ -1393,9 +1382,9 @@ update-gitrepo-file() {
 assert-environment-ok() {
   type git &> /dev/null ||
     error "Can't find your 'git' command in '$PATH'."
-  git_version="$(git --version)"
-  if [[ $git_version < "git version 1.7" ]]; then
-    error "Requires git version 1.7 or higher; you have '$git_version'."
+  local git_version=$(git --version)
+  if ! git worktree list &> /dev/null; then
+    error "Requires git version 2.5 or higher; you have '$git_version'."
   fi
 }
 
@@ -1430,27 +1419,34 @@ assert-repo-is-ready() {
   [[ $command == clone ]] ||
     RUN git rev-parse --verify HEAD
 
-  # Repo is in a clean state:
-  if [[ $command =~ ^(clone|init|pull|push|branch|commit)$ ]]; then
-    git update-index -q --ignore-submodules --refresh
-    git diff-files --quiet --ignore-submodules ||
-      error "Can't $command subrepo. Unstaged changes."
-    if [[ $command != clone ]] || git:rev-exists HEAD; then
-      git diff-index --quiet --ignore-submodules HEAD ||
-        error "Can't $command subrepo. Working tree has changes."
-      git diff-index --quiet --cached --ignore-submodules HEAD ||
-        error "Can't $command subrepo. Index has changes."
-    else
-      # Repo has no commits and we're cloning a subrepo. Working tree won't
-      #  possibly have changes as there was nothing initial to change.
-      [[ -z $(git ls-files) ]] ||
-        error "Can't $command subrepo. Index has changes."
-    fi
-  fi
+  assert-working-copy-is-clean
 
   # For now, only support actions from top of repo:
   if [[ -n "$(git rev-parse --show-prefix)" ]]; then
     error "Need to run subrepo command from top level directory of the repo."
+  fi
+}
+
+assert-working-copy-is-clean() {
+  # Repo is in a clean state:
+  if [[ $command =~ ^(clone|init|pull|push|branch|commit)$ ]]; then
+    # TODO: Should we check for untracked files?
+    local pwd=$(pwd)
+    o "Assert that working copy is clean: $pwd"
+    git update-index -q --ignore-submodules --refresh
+    git diff-files --quiet --ignore-submodules ||
+      error "Can't $command subrepo. Unstaged changes. ($pwd)"
+    if [[ $command != clone ]] || git:rev-exists HEAD; then
+      git diff-index --quiet --ignore-submodules HEAD ||
+        error "Can't $command subrepo. Working tree has changes. ($pwd)"
+      git diff-index --quiet --cached --ignore-submodules HEAD ||
+        error "Can't $command subrepo. Index has changes. ($pwd)"
+    else
+      # Repo has no commits and we're cloning a subrepo. Working tree won't
+      #  possibly have changes as there was nothing initial to change.
+      [[ -z $(git ls-files) ]] ||
+        error "Can't $command subrepo. Index has changes. ($pwd)"
+    fi
   fi
 }
 
@@ -1631,38 +1627,37 @@ get-command-info() {
 error-join() {
   cat <<...
 
-You will need to finish the $command by hand. Your working tree has been
-temporarily checked out from your subrepo so that you can resolve the conflicts
+You will need to finish the $command by hand. A new working tree has been
+created at $worktree so that you can resolve the conflicts
 shown in the output above.
 
 This is the common conflict resolution workflow:
 
-  1. Resolve the conflicts (see "git status").
-  2. "git add" the resolved files.
+  1. cd $worktree
+  2. Resolve the conflicts (see "git status").
+  3. "git add" the resolved files.
 ...
 
   if [[ "$join_method" == "rebase" ]]; then
     cat <<...
-  3. git rebase --continue
+  4. git rebase --continue
 ...
   else
     cat <<...
-  3. git commit
+  4. git commit
 ...
   fi
 
   cat <<...
-  4. If there are more conflicts, restart at step 1.
-  5. git checkout $original_head_branch
-  6. git subrepo commit $subdir
+  5. If there are more conflicts, restart at step 2.
+  6. cd $start_pwd
+  7. git subrepo commit $subdir
 
 See "git help $join_method" for details.
 
 Alternatively, you can abort the $command and reset back to where you started:
 
-  1. git $join_method --abort
-  2. git checkout $original_head_branch
-  3. git subrepo clean $subdir
+  1. git subrepo clean $subdir
 
 See "git help subrepo" for more help.
 
@@ -1711,6 +1706,33 @@ git:make-ref() {
 git:is_merge_commit() {
   local commit="$1"
   git show --summary "$commit" | grep -q ^Merge:
+}
+
+git:create-worktree() {
+  local branch="$1"
+  worktree="$GIT_TMP/$branch"
+  RUN git worktree add "$worktree" "$branch"
+}
+
+git:remove-worktree() {
+  if [[ -e "$worktree" ]]; then
+    o "Check worktree for unsaved changes"
+    cd "$worktree"
+    assert-working-copy-is-clean
+    cd "$start_pwd"
+
+    o "Clean up worktree $worktree"
+    rm -rf "$worktree"
+    RUN git worktree prune
+  fi
+}
+
+git:delete-branch() {
+  local branch="$1"
+  o "Deleting old '$branch_name' branch."
+  # Remove worktree first, otherwise you can't delete the branch
+  git:remove-worktree "$branch"
+  FAIL=false RUN git branch -D "$branch"
 }
 
 
