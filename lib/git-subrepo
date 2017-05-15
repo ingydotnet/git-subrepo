@@ -1009,6 +1009,8 @@ get-command-options() {
           shift;;
       -M) join_method="$1"
           shift;;
+      -M) join_method="$1"
+          shift;;
       -N) dry_run_wanted=true ;;
       -r) subrepo_remote="$1"
           override_remote="$1"
