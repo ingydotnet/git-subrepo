@@ -579,6 +579,7 @@ subrepo:pull() {
 subrepo:push() {
   local branch_name="$branch"
   local new_upstream=false
+  local branch_created=false
 
   if [[ -z $branch_name ]]; then
     FAIL=false OUT=false CALL subrepo:fetch
@@ -603,7 +604,7 @@ subrepo:push() {
       fi
     fi
 
-    branch_name="subrepo-push/$subref"
+    branch_name="subrepo/$subref"
     git:delete-branch "$branch_name"
 
     if $squash_wanted; then
@@ -626,11 +627,11 @@ subrepo:push() {
         return
       fi
     fi
-
+    branch_created=true
     cd "$start_pwd"
   else
-    if ! git:rev-exists "$branch_name"; then
-      error "'$branch_name' is not a valid commit."
+    if $squash_wanted; then
+      error "Squash option (-s) can't be used with branch parameter"
     fi
   fi
 
@@ -664,7 +665,7 @@ subrepo:push() {
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
 
-  if [[ $branch_name == subrepo-push/$subdir ]]; then
+  if $branch_created; then
     o "Remove branch '$branch_name'."
     git:delete-branch "$branch_name"
   fi
@@ -1127,7 +1128,7 @@ command-setup() {
     local _worktree=$(git worktree list | grep "\[subrepo/$subdir\]")
     if [[ $command =~ ^(commit)$ && -z $_worktree ]]; then
       error "There is no worktree available, use the branch command first"
-    elif [[ ! $command =~ ^(branch|clean|commit)$ && -n $_worktree ]]; then
+    elif [[ ! $command =~ ^(branch|clean|commit|push)$ && -n $_worktree ]]; then
       error "There is already a worktree with branch subrepo/$subdir.
 Use the --force flag to override this check or perform a subrepo clean
 to remove the worktree."
@@ -1662,8 +1663,29 @@ This is the common conflict resolution workflow:
   cat <<...
   5. If there are more conflicts, restart at step 2.
   6. cd $start_pwd
+...
+  local branch_name="${branch:=subrepo/$subdir}"
+  if [[ "$command" == "push" ]]; then
+    cat <<...
+  7. git subrepo push $subdir $branch_name
+...
+  else
+    cat <<...
   7. git subrepo commit $subdir
+...
+  fi
 
+  if [[ "$command" == "pull" && "$join_method" == "rebase" ]]; then
+    cat <<...
+
+After you have performed the steps above you can push your local changes
+without repeating the rebase by:
+  1. git subrepo push $subdir $branch_name
+
+...
+  fi
+
+cat <<...
 See "git help $join_method" for details.
 
 Alternatively, you can abort the $command and reset back to where you started:
