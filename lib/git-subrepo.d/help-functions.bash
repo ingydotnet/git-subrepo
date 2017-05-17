@@ -8,11 +8,12 @@ help:all() {
     cat <<'...'
 branch               branch <subdir>|--all [-f] [-F]
 clean                clean <subdir>|--all|--ALL [-f]
-clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>]
+clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>] [--method <merge|rebase>]
 commit               commit <subdir> [<subrepo-ref>] [-e|-m <msg>] [-f] [-F]
+config               config <subdir> <option> [<value>] [-f]
 fetch                fetch <subdir>|--all [-r <remote>] [-b <branch>]
 help                 help [<command>|--all]
-init                 init <subdir> [-r <remote>] [-b <branch>]
+init                 init <subdir> [-r <remote>] [-b <branch>] [--method <merge|rebase>]
 pull                 pull <subdir>|--all [-M|-R|-f] [-e|-m <msg>] [-b <branch>] [-r <remote>] [-u]
 push                 push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
 status               status [<subdir>|--all|--ALL] [-F] [-q|-v]
@@ -70,7 +71,7 @@ help:clean() {
 help:clone() {
     cat <<'...'
 
-  Usage: git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>]
+  Usage: git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>] [--method <merge|rebase>]
 
 
   Add a repository as a subrepo in a subdir of your repository.
@@ -89,6 +90,9 @@ help:clone() {
   obtained.
 
   The `--force` option will "reclone" (completely replace) an existing subdir.
+
+  The `--method` option will decide how the join process between branches are
+   performed. The default option is merge.
 
   The `clone` command accepts the `--branch=` `--edit`, `--force` and
   `--message=` options.
@@ -114,6 +118,24 @@ help:commit() {
 
   The `commit` command accepts the `--edit`, `--fetch`, `--force` and
   `--message=` options.
+...
+}
+
+help:config() {
+    cat <<'...'
+
+  Usage: git subrepo config <subdir> <option> [<value>] [-f]
+
+
+  Read or update configuration values in the subdir/.gitrepo file.
+
+  Because most of the values stored in the .gitrepo file are generated you
+  will need to use `--force` if you want to change anything else then the
+  `method` option.
+
+  Example to update the `method` option for a subrepo:
+
+    git subrepo config foo method rebase
 ...
 }
 
@@ -153,7 +175,7 @@ help:help() {
 help:init() {
     cat <<'...'
 
-  Usage: git subrepo init <subdir> [-r <remote>] [-b <branch>]
+  Usage: git subrepo init <subdir> [-r <remote>] [-b <branch>] [--method <merge|rebase>]
 
 
   Turn an existing subdirectory into a subrepo.
@@ -173,6 +195,9 @@ help:init() {
 
   Note: You will need to create the empty upstream repo and push to it on your
   own, using `git subrepo push <subdir>`.
+
+  The `--method` option will decide how the join process between branches
+  are performed. The default option is merge.
 
   The `init` command accepts the `--branch=` and `--remote=` options.
 ...
@@ -198,8 +223,7 @@ help:pull() {
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git rebase subrepo/<subdir>/fetch subrepo/<subdir>
-    git checkout ORIG_HEAD
+    git merge/rebase subrepo/<subdir>/fetch subrepo/<subdir>
     git subrepo commit <subdir>
     # Only needed for a consequential push:
     git update-ref refs/subrepo/<subdir>/pull subrepo/<subdir>
@@ -210,15 +234,11 @@ help:pull() {
   conflicts can happen. Since Git has lots of ways to resolve conflicts to your
   personal tastes, the subrepo command defers to letting you do this by hand.
 
-  When you pull you can assume a fast-forward strategy (default) or you can
-  specify a `--rebase`, `--merge` or `--force` strategy. The `--force` option
-  is the same as a `clone --force` operation, using the current remote and
-  branch.
-
-  Choosing between `--merge` and `--rebase` has no effect on the final result
-  of the pull, since it becomes a single commit. But it does affect the
-  resulting `subrepo/<subdir>` branch, which is often used for a subrepo `push`
-  command. See 'push' below for more information.
+  When pulling new data, the method selected in clone/init is used. This has
+  no effect on the final result of the pull, since it becomes a single commit.
+  But it does affect the resulting `subrepo/<subdir>` branch, which is often
+  used for a subrepo `push` command. See 'push' below for more information.
+  If you want to change the method you can use the `config` command for this.
 
   When you pull you can assume a fast-forward strategy (default) or you can
   specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
@@ -233,7 +253,7 @@ help:pull() {
   The set of commands used above are described in detail below.
 
   The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
-  `--merge`, `--message=`, `--rebase`, `--remote=` and `--update` options.
+  `--message=`, `--remote=` and `--update` options.
 ...
 }
 
