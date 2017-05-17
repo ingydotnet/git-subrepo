@@ -17,6 +17,7 @@ Git Submodule Alternative
   git subrepo fetch <subdir>
   git subrepo branch <subdir>
   git subrepo commit <subdir>
+  git subrepo config <subdir>
 
   git subrepo status [<subdir>]
   git subrepo clean <subdir>
@@ -77,6 +78,8 @@ The best short answer is:
 
 The complete "Installation Instructions" can be found below.
 
+Note: git-subrepo needs a git version (> 2.5) that supports worktree:s.
+
 = Commands
 
 All the *subrepo* commands use names of actual Git commands and try to do
@@ -87,7 +90,7 @@ experienced Git users.
 Please note that the commands are /not/ exact equivalents, and do not take all
 the same arguments. Keep reading…
 
-- `git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>]`
+- `git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>] [--method <merge|rebase>]`
 
   Add a repository as a subrepo in a subdir of your repository.
 
@@ -106,10 +109,13 @@ the same arguments. Keep reading…
 
   The `--force` option will "reclone" (completely replace) an existing subdir.
 
+  The `--method` option will decide how the join process between branches are
+   performed. The default option is merge.
+
   The `clone` command accepts the `--branch=` `--edit`, `--force` and
   `--message=` options.
 
-- `git subrepo init <subdir> [-r <remote>] [-b <branch>]`
+- `git subrepo init <subdir> [-r <remote>] [-b <branch>] [--method <merge|rebase>]`
 
   Turn an existing subdirectory into a subrepo.
 
@@ -129,6 +135,9 @@ the same arguments. Keep reading…
   Note: You will need to create the empty upstream repo and push to it on your
   own, using `git subrepo push <subdir>`.
 
+  The `--method` option will decide how the join process between branches
+  are performed. The default option is merge.
+
   The `init` command accepts the `--branch=` and `--remote=` options.
 
 - `git subrepo pull <subdir>|--all [-M|-R|-f] [-e|-m <msg>] [-b <branch>] [-r <remote>] [-u]`
@@ -147,8 +156,7 @@ the same arguments. Keep reading…
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-    git rebase subrepo/<subdir>/fetch subrepo/<subdir>
-    git checkout ORIG_HEAD
+    git merge/rebase subrepo/<subdir>/fetch subrepo/<subdir>
     git subrepo commit <subdir>
     # Only needed for a consequential push:
     git update-ref refs/subrepo/<subdir>/pull subrepo/<subdir>
@@ -159,15 +167,11 @@ the same arguments. Keep reading…
   conflicts can happen. Since Git has lots of ways to resolve conflicts to your
   personal tastes, the subrepo command defers to letting you do this by hand.
 
-  When you pull you can assume a fast-forward strategy (default) or you can
-  specify a `--rebase`, `--merge` or `--force` strategy. The `--force` option
-  is the same as a `clone --force` operation, using the current remote and
-  branch.
-
-  Choosing between `--merge` and `--rebase` has no effect on the final result
-  of the pull, since it becomes a single commit. But it does affect the
-  resulting `subrepo/<subdir>` branch, which is often used for a subrepo `push`
-  command. See 'push' below for more information.
+  When pulling new data, the method selected in clone/init is used. This has
+  no effect on the final result of the pull, since it becomes a single commit.
+  But it does affect the resulting `subrepo/<subdir>` branch, which is often
+  used for a subrepo `push` command. See 'push' below for more information.
+  If you want to change the method you can use the `config` command for this.
 
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
@@ -178,7 +182,7 @@ the same arguments. Keep reading…
   The set of commands used above are described in detail below.
 
   The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
-  `--merge`, `--message=`, `--rebase`, `--remote=` and `--update` options.
+  `--message=`, `--remote=` and `--update` options.
 
 - `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N]`
 
@@ -281,6 +285,18 @@ the same arguments. Keep reading…
 
   The `clean` command accepts the `--all`, `--ALL`, and `--force` options.
 
+- `git subrepo config <subdir> <option> [<value>] [-f]`
+
+  Read or update configuration values in the subdir/.gitrepo file.
+
+  Because most of the values stored in the .gitrepo file are generated you
+  will need to use `--force` if you want to change anything else then the
+  `method` option.
+
+  Example to update the `method` option for a subrepo:
+
+    git subrepo config foo method rebase
+
 - `git subrepo help [<command>|--all]`
 
   Same as `git help subrepo`. Will launch the manpage. For the shorter usage,
@@ -357,19 +373,9 @@ the same arguments. Keep reading…
   NOTE: The `--force` option means different things for different commands.
   Read the command specific doc for the exact meaning.
 
-- `--merge` (`-M`)
-
-  Use a `merge` strategy to include upstream subrepo commits on a pull (or
-  setup for push).
-
 - `--message=<message>` (`-m <message>`)
 
   Specify your own commit message on the command line.
-
-- `--rebase` (`-R`)
-
-  Use a `rebase` strategy to include upstream subrepo commits on a pull (or
-  setup for push).
 
 - `--remote=<remote-url>` (`-r <remote-url>`)
 
