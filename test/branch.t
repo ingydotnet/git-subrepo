@@ -12,15 +12,23 @@ subrepo-clone-bar-into-foo
 
 before="$(stat $OWNER/foo/Foo | grep Modify)"
 
-is "$(
+(
   cd $OWNER/foo
   add-new-files bar/file
+  add-new-files .gitrepo
+)
+
+save-original-state $OWNER/foo bar
+
+is "$(
+  cd $OWNER/foo
   git subrepo branch bar
 )" \
   "Created branch 'subrepo/bar' and worktree '.git/tmp/subrepo/bar'." \
   "subrepo branch command output is correct"
 
 after="$(stat $OWNER/foo/Foo | grep Modify)"
+assert-original-state $OWNER/foo bar
 
 is "$before" "$after" \
   "No modification on Foo"

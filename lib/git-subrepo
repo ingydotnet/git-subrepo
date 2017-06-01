@@ -724,6 +724,8 @@ subrepo:branch() {
     OUT=true RUN git rev-list --reverse --first-parent "$subrepo_parent..HEAD"
     local commit_list="$output"
     for commit in $commit_list; do
+      o "Working on $commit"
+
       o "Find out the .gitrepo reference"
       FAIL=false OUT=true RUN git config --blob \
         "$commit":"$subdir/.gitrepo" "subrepo.commit"
@@ -779,7 +781,7 @@ subrepo:branch() {
       fi
     done
 
-    o "Create branch '$branch' for this new commit set $output."
+    o "Create branch '$branch' for this new commit set $prev_commit."
     RUN git branch "$branch" "$prev_commit"
   else
     o "No parent setting, use the subdir content."
@@ -789,10 +791,10 @@ subrepo:branch() {
   fi
 
   o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
-  local filter="HEAD"
-  [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..HEAD"
+  local filter="$branch"
+  [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
   FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-    "rm -f .gitrepo" "$filter" "$branch"
+    "rm -f .gitrepo" "$filter"
 
   git:create-worktree "$branch"
 
