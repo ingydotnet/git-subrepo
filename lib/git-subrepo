@@ -787,7 +787,7 @@ subrepo:branch() {
     o "No parent setting, use the subdir content."
     RUN git branch "$branch" HEAD
     TTY=true FAIL=false RUN git filter-branch -f --subdirectory-filter \
-      "$subdir" "$branch"
+      "$subref" "$branch"
   fi
 
   o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
@@ -857,7 +857,7 @@ subrepo:commit() {
   fi
 
   # Clean up worktree to indicate that we are ready
-  git:remove-worktree "$branch_name"
+  git:remove-worktree
 
   o "Create ref '$refs_subrepo_commit'."
   git:make-ref "$refs_subrepo_commit" "$subrepo_commit_ref"
@@ -945,11 +945,12 @@ subrepo:status() {
 
 subrepo:clean() {
   # Remove subrepo branches if exist:
-  local branch="subrepo/$subdir"
+  local branch="subrepo/$subref"
   local ref="refs/heads/$branch"
+  local worktree="$GIT_TMP/$branch"
 
   o "Clean $subdir"
-  git:remove-worktree "$branch"
+  git:remove-worktree
   if [[ -e .git/$ref ]]; then
     o "Remove branch '$branch'."
     RUN git update-ref -d "$ref"
@@ -1750,6 +1751,7 @@ git:create-worktree() {
 }
 
 git:remove-worktree() {
+  o "Remove $worktree"
   if [[ -d "$worktree" ]]; then
     o "Check worktree for unsaved changes"
     cd "$worktree"
@@ -1766,7 +1768,7 @@ git:delete-branch() {
   local branch="$1"
   o "Deleting old '$branch_name' branch."
   # Remove worktree first, otherwise you can't delete the branch
-  git:remove-worktree "$branch"
+  git:remove-worktree
   FAIL=false RUN git branch -D "$branch"
 }
 

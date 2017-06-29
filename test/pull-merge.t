@@ -79,7 +79,6 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
 }
 
 (
-  set -x
   cd $OWNER/foo
   git subrepo push bar
 ) &> /dev/null || die
