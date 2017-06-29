@@ -24,19 +24,11 @@ _git-subrepo() {
         '(-e --edit)'{-e,--edit}'[Edit commit message]' \
         '(-f --force)'{-f,--force}'[Force certain operations]' \
         '(-F --fetch)'{-F,--fetch}'[Fetch the upstream content first]' \
-<<<<<<< HEAD
         '(-M --method)'{-M,--method}'[Method when you join, valid options are '"'"'merge'"'"' or '"'"'rebase'"'"']:M' \
         '--Default[is '"'"'merge'"'"']' \
         '(-m --message)'{-m,--message}'[Specify a commit message]:m' \
         '(-N --dry-run)'{-N,--dry-run}'[Don'"'"'t push or commit (prints next commands to run)]' \
         '(-r --remote)'{-r,--remote}'[Specify the upstream remote to push/pull/fetch]:r' \
-=======
-        '(-M --merge)'{-M,--merge}'[Use '"'"'merge'"'"' strategy for pull]' \
-        '(-m --message)'{-m,--message}'[Specify a commit message]:m' \
-        '(-N --dry-run)'{-N,--dry-run}'[Don'"'"'t push or commit (prints next commands to run)]' \
-        '(-r --remote)'{-r,--remote}'[Specify the upstream remote to push/pull/fetch]:r' \
-        '(-R --rebase)'{-R,--rebase}'[Use '"'"'rebase'"'"' strategy for pull]' \
->>>>>>> Update docs to reflect how things should work
         '(-s --squash)'{-s,--squash}'[Squash commits on push]' \
         '(-u --update)'{-u,--update}'[Add the --branch and/or --remote overrides to .gitrepo]' \
         '(-q --quiet)'{-q,--quiet}'[Show minimal output]' \
@@ -47,11 +39,7 @@ _git-subrepo() {
 
     case $state in
     subcmd)
-<<<<<<< HEAD
-        compadd branch clean clone commit config fetch help init pull push status upgrade version
-=======
-        compadd branch clean clone commit fetch help init pull push status upgrade version
->>>>>>> Update docs to reflect how things should work
+        compadd branch clean clone clone clone commit commit commit config fetch fetch fetch help help help init pull pull pull push push push status status status upgrade version
     ;;
 
     args)
@@ -70,7 +58,7 @@ _git-subrepo() {
                 esac
         ;;
 
-        branch|clean|commit|config|fetch|pull|push|status)
+        branch|clean|commit|commit|commit|config|fetch|fetch|fetch|pull|pull|pull|push|push|push|status|status|status)
             _compadd_subdirs
         ;;
 
@@ -79,11 +67,7 @@ _git-subrepo() {
         ;;
 
         help)
-<<<<<<< HEAD
-            compadd branch clean clone commit config fetch help init pull push status upgrade version
-=======
-            compadd branch clean clone commit fetch help init pull push status upgrade version
->>>>>>> Update docs to reflect how things should work
+            compadd branch clean clone clone clone commit commit commit config fetch fetch fetch help help help init pull pull pull push push push status status status upgrade version
         ;;
         esac
     ;;
