@@ -511,7 +511,7 @@ subrepo:init() {
 
   o "Add the new '$subdir/.gitrepo' file."
   # -f from pull request #219. TODO needs test.
-  RUN git add -f -- "$subdir/.gitrepo"
+  RUN git add -f -- "$gitrepo"
 
   o "Commit new subrepo to the '$original_head_branch' branch."
   subrepo_commit_ref="$original_head_commit"
@@ -1107,10 +1107,10 @@ command-setup() {
   encode-subdir
 
   # Set refs_ variables:
-  refs_subrepo_branch="refs/subrepo/$subdir/branch"
-  refs_subrepo_commit="refs/subrepo/$subdir/commit"
-  refs_subrepo_fetch="refs/subrepo/$subdir/fetch"
-  refs_subrepo_push="refs/subrepo/$subdir/push"
+  refs_subrepo_branch="refs/subrepo/$subref/branch"
+  refs_subrepo_commit="refs/subrepo/$subref/commit"
+  refs_subrepo_fetch="refs/subrepo/$subref/fetch"
+  refs_subrepo_push="refs/subrepo/$subref/push"
 
   # Read/parse the .gitrepo file (unless clone/init; doesn't exist yet)
   gitrepo="$subdir/.gitrepo"
@@ -1354,7 +1354,7 @@ update-gitrepo-file() {
 
   RUN git config --file="$gitrepo" subrepo.cmdver "$VERSION"
 
-  RUN git add -f "$gitrepo"
+  RUN git add -f -- "$gitrepo"
 }
 
 #------------------------------------------------------------------------------
