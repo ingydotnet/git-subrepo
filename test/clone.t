@@ -36,6 +36,18 @@ clone-foo-and-bar
     "Subrepo '../../../tmp/upstream/bar' (master) cloned into 'bar'." \
     'subrepo clone command output is correct'
 
+  remote_output="$(
+    cd $OWNER/foo
+    git remote -v
+  )"
+
+  is "$(
+    cd $OWNER/foo
+    git remote -v | grep subrepo/bar
+  )" \
+    "" \
+    'No remotes created'
+
   clone_output_empty="$(
     cd $OWNER/empty
     catch git subrepo clone ../../../$UPSTREAM/bar
