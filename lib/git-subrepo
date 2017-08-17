@@ -678,7 +678,7 @@ subrepo:fetch() {
   fi
 
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
-  RUN git fetch --quiet "$subrepo_remote" "$subrepo_branch"
+  RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch"
   OK || return
 
   o "Get the upstream subrepo HEAD commit."
