@@ -24,8 +24,7 @@ is "$(
   cd $OWNER/foo
   git subrepo clean bar
 )" \
-  "Removed branch 'subrepo/bar'.
-Removed remote 'subrepo/bar'." \
+  "Removed branch 'subrepo/bar'." \
   "subrepo clean command output is correct"
 
 test-exists \

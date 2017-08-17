@@ -502,12 +502,6 @@ subrepo:init() {
   # Check if subdir is proper candidate for this init:
   assert-subdir-ready-for-init
 
-  if [[ $subrepo_remote != none ]]; then
-    o "Create subrepo remote 'subrepo/$subref' -> '$subrepo_remote'."
-    FAIL=false RUN git remote remove "subrepo/$subref"
-    RUN git remote add "subrepo/$subref" "$subrepo_remote"
-  fi
-
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
 
@@ -690,17 +684,6 @@ subrepo:fetch() {
   o "Get the upstream subrepo HEAD commit."
   OUT=true RUN git rev-parse FETCH_HEAD^0
   upstream_head_commit="$output"
-
-  local output=; output=$(git config "remote.subrepo/$subref.url" || true)
-  if [[ -z $output ]]; then
-    o "Create subrepo remote 'subrepo/$subref' -> '$subrepo_remote'."
-    RUN git remote add "subrepo/$subref" "$subrepo_remote"
-  else
-    if [[ $output != $subrepo_remote ]]; then
-      o "Change subrepo remote 'subrepo/$subref' -> '$subrepo_remote'."
-      git remote set-url "subrepo/$subref" "$subrepo_remote"
-    fi
-  fi
 
   o "Create ref '$refs_subrepo_fetch'."
   git:make-ref "$refs_subrepo_fetch" FETCH_HEAD^0
@@ -955,14 +938,6 @@ subrepo:clean() {
     o "Remove branch '$branch'."
     RUN git update-ref -d "$ref"
     clean_list+=("branch '$branch'")
-  fi
-
-  local remote="subrepo/$subref"
-  FAIL=false OUT=true RUN git config "remote.$remote.url"
-  if [[ -n $output ]]; then
-    o "Remove remote '$remote'."
-    RUN git remote rm "$remote"
-    clean_list+=("remote '$remote'")
   fi
 
   if "$force_wanted"; then
