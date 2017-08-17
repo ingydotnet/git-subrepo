@@ -38,7 +38,7 @@ note "Pull - Conflict - Use ours - Push"
   git push
 ) &> /dev/null || die
 
-before="$(stat $OWNER/foo/Foo | grep Modify)"
+before="$(date -r $OWNER/foo/Foo '+%s')"
 
 (
   cd $OWNER/foo
@@ -53,7 +53,8 @@ before="$(stat $OWNER/foo/Foo | grep Modify)"
   }
 ) &> /dev/null || die
 
-after="$(stat $OWNER/foo/Foo | grep Modify)"
+sleep 1
+after="$(date -r $OWNER/foo/Foo '+%s')"
 
 is "$before" "$after" \
   "No modification on Foo"

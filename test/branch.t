@@ -10,7 +10,7 @@ clone-foo-and-bar
 
 subrepo-clone-bar-into-foo
 
-before="$(stat $OWNER/foo/Foo | grep Modify)"
+before="$(date -r $OWNER/foo/Foo '+%s')"
 
 (
   cd $OWNER/foo
@@ -27,7 +27,8 @@ is "$(
   "Created branch 'subrepo/bar' and worktree '.git/tmp/subrepo/bar'." \
   "subrepo branch command output is correct"
 
-after="$(stat $OWNER/foo/Foo | grep Modify)"
+sleep 1
+after="$(date -r $OWNER/foo/Foo '+%s')"
 assert-original-state $OWNER/foo bar
 
 is "$before" "$after" \
