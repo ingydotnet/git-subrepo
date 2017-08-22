@@ -8,28 +8,14 @@ help:all() {
     cat <<'...'
 branch               branch <subdir>|--all [-f] [-F]
 clean                clean <subdir>|--all|--ALL [-f]
-clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>] [--method <merge|rebase>]
-clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [-e]
-clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>]
-commit               commit <subdir> [<subrepo-ref>] [-e|-m <msg>] [-f] [-F]
+clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [-e] [--method <merge|rebase>]
 commit               commit <subdir> [<subrepo-ref>] [-m <msg>] [-e] [-f] [-F]
-commit               commit <subdir> [<subrepo-ref>] [-e|-m <msg>] [-f] [-F]
 config               config <subdir> <option> [<value>] [-f]
 fetch                fetch <subdir>|--all [-r <remote>] [-b <branch>]
-fetch                fetch <subdir>|--all [<branch>] [-r <remote>]
-fetch                fetch <subdir>|--all [-r <remote>] [-b <branch>]
-help                 help [<command>|--all]
-help                 help [--all]
 help                 help [<command>|--all]
 init                 init <subdir> [-r <remote>] [-b <branch>] [--method <merge|rebase>]
-pull                 pull <subdir>|--all [-M|-R|-f] [-e|-m <msg>] [-b <branch>] [-r <remote>] [-u]
-pull                 pull <subdir>|-a [-R] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u]
-pull                 pull <subdir>|--all [-M|-R|-f] [-e|-m <msg>] [-b <branch>] [-r <remote>] [-u]
+pull                 pull <subdir>|--all [-M|-R|-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u]
 push                 push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
-push                 push <subdir>|-a [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N]
-push                 push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
-status               status [<subdir>|--all|--ALL] [-F] [-q|-v]
-status               status [<subdir>|--all|--ALL] [-F] [-q]
 status               status [<subdir>|--all|--ALL] [-F] [-q|-v]
 upgrade              upgrade
 version              version [-q|-v]
@@ -52,9 +38,6 @@ help:branch() {
   Use the `--force` option to write over an existing `subrepo/<subdir>` branch.
 
   The `branch` command accepts the `--all`, `--fetch` and `--force` options.
-
-<<<<<<< HEAD
-<<<<<<< HEAD
 ...
 }
 
@@ -78,41 +61,18 @@ help:clean() {
   it. Use `--ALL` to remove any artifacts that were ever created by subrepo.
 
   To remove ALL subrepo artifacts:
-<<<<<<< HEAD
 
     git subrepo clean --ALL --force
 
   The `clean` command accepts the `--all`, `--ALL`, and `--force` options.
-
-<<<<<<< HEAD
 ...
 }
 
 help:clone() {
     cat <<'...'
 
-  Usage: git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>] [--method <merge|rebase>]
+  Usage: git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [-e] [--method <merge|rebase>]
 
-=======
-...
-}
-
-help:clone() {
-    cat <<'...'
-
-  Usage: git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [-e]
-
->>>>>>> Make it possible to specify commit messages.
-=======
-...
-}
-
-help:clone() {
-    cat <<'...'
-
-  Usage: git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-e|-m <msg>]
-
->>>>>>> Update docs to reflect how things should work
 
   Add a repository as a subrepo in a subdir of your repository.
 
@@ -131,12 +91,9 @@ help:clone() {
 
   The `--force` option will "reclone" (completely replace) an existing subdir.
 
-<<<<<<< HEAD
   The `--method` option will decide how the join process between branches are
    performed. The default option is merge.
 
-=======
->>>>>>> Make it possible to specify commit messages.
   The `clone` command accepts the `--branch=` `--edit`, `--force` and
   `--message=` options.
 ...
@@ -145,28 +102,8 @@ help:clone() {
 help:commit() {
     cat <<'...'
 
-  Usage: git subrepo commit <subdir> [<subrepo-ref>] [-e|-m <msg>] [-f] [-F]
-
-=======
-...
-}
-
-help:commit() {
-    cat <<'...'
-
   Usage: git subrepo commit <subdir> [<subrepo-ref>] [-m <msg>] [-e] [-f] [-F]
 
->>>>>>> Make it possible to specify commit messages.
-=======
-...
-}
-
-help:commit() {
-    cat <<'...'
-
-  Usage: git subrepo commit <subdir> [<subrepo-ref>] [-e|-m <msg>] [-f] [-F]
-
->>>>>>> Update docs to reflect how things should work
 
   Add subrepo branch to current history as a single commit.
 
@@ -181,9 +118,6 @@ help:commit() {
 
   The `commit` command accepts the `--edit`, `--fetch`, `--force` and
   `--message=` options.
-
-<<<<<<< HEAD
-<<<<<<< HEAD
 ...
 }
 
@@ -194,16 +128,11 @@ help:config() {
 
 
   Read or update configuration values in the subdir/.gitrepo file.
-=======
-
-    git subrepo clean --ALL --force
->>>>>>> Make it possible to specify commit messages.
 
   Because most of the values stored in the .gitrepo file are generated you
   will need to use `--force` if you want to change anything else then the
   `method` option.
 
-<<<<<<< HEAD
   Example to update the `method` option for a subrepo:
 
     git subrepo config foo method rebase
@@ -215,28 +144,6 @@ help:fetch() {
 
   Usage: git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>]
 
-=======
-  `--remote=`, `--squash` and `--update` options.
-...
-}
-
-help:fetch() {
-    cat <<'...'
-
-  Usage: git subrepo fetch <subdir>|--all [<branch>] [-r <remote>]
-
->>>>>>> Make it possible to specify commit messages.
-=======
-  `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
-...
-}
-
-help:fetch() {
-    cat <<'...'
-
-  Usage: git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>]
-
->>>>>>> Update docs to reflect how things should work
 
   Fetch the remote/upstream content for a subrepo.
 
@@ -254,26 +161,6 @@ help:help() {
 
   Usage: git subrepo help [<command>|--all]
 
-=======
-...
-}
-
-help:help() {
-    cat <<'...'
-
-  Usage: git subrepo help [--all]
-
->>>>>>> Make it possible to specify commit messages.
-=======
-...
-}
-
-help:help() {
-    cat <<'...'
-
-  Usage: git subrepo help [<command>|--all]
-
->>>>>>> Update docs to reflect how things should work
 
   Same as `git help subrepo`. Will launch the manpage. For the shorter usage,
   use `git subrepo -h`.
@@ -282,15 +169,6 @@ help:help() {
   `--all` to get a summary of all commands.
 
   The `help` command accepts the `--all` option.
-
-<<<<<<< HEAD
-  Use `git subrepo help <command> to get help for a specific command. Use
-  `--all` to get a summary of all commands.
-
-  The `help` command accepts the `--all` option.
-
-=======
->>>>>>> Update docs to reflect how things should work
 ...
 }
 
@@ -322,37 +200,14 @@ help:init() {
   are performed. The default option is merge.
 
   The `init` command accepts the `--branch=` and `--remote=` options.
-
-<<<<<<< HEAD
-<<<<<<< HEAD
 ...
 }
 
 help:pull() {
     cat <<'...'
 
-  Usage: git subrepo pull <subdir>|--all [-M|-R|-f] [-e|-m <msg>] [-b <branch>] [-r <remote>] [-u]
+  Usage: git subrepo pull <subdir>|--all [-M|-R|-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u]
 
-=======
-...
-}
-
-help:pull() {
-    cat <<'...'
-
-  Usage: git subrepo pull <subdir>|-a [-R] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u]
-
->>>>>>> Make it possible to specify commit messages.
-=======
-...
-}
-
-help:pull() {
-    cat <<'...'
-
-  Usage: git subrepo pull <subdir>|--all [-M|-R|-f] [-e|-m <msg>] [-b <branch>] [-r <remote>] [-u]
-
->>>>>>> Update docs to reflect how things should work
 
   Update the subrepo subdir with the latest upstream changes.
 
@@ -368,20 +223,13 @@ help:pull() {
 
     git subrepo fetch <subdir>
     git subrepo branch <subdir>
-<<<<<<< HEAD
     git merge/rebase subrepo/<subdir>/fetch subrepo/<subdir>
-=======
-    git rebase --onto <new_parent> <old_parent> subrepo/<subdir>
-    git rebase subrepo/<subdir>/fetch subrepo/<subdir>
-    git checkout ORIG_HEAD
->>>>>>> Make it possible to specify commit messages.
     git subrepo commit <subdir>
     # Only needed for a consequential push:
     git update-ref refs/subrepo/<subdir>/pull subrepo/<subdir>
 
   In other words, you could do all the above commands yourself, for the same
   effect. If any of the commands fail, subrepo will stop and tell you to finish
-<<<<<<< HEAD
   this by hand. Generally a failure would be in the merge or rebase part, where
   conflicts can happen. Since Git has lots of ways to resolve conflicts to your
   personal tastes, the subrepo command defers to letting you do this by hand.
@@ -395,11 +243,6 @@ help:pull() {
   When you pull you can assume a fast-forward strategy (default) or you can
   specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
   as a `clone --force` operation, using the current remote and branch.
-=======
-  this by hand. Generally a failure would be in the rebase, where conflicts can
-  happen. Since Git has lots of ways to resolve conflicts to your personal
-  tastes, the subrepo command defers to letting you do this by hand.
->>>>>>> Make it possible to specify commit messages.
 
   When you pull you can assume a fast-forward strategy (default) or you can
   specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
@@ -413,8 +256,6 @@ help:pull() {
 
   The set of commands used above are described in detail below.
 
-<<<<<<< HEAD
-<<<<<<< HEAD
   The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
   `--message=`, `--remote=` and `--update` options.
 ...
@@ -425,30 +266,6 @@ help:push() {
 
   Usage: git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
 
-=======
-  The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--message=`,
-  `--rebase`, `--remote=` and `--update` options.
-...
-}
-
-help:push() {
-    cat <<'...'
-
-  Usage: git subrepo push <subdir>|-a [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N]
-
->>>>>>> Make it possible to specify commit messages.
-=======
-  The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
-  `--merge`, `--message=`, `--rebase`, `--remote=` and `--update` options.
-...
-}
-
-help:push() {
-    cat <<'...'
-
-  Usage: git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
-
->>>>>>> Update docs to reflect how things should work
 
   Push a properly merged subrepo branch back upstream.
 
@@ -473,8 +290,6 @@ help:push() {
   option will NOT check for a proper merge. ANY branch will be force pushed!)
 
   The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
-<<<<<<< HEAD
-<<<<<<< HEAD
   `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
 ...
 }
@@ -484,26 +299,6 @@ help:status() {
 
   Usage: git subrepo status [<subdir>|--all|--ALL] [-F] [-q|-v]
 
-=======
-...
-}
-
-help:status() {
-    cat <<'...'
-
-  Usage: git subrepo status [<subdir>|--all|--ALL] [-F] [-q]
-
->>>>>>> Make it possible to specify commit messages.
-=======
-...
-}
-
-help:status() {
-    cat <<'...'
-
-  Usage: git subrepo status [<subdir>|--all|--ALL] [-F] [-q|-v]
-
->>>>>>> Update docs to reflect how things should work
 
   Get the status of a subrepo. Uses the `--all` option by default. If the
   `--quiet` flag is used, just print the subrepo names, one per line.
@@ -513,17 +308,8 @@ help:status() {
   Use `--ALL` to show the subrepos of the subrepos (ie the "subsubrepos"), if
   any.
 
-<<<<<<< HEAD
-<<<<<<< HEAD
   The `status` command accepts the `--all`, `--ALL`, `--fetch`, `--quiet` and
   `--verbose` options.
-=======
-  The `status` command accepts the `--ALL`, `--all`, and `--fetch` options.
->>>>>>> Make it possible to specify commit messages.
-=======
-  The `status` command accepts the `--all`, `--ALL`, `--fetch`, `--quiet` and
-  `--verbose` options.
->>>>>>> Update docs to reflect how things should work
 ...
 }
 
@@ -550,16 +336,7 @@ help:version() {
   environment. For just the version number, use `git subrepo --version`. Use
   `--verbose` for more version info, and `--quiet` for less.
 
-<<<<<<< HEAD
-<<<<<<< HEAD
   The `version` command accepts the `--quiet` and `--verbose` options.
-
-=======
->>>>>>> Make it possible to specify commit messages.
-=======
-  The `version` command accepts the `--quiet` and `--verbose` options.
-
->>>>>>> Update docs to reflect how things should work
 ...
 }
 
