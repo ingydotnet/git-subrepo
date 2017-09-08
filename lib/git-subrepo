@@ -698,16 +698,29 @@ subrepo:branch() {
   local last_gitrepo_commit=
   local first_gitrepo_commit=
 
-  # TODO: Currently --first-parent avoids the branching
-  # Should you create a more complex structure instead?
   o "Subrepo parent: $subrepo_parent"
   if [[ -n "$subrepo_parent" ]]; then
     local prev_commit=
+    local ancestor=
     o "Create new commits with parents into the subrepo fetch"
-    OUT=true RUN git rev-list --reverse --first-parent "$subrepo_parent..HEAD"
+    OUT=true RUN git rev-list --reverse --ancestry-path "$subrepo_parent..HEAD"
     local commit_list="$output"
     for commit in $commit_list; do
       o "Working on $commit"
+
+      # Only include the commit if it's a child of the previous commit
+      # This way we create a single path between $subrepo_parent..HEAD
+      if [[ -n "$ancestor" ]]; then
+        local is_direct_child=$(git show -s --pretty=format:"%P" $commit | grep "$ancestor")
+        o "is child: $is_direct_child"
+        if [[ -z "$is_direct_child" ]]; then
+          o "Ignore $commit, it's not in the selected path"
+          continue
+        fi
+      fi
+
+      # Remember the previous commit from the parent repo path
+      ancestor="$commit"
 
       o "Find out the .gitrepo reference"
       FAIL=false OUT=true RUN git config --blob \
@@ -717,7 +730,7 @@ subrepo:branch() {
       o "Check for rebase"
       if git:rev-exists "$refs_subrepo_fetch"; then
         if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
-          error "Can't branch: '$refs_subrepo_fetch' doesn't contain $gitrepo_commit."
+          error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' of add the '-F' flag to always fetch the latest content."
         fi
       fi
 

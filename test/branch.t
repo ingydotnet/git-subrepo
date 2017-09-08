@@ -20,6 +20,9 @@ before="$(date -r $OWNER/foo/Foo '+%s')"
 
 save-original-state $OWNER/foo bar
 
+# Make sure that time stamps differ
+sleep 1
+
 is "$(
   cd $OWNER/foo
   git subrepo branch bar
@@ -27,10 +30,11 @@ is "$(
   "Created branch 'subrepo/bar' and worktree '.git/tmp/subrepo/bar'." \
   "subrepo branch command output is correct"
 
-sleep 1
+
 after="$(date -r $OWNER/foo/Foo '+%s')"
 assert-original-state $OWNER/foo bar
 
+# Check that we haven't checked out any temporary files
 is "$before" "$after" \
   "No modification on Foo"
 
