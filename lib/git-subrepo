@@ -58,7 +58,7 @@ Options:
 h           Show the command summary
 help        Help overview
 version     Print the git-subrepo version number
- 
+
 a,all       Perform command on all current subrepos
 A,ALL       Perform command on all subrepos and subsubrepos
 b,branch=   Specify the upstream branch to push/pull/fetch
@@ -68,11 +68,10 @@ F,fetch     Fetch the upstream content first
 M,method=   Method when you join, valid options are 'merge' or 'rebase'
             Default is 'merge'
 m,message=  Specify a commit message
-N,dry-run   Don't push or commit (prints next commands to run)
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
- 
+
 q,quiet     Show minimal output
 v,verbose   Show verbose output
 d,debug     Show the actual commands used
@@ -91,7 +90,6 @@ main() {
 
   local all_wanted=false        # Apply command to all subrepos
   local ALL_wanted=false        # Apply command to all subrepos and subsubrepos
-  local dry_run_wanted=false    # Skip commits and pushes
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local squash_wanted=false     # Squash commits on push
@@ -275,6 +273,8 @@ command:branch() {
 
   local branch="subrepo/$subref"
   if $force_wanted; then
+    # We must make sure that the worktree is removed as well
+    worktree="$GIT_TMP/$branch"
     git:delete-branch "$branch"
   fi
 
@@ -1007,7 +1007,6 @@ get-command-options() {
           shift;;
       -M) join_method="$1"
           shift;;
-      -N) dry_run_wanted=true ;;
       -r) subrepo_remote="$1"
           override_remote="$1"
           commit_msg_args+=("--remote=$1")
@@ -1041,7 +1040,7 @@ get-command-options() {
   fi
   commit_msg_args+=("${command_arguments[@]}")
 
-  for option in all ALL dry_run edit fetch force squash; do
+  for option in all ALL edit fetch force squash; do
     var="${option}_wanted"
     if ${!var}; then
       check_option $option
@@ -1074,7 +1073,7 @@ options_commit='edit fetch force message'
 options_fetch='all branch remote'
 options_init='branch remote method'
 options_pull='all branch edit force message remote update'
-options_push='all branch dry_run force remote squash update'
+options_push='all branch force remote squash update'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
@@ -1754,7 +1753,7 @@ git:remove-worktree() {
 
 git:delete-branch() {
   local branch="$1"
-  o "Deleting old '$branch_name' branch."
+  o "Deleting old '$branch' branch."
   # Remove worktree first, otherwise you can't delete the branch
   git:remove-worktree
   FAIL=false RUN git branch -D "$branch"
