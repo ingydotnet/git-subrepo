@@ -1504,8 +1504,10 @@ assert-subdir-empty() {
 # Find all the current subrepos by looking for all the subdirectories that
 # contain a `.gitrepo` file.
 get-all-subrepos() {
-  local paths=($(
-    find . -name '.gitrepo' |
+  local paths=();
+  paths=($(
+    git ls-files |
+      grep '.gitrepo$' |
       grep -v '/.git/' |
       grep '/.gitrepo$' |
       sed 's/.gitrepo$//' |
