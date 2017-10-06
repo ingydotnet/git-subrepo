@@ -708,6 +708,17 @@ subrepo:branch() {
     for commit in $commit_list; do
       o "Working on $commit"
 
+      FAIL=false OUT=true RUN git config --blob \
+        "$commit":"$subdir/.gitrepo" "subrepo.commit"
+      if [[ -z "$output" ]]; then
+        o "Ignore commit, no .gitrepo file"
+        continue
+      fi
+
+      local gitrepo_commit="$output"
+      o ".gitrepo reference commit: $gitrepo_commit"
+
+
       # Only include the commit if it's a child of the previous commit
       # This way we create a single path between $subrepo_parent..HEAD
       if [[ -n "$ancestor" ]]; then
@@ -721,11 +732,6 @@ subrepo:branch() {
 
       # Remember the previous commit from the parent repo path
       ancestor="$commit"
-
-      o "Find out the .gitrepo reference"
-      FAIL=false OUT=true RUN git config --blob \
-        "$commit":"$subdir/.gitrepo" "subrepo.commit"
-      local gitrepo_commit="$output"
 
       o "Check for rebase"
       if git:rev-exists "$refs_subrepo_fetch"; then
@@ -1738,7 +1744,7 @@ git:create-worktree() {
 }
 
 git:remove-worktree() {
-  o "Remove $worktree"
+  o "Remove worktree: $worktree"
   if [[ -d "$worktree" ]]; then
     o "Check worktree for unsaved changes"
     cd "$worktree"
