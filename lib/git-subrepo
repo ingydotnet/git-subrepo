@@ -1796,7 +1796,7 @@ RUN() {
 
   if [[ $rc -ne 0 ]]; then
     OK=false
-    $FAIL && error "Command failed: '$*'."
+    $FAIL && error "Command failed: '$*'.\n$out"
   fi
   output="$out"
 }
@@ -1854,7 +1854,7 @@ usage-error() {
 # Nicely report common error messages:
 error() {
   local msg="git-subrepo: $1" usage=
-  echo "$msg" >&2
+  echo -e "$msg" >&2
   exit 1
 }
 
