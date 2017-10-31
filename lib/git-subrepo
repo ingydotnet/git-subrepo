@@ -665,11 +665,13 @@ subrepo:push() {
     git:delete-branch "$branch_name"
   fi
 
-  o "Put updates into '$subdir/.gitrepo' file."
-  upstream_head_commit="$new_upstream_head_commit"
-  subrepo_commit_ref="$upstream_head_commit"
-  update-gitrepo-file
-  RUN git commit -m "$(get-commit-message)"
+  if $update_wanted; then
+    o "Put updates into '$subdir/.gitrepo' file."
+    upstream_head_commit="$new_upstream_head_commit"
+    subrepo_commit_ref="$upstream_head_commit"
+    update-gitrepo-file
+    RUN git commit -m "$(get-commit-message)"
+  fi
 }
 
 # Fetch the subrepo's remote branch content:
