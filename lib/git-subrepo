@@ -646,7 +646,8 @@ subrepo:push() {
   if ! $force_wanted; then
     o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
-      error "Can't commit: '$branch_name' doesn't contain upstream HEAD."
+      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: " \
+        "$upstream_head_commit"
     fi
   fi
 
@@ -1392,7 +1393,7 @@ assert-environment-ok() {
     error "Can't find your 'git' command in '$PATH'."
   local git_version=$(git --version)
   if ! git worktree list &> /dev/null; then
-    error "Requires git version 2.5 or higher; you have '$git_version'."
+    error "Requires git version 2.7 or higher; you have '$git_version'."
   fi
 }
 
