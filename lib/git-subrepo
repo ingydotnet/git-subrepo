@@ -27,6 +27,7 @@ fi
 bash+:import :std can
 
 VERSION=0.4.0
+REQUIRED_GIT_VERSION=2.7
 GIT_TMP=.git/tmp
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
@@ -1391,9 +1392,12 @@ update-gitrepo-file() {
 assert-environment-ok() {
   type git &> /dev/null ||
     error "Can't find your 'git' command in '$PATH'."
-  local git_version=$(git --version)
-  if ! git worktree list &> /dev/null; then
-    error "Requires git version 2.7 or higher; you have '$git_version'."
+  git_version=$(git --version | awk '{print $3}')
+
+  if [ "$(printf "$REQUIRED_GIT_VERSION\n$git_version" | sort -V | head -n1)" \
+    == "$git_version" ] && [ "$git_version" != "$REQUIRED_GIT_VERSION" ]; then
+    error "Requires git version $REQUIRED_GIT_VERSION or higher; "`
+          `"you have '$git_version'."
   fi
 }
 
