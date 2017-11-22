@@ -652,11 +652,11 @@ subrepo:push() {
     fi
   fi
 
-  local force=
-  "$force_wanted" && force=--force
+  local force=''
+  "$force_wanted" && force=' --force'
 
-  o "Push $force branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push $force "$subrepo_remote" "$branch_name":"$subrepo_branch"
+  o "Push$force branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
+  RUN git push$force "$subrepo_remote" "$branch_name":"$subrepo_branch"
 
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
