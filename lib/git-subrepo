@@ -519,9 +519,10 @@ subrepo:pull() {
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
   CALL subrepo:fetch
 
-  # Check if we already are up to date:
-  if [[ $upstream_head_commit == $subrepo_commit ]] &&
-     [[ -z $subrepo_branch ]]; then
+  # Check if we are already up to date with the upstream and can return early.
+  # If we want a gitrepo update for a non-default branch or remote, then we
+  # need to go through the process anyway.
+  if [[ $upstream_head_commit == $subrepo_commit ]] && ! $update_wanted; then
     OK=false; CODE=-1; return
   fi
 

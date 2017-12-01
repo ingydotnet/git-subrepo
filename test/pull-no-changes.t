@@ -56,8 +56,65 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 # foo/bar/.gitrepo file contents should not have changed:
 {
+  test-gitrepo-field "branch" "master"
   test-gitrepo-field "commit" "$bar_head_commit"
   test-gitrepo-field "parent" "$foo_pull_commit"
+}
+
+
+# Add a new branch at the same revision
+(
+  cd $OWNER/bar
+  git push origin HEAD:a-branch
+) &> /dev/null || die
+
+# Do the pull on the new branch; there should be no changes reported…
+{
+  is "$(
+    cd $OWNER/foo
+    git subrepo pull bar -b a-branch
+  )" \
+    "Subrepo 'bar' is up to date." \
+    'subrepo pull command output is correct'
+}
+
+# …and no new commit
+{
+  foo_commit_after_this_pull="$(cd $OWNER/foo; git rev-parse HEAD)"
+  is $foo_commit_after_this_pull $foo_commit_after_first_pull "No new commits to foo"
+}
+
+# foo/bar/.gitrepo file contents should not have changed:
+{
+  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "parent" "$foo_pull_commit"
+}
+
+# Do the pull on the new branch again, this time with updates requested.  There
+# should be changes reported…
+{
+  is "$(
+    cd $OWNER/foo
+    git subrepo pull bar -b a-branch -u
+  )" \
+    "Subrepo 'bar' pulled from '../../../tmp/upstream/bar' (a-branch)." \
+    'subrepo pull command output is correct'
+}
+
+# …and a new commit
+{
+  foo_commit_after_this_pull="$(cd $OWNER/foo; git rev-parse HEAD)"
+  foo_commit_before_this_pull="$(cd $OWNER/foo; git rev-parse HEAD^)"
+  isnt $foo_commit_after_this_pull $foo_commit_after_first_pull "Got a new commit"
+  is $foo_commit_before_this_pull $foo_commit_after_first_pull "Previous commit is the same"
+}
+
+# foo/bar/.gitrepo file contents should have changed slightly:
+{
+  test-gitrepo-field "branch" "a-branch"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "parent" "$foo_commit_after_first_pull"
 }
 
 done_testing
