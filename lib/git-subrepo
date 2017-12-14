@@ -1120,16 +1120,25 @@ command-setup() {
 
   check-and-normalize-subdir
   encode-subdir
+  gitrepo="$subdir/.gitrepo"
 
   if ! $force_wanted; then
     o "Check for worktree with branch subrepo/$subdir"
-    local _worktree=$(git worktree list | grep "\[subrepo/$subdir\]")
+    local _worktree=$(git worktree list | grep "\[subrepo/$subdir\]" | cut -d ' ' -f1)
     if [[ $command =~ ^(commit)$ && -z $_worktree ]]; then
       error "There is no worktree available, use the branch command first"
     elif [[ ! $command =~ ^(branch|clean|commit|push)$ && -n $_worktree ]]; then
-      error "There is already a worktree with branch subrepo/$subdir.
+      if [[ -e $gitrepo ]]; then
+        error "There is already a worktree with branch subrepo/$subdir.
 Use the --force flag to override this check or perform a subrepo clean
 to remove the worktree."
+      else
+        error "There is already a worktree with branch subrepo/$subdir.
+Use the --force flag to override this check or remove the worktree with
+1. rm -rf $_worktree
+2. git worktree prune
+"
+      fi
     fi
   fi
 
@@ -1140,7 +1149,6 @@ to remove the worktree."
   refs_subrepo_push="refs/subrepo/$subref/push"
 
   # Read/parse the .gitrepo file (unless clone/init; doesn't exist yet)
-  gitrepo="$subdir/.gitrepo"
   if [[ ! $command =~ ^(clone|init)$ ]]; then
     read-gitrepo-file
   fi
