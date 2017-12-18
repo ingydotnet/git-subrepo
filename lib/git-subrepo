@@ -531,7 +531,6 @@ subrepo:pull() {
   local branch_name="subrepo/$subref"
   git:delete-branch "$branch_name"
 
-  subrepo_parent="HEAD^"
   subrepo_commit_ref="$branch_name"
 
   o "Create subrepo branch '$branch_name'."
