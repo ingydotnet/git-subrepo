@@ -236,7 +236,9 @@ command:pull() {
     error-join
     return "$CODE"
   elif [[ $CODE -eq $ERROR_COMMIT_NOT_AVAILABLE ]]; then
-    say "You will have to manually fetch this commit into this repository"
+    say "git does not support fetching on SHA by default so you will"
+    say "have to manually fetch missing commits from the subrepo into"
+    say "this repository."
     return "$CODE"
   else
     die "Unknown pull error code: '$CODE'"
@@ -772,10 +774,10 @@ You can use --squash ignore the subrepo.parent from .gitrepo"
       if git:rev-exists "$gitrepo_commit"; then
         if ! $force_wanted; then
           if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
-            say "In $commit .gitrepo file there is a reference to"
-            say "$gitrepo_commit, that commit is not in the upstream history."
-            say "You can use --force to ignore this error or you can"
-            error "try --squash to only use the latest local state."
+            error "In $commit .gitrepo file there is a reference to
+$gitrepo_commit, that commit is not in the upstream history.
+You can use --force to ignore this error or you can
+try --squash to only use the latest local state."
           fi
         fi
       else
