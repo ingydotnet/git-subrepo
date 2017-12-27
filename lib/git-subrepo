@@ -31,8 +31,8 @@ REQUIRED_GIT_VERSION=2.7.0
 GIT_TMP=.git/tmp
 
 ERROR_JOIN_METHOD_FAILED=1
-ERROR_COMMIT_NOT_IN_FETCH=2
-ERROR_PARENT_NOT_IN_HISTORY=3
+ERROR_COMMIT_NOT_AVAILABLE=4
+ERROR_FETCH_NOT_PERFORMED=5
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
@@ -67,6 +67,7 @@ version     Print the git-subrepo version number
 a,all       Perform command on all current subrepos
 A,ALL       Perform command on all subrepos and subsubrepos
 b,branch=   Specify the upstream branch to push/pull/fetch
+c,clean     Clean up previous worktrees and branches
 e,edit      Edit commit message
 f,force     Force certain operations
 F,fetch     Fetch the upstream content first
@@ -95,6 +96,7 @@ main() {
 
   local all_wanted=false        # Apply command to all subrepos
   local ALL_wanted=false        # Apply command to all subrepos and subsubrepos
+  local clean_wanted=false      # Remove previous worktrees and branches
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local squash_wanted=false     # Squash commits on push
@@ -233,11 +235,8 @@ command:pull() {
   elif [[ $CODE -eq $ERROR_JOIN_METHOD_FAILED ]]; then
     error-join
     return "$CODE"
-  elif [[ $CODE -eq $ERROR_COMMIT_NOT_IN_FETCH ]]; then
-    say "TODO: Explain how to proceed when there has been a rebase!"
-    return "$CODE"
-  elif [[ $CODE -eq $ERROR_PARENT_NOT_IN_HISTORY ]]; then
-    say "You can use --squash ignore the subrepo.parent from .gitrepo"
+  elif [[ $CODE -eq $ERROR_COMMIT_NOT_AVAILABLE ]]; then
+    say "You will have to manually fetch this commit into this repository"
     return "$CODE"
   else
     die "Unknown pull error code: '$CODE'"
@@ -257,9 +256,6 @@ command:push() {
     say "Subrepo '$subdir' has no new commits to push."
   elif [[ $CODE -eq $ERROR_JOIN_METHOD_FAILED ]]; then
     error-join
-    return "$CODE"
-  elif [[ $CODE -eq $ERROR_COMMIT_NOT_IN_FETCH ]]; then
-    say "TODO: Explain how to proceed when there has been a rebase!"
     return "$CODE"
   else
     die "Unknown push error code: '$CODE'"
@@ -286,7 +282,7 @@ command:branch() {
   fi
 
   local branch="subrepo/$subref"
-  if $force_wanted; then
+  if $clean_wanted; then
     # We must make sure that the worktree is removed as well
     worktree="$GIT_TMP/$branch"
     git:delete-branch "$branch"
@@ -301,9 +297,9 @@ command:branch() {
 
   if OK; then
     say "Created branch '$branch' and worktree '$worktree'."
-  elif [[ $CODE -eq $ERROR_COMMIT_NOT_IN_FETCH ]]; then
+  elif [[ $CODE -eq $ERROR_COMMIT_NOT_AVAILABLE ]]; then
     say "To fetch commits from upstream, use --fetch."
-    say "TODO: Explain problems with rebase"
+    say "If that doesn't work you will have to fetch the commits manually."
     return "$CODE"
   else
     die "Unknown branch error code: '$CODE'"
@@ -724,6 +720,11 @@ subrepo:branch() {
 
   o "Subrepo parent: $subrepo_parent"
   if [[ -n "$subrepo_parent" ]]; then
+    o "Make sure that we have some commits from the subrepo"
+    if ! git:rev-exists "$refs_subrepo_fetch"; then
+      error "There is no fetch reference present, use --fetch"
+    fi
+
     if $squash_wanted; then
       o "Squash commits, ignore subrepo.parent in .gitrepo"
       subrepo_parent="HEAD^"
@@ -737,7 +738,7 @@ subrepo:branch() {
 
     if [[ -z "$output" ]]; then
       say "Parent: $subrepo_parent is not part of current history"
-      OK=false; CODE=$ERROR_PARENT_NOT_IN_HISTORY; return
+      error "You can use --squash ignore the subrepo.parent from .gitrepo"
     fi
 
     for commit in $commit_list; do
@@ -753,7 +754,6 @@ subrepo:branch() {
       local gitrepo_commit="$output"
       o ".gitrepo reference commit: $gitrepo_commit"
 
-
       # Only include the commit if it's a child of the previous commit
       # This way we create a single path between $subrepo_parent..HEAD
       if [[ -n "$ancestor" ]]; then
@@ -768,13 +768,19 @@ subrepo:branch() {
       # Remember the previous commit from the parent repo path
       ancestor="$commit"
 
-      o "Check for rebase"
-      if git:rev-exists "$refs_subrepo_fetch"; then
-        if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
-          say "$gitrepo_commit is not present in the fetched history."
-          #error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' of add the '-F' flag to always fetch the latest content."
-          OK=false; CODE=$ERROR_COMMIT_NOT_IN_FETCH; return
+      o "Locate subrepo.commit from .gitrepo, fetch: $refs_subrepo_fetch"
+      if git:rev-exists "$gitrepo_commit"; then
+        if ! force_wanted; then
+          if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
+            say "In $commit .gitrepo file there is a reference to"
+            say "$gitrepo_commit, that commit is not in the upstream history."
+            say "You can use --force to ignore this error or you can"
+            error "try --squash to only use the latest local state."
+          fi
         fi
+      else
+        say "$gitrepo_commit is not available in the repo."
+        OK=false; CODE=$ERROR_COMMIT_NOT_AVAILABLE; return
       fi
 
       o "Find parents"
@@ -823,7 +829,7 @@ subrepo:branch() {
     o "Create branch '$branch' for this new commit set $prev_commit."
     RUN git branch "$branch" "$prev_commit"
   else
-    o "No parent setting, use the subdir content."
+    o "No parent setting, use the subdir content. (No remote)"
     RUN git branch "$branch" HEAD
     TTY=true FAIL=false RUN git filter-branch -f --subdirectory-filter \
       "$subref" "$branch"
@@ -1036,6 +1042,7 @@ get-command-options() {
       -a) all_wanted=true ;;
       -A) ALL_wanted=true
           all_wanted=true ;;
+      -c) clean_wanted=true ;;
       -b) subrepo_branch="$1"
           override_branch="$1"
           commit_msg_args+=("--branch=$1")
@@ -1108,15 +1115,15 @@ get-command-options() {
 }
 
 options_help='all'
-options_branch='all fetch force squash'
+options_branch='all clean fetch force squash'
 options_clean='ALL all force'
 options_clone='branch edit force message method'
 options_config='force'
 options_commit='edit fetch force message'
 options_fetch='all branch remote'
 options_init='branch remote method'
-options_pull='all branch edit force message remote squash update'
-options_push='all branch force remote squash update'
+options_pull='all branch clean edit force message remote squash update'
+options_push='all branch clean force remote squash update'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
@@ -1157,7 +1164,7 @@ command-setup() {
   encode-subdir
   gitrepo="$subdir/.gitrepo"
 
-  if ! $force_wanted; then
+  if ! $clean_wanted; then
     o "Check for worktree with branch subrepo/$subdir"
     local _worktree=$(git worktree list | grep "\[subrepo/$subdir\]" | cut -d ' ' -f1)
     if [[ $command =~ ^(commit)$ && -z $_worktree ]]; then
@@ -1165,11 +1172,11 @@ command-setup() {
     elif [[ ! $command =~ ^(branch|clean|commit|push)$ && -n $_worktree ]]; then
       if [[ -e $gitrepo ]]; then
         error "There is already a worktree with branch subrepo/$subdir.
-Use the --force flag to override this check or perform a subrepo clean
+Use the --clean flag to override this check or perform a subrepo clean
 to remove the worktree."
       else
         error "There is already a worktree with branch subrepo/$subdir.
-Use the --force flag to override this check or remove the worktree with
+Use the --clean flag to override this check or remove the worktree with
 1. rm -rf $_worktree
 2. git worktree prune
 "
