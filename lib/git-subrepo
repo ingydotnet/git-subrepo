@@ -30,6 +30,10 @@ VERSION=0.4.0
 REQUIRED_GIT_VERSION=2.7.0
 GIT_TMP=.git/tmp
 
+ERROR_JOIN_METHOD_FAILED=1
+ERROR_COMMIT_NOT_IN_FETCH=2
+ERROR_PARENT_NOT_IN_HISTORY=3
+
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
 git subrepo <command> <arguments> <options>
@@ -70,7 +74,7 @@ M,method=   Method when you join, valid options are 'merge' or 'rebase'
             Default is 'merge'
 m,message=  Specify a commit message
 r,remote=   Specify the upstream remote to push/pull/fetch
-s,squash    Squash commits on push
+s,squash    Squash commits in the branch step, ignore parent in .gitrepo
 u,update    Add the --branch and/or --remote overrides to .gitrepo
 
 q,quiet     Show minimal output
@@ -226,8 +230,14 @@ command:pull() {
     say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)."
   elif [[ $CODE -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date."
-  elif [[ $CODE -eq 1 ]]; then
+  elif [[ $CODE -eq $ERROR_JOIN_METHOD_FAILED ]]; then
     error-join
+    return "$CODE"
+  elif [[ $CODE -eq $ERROR_COMMIT_NOT_IN_FETCH ]]; then
+    say "TODO: Explain how to proceed when there has been a rebase!"
+    return "$CODE"
+  elif [[ $CODE -eq $ERROR_PARENT_NOT_IN_HISTORY ]]; then
+    say "You can use --squash ignore the subrepo.parent from .gitrepo"
     return "$CODE"
   else
     die "Unknown pull error code: '$CODE'"
@@ -245,8 +255,11 @@ command:push() {
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
   elif [[ $CODE -eq -2 ]]; then
     say "Subrepo '$subdir' has no new commits to push."
-  elif [[ $CODE -eq 1 ]]; then
+  elif [[ $CODE -eq $ERROR_JOIN_METHOD_FAILED ]]; then
     error-join
+    return "$CODE"
+  elif [[ $CODE -eq $ERROR_COMMIT_NOT_IN_FETCH ]]; then
+    say "TODO: Explain how to proceed when there has been a rebase!"
     return "$CODE"
   else
     die "Unknown push error code: '$CODE'"
@@ -286,7 +299,16 @@ command:branch() {
   # Create the subrepo branch:
   subrepo:branch
 
-  say "Created branch '$branch' and worktree '$worktree'."
+  if OK; then
+    say "Created branch '$branch' and worktree '$worktree'."
+  elif [[ $CODE -eq $ERROR_COMMIT_NOT_IN_FETCH ]]; then
+    say "To fetch commits from upstream, use --fetch."
+    say "TODO: Explain problems with rebase"
+    return "$CODE"
+  else
+    die "Unknown branch error code: '$CODE'"
+  fi
+  return 0
 }
 
 # `git subrepo commit <subdir>` command
@@ -535,6 +557,9 @@ subrepo:pull() {
 
   o "Create subrepo branch '$branch_name'."
   CALL subrepo:branch
+  if ! OK; then
+    return
+  fi
   cd "$worktree";
 
   if [[ "$join_method" == "rebase" ]]; then
@@ -544,7 +569,7 @@ subrepo:pull() {
       say "The \"git rebase\" command failed:"
       say
       say "  ${output//$'\n'/$'\n'  }"
-      CODE=1
+      CODE=$ERROR_JOIN_METHOD_FAILED
       return
     fi
   else
@@ -554,7 +579,7 @@ subrepo:pull() {
       say "The \"git merge\" command failed:"
       say
       say "  ${output//$'\n'/$'\n'  }"
-      CODE=1
+      CODE=$ERROR_JOIN_METHOD_FAILED
       return
     fi
   fi
@@ -601,13 +626,11 @@ subrepo:push() {
     branch_name="subrepo/$subref"
     git:delete-branch "$branch_name"
 
-    if $squash_wanted; then
-      o "Squash commits"
-      subrepo_parent="HEAD^"
-    fi
-
     o "Create subrepo branch '$branch_name'."
     CALL subrepo:branch "$branch_name"
+    if ! OK; then
+      return
+    fi
     cd "$worktree";
 
     if [[ "$join_method" == "rebase" ]]; then
@@ -617,7 +640,7 @@ subrepo:push() {
         say "The \"git rebase\" command failed:"
         say
         say "  ${output//$'\n'/$'\n'  }"
-        CODE=1
+        CODE=$ERROR_JOIN_METHOD_FAILED
         return
       fi
     fi
@@ -701,11 +724,22 @@ subrepo:branch() {
 
   o "Subrepo parent: $subrepo_parent"
   if [[ -n "$subrepo_parent" ]]; then
+    if $squash_wanted; then
+      o "Squash commits, ignore subrepo.parent in .gitrepo"
+      subrepo_parent="HEAD^"
+    fi
+
     local prev_commit=
     local ancestor=
     o "Create new commits with parents into the subrepo fetch"
     OUT=true RUN git rev-list --reverse --ancestry-path "$subrepo_parent..HEAD"
     local commit_list="$output"
+
+    if [[ -z "$output" ]]; then
+      say "Parent: $subrepo_parent is not part of current history"
+      OK=false; CODE=$ERROR_PARENT_NOT_IN_HISTORY; return
+    fi
+
     for commit in $commit_list; do
       o "Working on $commit"
 
@@ -737,7 +771,9 @@ subrepo:branch() {
       o "Check for rebase"
       if git:rev-exists "$refs_subrepo_fetch"; then
         if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
-          error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' of add the '-F' flag to always fetch the latest content."
+          say "$gitrepo_commit is not present in the fetched history."
+          #error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' of add the '-F' flag to always fetch the latest content."
+          OK=false; CODE=$ERROR_COMMIT_NOT_IN_FETCH; return
         fi
       fi
 
@@ -1072,14 +1108,14 @@ get-command-options() {
 }
 
 options_help='all'
-options_branch='all fetch force'
+options_branch='all fetch force squash'
 options_clean='ALL all force'
 options_clone='branch edit force message method'
 options_config='force'
 options_commit='edit fetch force message'
 options_fetch='all branch remote'
 options_init='branch remote method'
-options_pull='all branch edit force message remote update'
+options_pull='all branch edit force message remote squash update'
 options_push='all branch force remote squash update'
 options_status='ALL all fetch'
 check_option() {
