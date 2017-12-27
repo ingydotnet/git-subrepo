@@ -737,8 +737,8 @@ subrepo:branch() {
     local commit_list="$output"
 
     if [[ -z "$output" ]]; then
-      say "Parent: $subrepo_parent is not part of current history"
-      error "You can use --squash ignore the subrepo.parent from .gitrepo"
+      error "subrepo.parent $subrepo_parent is not part of current history
+You can use --squash ignore the subrepo.parent from .gitrepo"
     fi
 
     for commit in $commit_list; do
@@ -770,7 +770,7 @@ subrepo:branch() {
 
       o "Locate subrepo.commit from .gitrepo, fetch: $refs_subrepo_fetch"
       if git:rev-exists "$gitrepo_commit"; then
-        if ! force_wanted; then
+        if ! $force_wanted; then
           if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
             say "In $commit .gitrepo file there is a reference to"
             say "$gitrepo_commit, that commit is not in the upstream history."

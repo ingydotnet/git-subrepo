@@ -38,9 +38,9 @@ subrepo-clone-bar-into-foo
   cd $OWNER/foo
   parent_commit=$(git config --file=bar/.gitrepo subrepo.parent)
   is "$(
-    git subrepo pull bar
+    catch git subrepo pull bar
   )" \
-    "Parent: $parent_commit is not part of current history
+    "git-subrepo: subrepo.parent $parent_commit is not part of current history
 You can use --squash ignore the subrepo.parent from .gitrepo" \
     'subrepo pull should fail due to missing parent'
 }
