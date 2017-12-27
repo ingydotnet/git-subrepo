@@ -124,7 +124,7 @@ main() {
 
   local override_remote=        # Remote specified with -r
   local override_branch=        # Remote specified with -b
-  
+
   local edit_wanted=false       # Edit commit message using -e
   local wanted_commit_message=  # Custom commit message using -m
   local prefix_commit_message=  # Custom commit prefix message using -p
