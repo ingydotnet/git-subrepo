@@ -26,10 +26,10 @@ subrepo-clone-bar-into-foo
 
 # Parent should be missing in history and cause the pull to fail
 {
-  cd $OWNER/foo
-  current_commit=$(git rev-parse HEAD)
-  gitrepo_commit=$(git config --file=bar/.gitrepo subrepo.commit)
   like "$(
+    cd $OWNER/foo
+    current_commit=$(git rev-parse HEAD)
+    gitrepo_commit=$(git config --file=bar/.gitrepo subrepo.commit)
     catch git subrepo pull bar
   )" \
     "$current_commit.+$gitrepo_commit.+--force.+--squash.+" \
@@ -39,10 +39,30 @@ subrepo-clone-bar-into-foo
 # But using force should make it work
 {
   is "$(
+    cd $OWNER/foo
     git subrepo pull bar --force
   )" \
     "Subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)." \
     'subrepo pull works with --force'
+}
+
+(
+  cd $OWNER/foo
+  git subrepo push bar --force
+) &> /dev/null || die
+
+(
+  cd $OWNER/bar
+  git pull
+) &> /dev/null || die
+
+{
+  like "$(
+    cd $OWNER/bar
+    git log --pretty=%P -n 1 HEAD
+  )" \
+    "[a-z0-9]{40} [a-z0-9]{40}" \
+    'There is a merge commit in the subrepo'
 }
 
 done_testing # 9
