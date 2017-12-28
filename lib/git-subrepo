@@ -284,15 +284,6 @@ command:branch() {
   fi
 
   local branch="subrepo/$subref"
-  if $clean_wanted; then
-    # We must make sure that the worktree is removed as well
-    worktree="$GIT_TMP/$branch"
-    git:delete-branch "$branch"
-  fi
-
-  if git:branch-exists "$branch"; then
-    error "Branch '$branch' already exists. Use '--force' to override."
-  fi
 
   # Create the subrepo branch:
   subrepo:branch
@@ -714,8 +705,16 @@ subrepo:fetch() {
 # Create a subrepo branch containing all changes
 subrepo:branch() {
   local branch="${1:-"subrepo/$subref"}"
-  o "Check if the '$branch' branch already exists."
-  git:branch-exists "$branch" && return
+
+  if git:branch-exists "$branch"; then
+    if $clean_wanted; then
+      # We must make sure that the worktree is removed as well
+      worktree="$GIT_TMP/$branch"
+      git:delete-branch "$branch"
+    else
+      error "Branch '$branch' already exists. Use '--clean' to override."
+    fi
+  fi
 
   local last_gitrepo_commit=
   local first_gitrepo_commit=

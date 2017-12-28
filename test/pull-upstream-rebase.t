@@ -45,8 +45,6 @@ subrepo-clone-bar-into-foo
     'subrepo pull works with --force'
 }
 
-exit 2
-
 done_testing # 9
 
 teardown

@@ -19,7 +19,7 @@ clone-foo-and-bar
       git subrepo --quiet branch foo
       catch git subrepo branch foo
     )" \
-    "git-subrepo: Branch 'subrepo/foo' already exists. Use '--force' to override." \
+    "git-subrepo: Branch 'subrepo/foo' already exists. Use '--clean' to override." \
     "Error OK: can't create a branch that exists"
 
   (
