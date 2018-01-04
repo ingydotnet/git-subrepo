@@ -24,7 +24,7 @@ subrepo-clone-bar-into-foo
 ) &> /dev/null || die
 
 
-# Parent should be missing in history and cause the pull to fail
+# Commit in .gitrepo is not in the history of the current upstream HEAD
 {
   like "$(
     cd $OWNER/foo
@@ -56,6 +56,7 @@ subrepo-clone-bar-into-foo
   git pull
 ) &> /dev/null || die
 
+# Check that we have two parents for the latest commit
 {
   like "$(
     cd $OWNER/bar

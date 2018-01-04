@@ -17,8 +17,8 @@ gitrepo=$OWNER/init/doc/.gitrepo
 
 # Test init/doc/.gitrepo file contents:
 {
-  test-gitrepo-field "remote" "none"
-  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "remote" ""
+  test-gitrepo-field "branch" ""
   test-gitrepo-field "commit" ""
   test-gitrepo-field "parent" ""
   test-gitrepo-field "method" "merge"
@@ -32,8 +32,8 @@ is "$(
   "Subrepo 'doc' option 'method' set to 'rebase'."
 
 {
-  test-gitrepo-field "remote" "none"
-  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "remote" ""
+  test-gitrepo-field "branch" ""
   test-gitrepo-field "commit" ""
   test-gitrepo-field "parent" ""
   test-gitrepo-field "method" "rebase"

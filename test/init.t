@@ -37,9 +37,10 @@ is "$output" "Subrepo created from 'doc' (with no remote)." \
 {
   init_clone_commit="$(cd $OWNER/init; git rev-parse HEAD^)"
   test-gitrepo-comment-block
-  test-gitrepo-field "remote" "none"
-  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "remote" ""
+  test-gitrepo-field "branch" ""
   test-gitrepo-field "commit" ""
+  test-gitrepo-field "merged" ""
   test-gitrepo-field "parent" ""
   test-gitrepo-field "method" "merge"
   test-gitrepo-field "cmdver" "`git subrepo --version`"
@@ -55,6 +56,7 @@ git clone $UPSTREAM/init $OWNER/init &>/dev/null
 test-gitrepo-field "remote" "git@github.com:user/repo"
 test-gitrepo-field "branch" "foo"
 test-gitrepo-field "commit" ""
+test-gitrepo-field "merged" ""
 test-gitrepo-field "parent" ""
 test-gitrepo-field "method" "rebase"
 test-gitrepo-field "cmdver" "`git subrepo --version`"

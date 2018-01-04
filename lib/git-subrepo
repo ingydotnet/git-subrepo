@@ -30,6 +30,7 @@ VERSION=0.4.0
 REQUIRED_GIT_VERSION=2.7.0
 GIT_TMP=.git/tmp
 
+NOTHING_TO_PUSH=-2
 ERROR_JOIN_METHOD_FAILED=1
 ERROR_COMMIT_NOT_AVAILABLE=4
 ERROR_FETCH_NOT_PERFORMED=5
@@ -121,6 +122,7 @@ main() {
   local subrepo_commit=         # Upstream HEAD from previous clone/pull
   local subrepo_parent=         # Local commit from before previous clone/pull
   local subrepo_former=         # A retired gitrepo key that might still exist
+  local subrepo_merged=          # Upstream merged parent
 
   local refs_subrepo_branch=    # A subrepo ref -> commit of branch/pull command
   local refs_subrepo_commit=    # A subrepo ref -> commit last merged
@@ -163,8 +165,8 @@ main() {
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
       command-prepare
-      subrepo_remote=
-      subrepo_branch=
+      override_remote=
+      override_branch=
       command_arguments=( "$subdir" "${args[@]}" )
       "command:$command"
     done
@@ -186,7 +188,7 @@ main() {
 
 # `git subrepo clone <url> [<subdir>]` command:
 command:clone() {
-  command-setup +subrepo_remote subdir:guess-subdir
+  command-setup +override_remote subdir:guess-subdir
 
   # Clone (or reclone) the subrepo into the subdir:
   local reclone_up_to_date=false
@@ -199,23 +201,20 @@ command:clone() {
   # Successful command output:
   local re=
   $force_wanted && re=re
-  local remote="$subrepo_remote"
-  say "Subrepo '$remote' ($subrepo_branch) ${re}cloned into '$subdir'."
+  say "Subrepo '$override_remote' ($override_branch) ${re}cloned into '$subdir'."
 }
 
 # `git subrepo init <subdir>` command:
 command:init() {
   command-setup +subdir
-  local remote="${subrepo_remote:=none}"
-  local branch="${subrepo_branch:=master}"
 
   # Init new subrepo from the subdir:
   subrepo:init
   if OK; then
-    if [[ $remote == none ]]; then
+    if [[ -z $override_remote ]]; then
       say "Subrepo created from '$subdir' (with no remote)."
     else
-      say "Subrepo created from '$subdir' with remote '$remote' ($branch)."
+      say "Subrepo created from '$subdir' with remote '$override_remote' ($branch)."
     fi
   else
     die "Unknown init error code: '$CODE'"
@@ -229,7 +228,7 @@ command:pull() {
 
   subrepo:pull
   if OK; then
-    say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)."
+    say "Subrepo '$subdir' pulled from '$subrepo_remote' ($override_branch)."
   elif [[ $CODE -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date."
   elif [[ $CODE -eq $ERROR_JOIN_METHOD_FAILED ]]; then
@@ -253,8 +252,8 @@ command:push() {
 
   subrepo:push
   if OK; then
-    say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
-  elif [[ $CODE -eq -2 ]]; then
+    say "Subrepo '$subdir' pushed to '$override_remote' ($override_branch)."
+  elif [[ $CODE -eq $NOTHING_TO_PUSH ]]; then
     say "Subrepo '$subdir' has no new commits to push."
   elif [[ $CODE -eq $ERROR_JOIN_METHOD_FAILED ]]; then
     error-join
@@ -272,7 +271,7 @@ command:fetch() {
     say "Ignored '$subdir', no remote."
   else
     subrepo:fetch
-    say "Fetched '$subdir' from '$subrepo_remote' ($subrepo_branch)."
+    say "Fetched '$subdir' from '$override_remote' ($override_branch)."
   fi
 }
 
@@ -489,12 +488,15 @@ subrepo:clone() {
     fi
     o "Remove the old subdir."
     RUN git rm -r -- "$subdir"
+
+    o "Update git-repo file"
+    update_wanted=true
   else
     assert-subdir-empty
-    if [[ -z $subrepo_branch ]]; then
+    if [[ -z $override_branch ]]; then
       o "Determine the upstream head branch."
       get-upstream-head-branch
-      subrepo_branch="$output"
+      override_branch="$output"
     fi
 
     CALL subrepo:fetch
@@ -562,8 +564,8 @@ subrepo:pull() {
       return
     fi
   else
-    o "Merge in changes from $refs_subrepo_fetch"
-    FAIL=false OUT=true RUN git merge "$refs_subrepo_fetch"
+    o "Merge in changes from $upstream_head_commit"
+    FAIL=false OUT=true RUN git merge "$upstream_head_commit"
     if ! OK; then
       say "The \"git merge\" command failed:"
       say
@@ -597,17 +599,19 @@ subrepo:push() {
       # push the commit directly. This is common after a `git subrepo init`:
       local re="(^|"$'\n'")fatal: Couldn't find remote ref "
       if [[ $output =~ $re ]]; then
-        o "Pushing to new upstream: $subrepo_remote ($subrepo_branch)."
+        o "Pushing to new upstream: $override_remote ($override_branch)."
         new_upstream=true
       else
         error "Fetch for push failed: $output"
       fi
     else
       # Check that we are up to date:
-      o "Check upstream head against .gitrepo commit."
-      if ! $force_wanted; then
-        if [[ $upstream_head_commit != $subrepo_commit ]]; then
-          error "There are new changes upstream, you need to pull first."
+      if ! override-in-progress; then
+        o "Check upstream head against .gitrepo commit."
+        if ! $force_wanted; then
+          if [[ $upstream_head_commit != $subrepo_commit ]]; then
+            error "There are new changes upstream, you need to pull first."
+          fi
         fi
       fi
     fi
@@ -649,25 +653,22 @@ subrepo:push() {
   new_upstream_head_commit="$(git rev-parse "$branch_name")"
   if ! $new_upstream; then
     if [[ $upstream_head_commit == $new_upstream_head_commit ]]; then
-      OK=false
-      CODE=-2
-      return
+      OK=false; CODE=$NOTHING_TO_PUSH; return
     fi
   fi
 
   if ! $force_wanted; then
-    o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
+    o "Make sure '$branch_name' contains the upstream HEAD: $upstream_head_commit"
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
-      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: " \
-        "$upstream_head_commit"
+      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: $upstream_head_commit"
     fi
   fi
 
   local force=''
   "$force_wanted" && force=' --force'
 
-  o "Push$force branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push$force "$subrepo_remote" "$branch_name":"$subrepo_branch"
+  o "Push$force branch '$branch_name' to '$override_remote' ($override_branch)."
+  RUN git push$force "$override_remote" "$branch_name":"$override_branch"
 
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
@@ -677,26 +678,35 @@ subrepo:push() {
     git:delete-branch "$branch_name"
   fi
 
-  o "Put updates into '$subdir/.gitrepo' file."
-  upstream_head_commit="$new_upstream_head_commit"
-  subrepo_commit_ref="$upstream_head_commit"
-  update-gitrepo-file
-  RUN git commit -m "$(get-commit-message)"
+  if auto-update || $update_wanted; then
+    o "Put updates into '$subdir/.gitrepo' file."
+    upstream_head_commit="$new_upstream_head_commit"
+    subrepo_commit_ref="$upstream_head_commit"
+    update-gitrepo-file
+    RUN git commit -m "$(get-commit-message)"
+  fi
 }
 
 # Fetch the subrepo's remote branch content:
 subrepo:fetch() {
-  if [[ $subrepo_remote == none ]]; then
+  # TODO test this!
+  if [[ $override_remote == none ]]; then
     error "Can't fetch subrepo. Remote is 'none' in '$subdir/.gitrepo'."
   fi
 
-  o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
-  RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch"
+  o "Fetch the upstream: $override_remote ($override_branch)."
+  RUN git fetch --no-tags --quiet "$override_remote" "$override_branch"
   OK || return
 
   o "Get the upstream subrepo HEAD commit."
   OUT=true RUN git rev-parse FETCH_HEAD^0
   upstream_head_commit="$output"
+
+  if override-in-progress; then
+    o "We need to fetch the current tracking as well"
+    RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch"
+    OK || return
+  fi
 
   o "Create ref '$refs_subrepo_fetch'."
   git:make-ref "$refs_subrepo_fetch" FETCH_HEAD^0
@@ -717,6 +727,7 @@ subrepo:branch() {
   fi
 
   local last_gitrepo_commit=
+  local last_gitrepo_merged=
   local first_gitrepo_commit=
 
   o "Subrepo parent: $subrepo_parent"
@@ -753,7 +764,7 @@ You can use --squash ignore the subrepo.parent from .gitrepo"
       fi
 
       local gitrepo_commit="$output"
-      o ".gitrepo reference commit: $gitrepo_commit"
+      o ".gitrepo commit SHA: $gitrepo_commit"
 
       # Only include the commit if it's a child of the previous commit
       # This way we create a single path between $subrepo_parent..HEAD
@@ -784,6 +795,18 @@ try --squash to only use the latest local state."
         OK=false; CODE=$ERROR_COMMIT_NOT_AVAILABLE; return
       fi
 
+      FAIL=false OUT=true RUN git config --blob \
+        "$commit":"$subdir/.gitrepo" "subrepo.merged"
+      local gitrepo_merged="$output"
+      o ".gitrepo merged SHA: $gitrepo_merged"
+
+      if [[ -n "$gitrepo_merged" ]]; then
+        if ! git:rev-exists "$gitrepo_merged"; then
+          say "$gitrepo_merged is not available in the repo."
+          OK=false; CODE=$ERROR_COMMIT_NOT_AVAILABLE; return
+        fi
+      fi
+
       o "Find parents"
       local first_parent=
       [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
@@ -798,6 +821,12 @@ try --squash to only use the latest local state."
         if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
           second_parent="-p $gitrepo_commit"
           last_gitrepo_commit="$gitrepo_commit"
+        elif [[ "$gitrepo_merged" != "$last_gitrepo_merged" ]]; then
+          if [[ -n "$gitrepo_merged" ]]; then
+            # Merge parameter may be empty
+            second_parent="-p $gitrepo_merged"
+          fi
+          last_gitrepo_merged="$gitrepo_merged"
         fi
       fi
 
@@ -855,11 +884,10 @@ subrepo:commit() {
     error "Commit ref '$subrepo_commit_ref' does not exist."
 
   if ! "$force_wanted"; then
-    local upstream="$upstream_head_commit"
-    o "Make sure '$subrepo_commit_ref' contains the upstream HEAD."
-    if ! git:commit-in-rev-list "$upstream" "$subrepo_commit_ref"; then
+    o "Make sure '$subrepo_commit_ref' contains the upstream HEAD. ($upstream_head_commit)"
+    if ! git:commit-in-rev-list "$upstream_head_commit" "$subrepo_commit_ref"; then
       error \
-        "Can't commit: '$subrepo_commit_ref' doesn't contain upstream HEAD."
+        "Can't commit: '$subrepo_commit_ref' doesn't contain upstream HEAD: $upstream_head_commit"
     fi
   fi
 
@@ -946,6 +974,8 @@ subrepo:status() {
 
     read-gitrepo-file
     if $fetch_wanted; then
+      override_remote=$subrepo_remote
+      override_branch=$subrepo_branch
       subrepo:fetch
     fi
 
@@ -1044,8 +1074,7 @@ get-command-options() {
       -A) ALL_wanted=true
           all_wanted=true ;;
       -c) clean_wanted=true ;;
-      -b) subrepo_branch="$1"
-          override_branch="$1"
+      -b) override_branch="$1"
           commit_msg_args+=("--branch=$1")
           shift ;;
       -e) edit_wanted=true ;;
@@ -1058,8 +1087,7 @@ get-command-options() {
           shift;;
       -M) join_method="$1"
           shift;;
-      -r) subrepo_remote="$1"
-          override_remote="$1"
+      -r) override_remote="$1"
           commit_msg_args+=("--remote=$1")
           shift ;;
       -s) squash_wanted=true ;;
@@ -1109,7 +1137,7 @@ get-command-options() {
   fi
   if $update_wanted; then
     check_option update
-    if [[ -z $subrepo_branch && -z $subrepo_remote ]]; then
+    if [[ -z $override_branch && -z $override_remote ]]; then
       usage-error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
@@ -1196,6 +1224,15 @@ Use the --clean flag to override this check or remove the worktree with
     read-gitrepo-file
   fi
 
+  # Sort out the override/subrepo branch/remote
+  if [[ -z $override_remote ]]; then
+    override_remote="$subrepo_remote"
+  fi
+
+  if [[ -z $override_branch ]]; then
+    override_branch="$subrepo_branch"
+  fi
+
   true
 }
 
@@ -1245,12 +1282,12 @@ check-and-normalize-subdir() {
 
 # Determine the correct subdir path to use:
 guess-subdir() {
-  local dir="$subrepo_remote"
+  local dir="$override_remote"
   dir="${dir%.git}"
   dir="${dir%/}"
   dir="${dir##*/}"
   [[ $dir =~ ^[-_a-zA-Z0-9]+$ ]] ||
-    error "Can't determine subdir from '$subrepo_remote'."
+    error "Can't determine subdir from '$override_remote'."
   subdir="$dir"
   check-and-normalize-subdir
   encode-subdir
@@ -1367,6 +1404,10 @@ read-gitrepo-file() {
   subrepo_parent="$output"
 
   FAIL=false \
+  SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.merged
+  subrepo_merged="$output"
+
+  FAIL=false \
   SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.method
   if [[ $output == "rebase" ]]; then
     join_method="rebase"
@@ -1407,17 +1448,23 @@ update-gitrepo-file() {
     fi
   fi
 
-
   # TODO: only update remote and branch if supplied and $update_wanted
-  if $newfile || [[ $update_wanted && -n $override_remote ]]; then
-    RUN git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
+  if $newfile || [[ $update_wanted == true && -n $override_remote ]]; then
+    RUN git config --file="$gitrepo" subrepo.remote "$override_remote"
   fi
 
-  if $newfile || [[ $update_wanted && -n $override_branch ]]; then
-    RUN git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
+  if $newfile || [[ $update_wanted == true && -n $override_branch ]]; then
+    RUN git config --file="$gitrepo" subrepo.branch "$override_branch"
   fi
 
-  RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
+  if override-in-progress && ! $update_wanted; then
+    o "Adding merged entry"
+    RUN git config --file="$gitrepo" subrepo.commit "$subrepo_commit"
+    RUN git config --file="$gitrepo" subrepo.merged "$upstream_head_commit"
+  else
+    RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
+  fi
+
   # Only write new parent when we are at the head of upstream
   if [[ -n $upstream_head_commit && -n $subrepo_commit_ref ]]; then
     OUT=true RUN git rev-parse "$subrepo_commit_ref"
@@ -1434,6 +1481,30 @@ update-gitrepo-file() {
 
   RUN git add -f -- "$gitrepo"
 }
+
+override-in-progress() {
+  o "$subrepo_remote:$override_remote, $subrepo_branch:$override_branch"
+  if [[ -n $subrepo_remote && -n $subrepo_branch ]]; then
+    if [[($override_remote != $subrepo_remote || $override_branch != $subrepo_branch)]]; then
+      return 0  # True
+    fi
+  fi
+
+  return 1  # False
+}
+
+auto-update() {
+  if override-in-progress; then
+    return 1  # False
+  fi
+
+  if [[ -z $subrepo_remote && -z $subrepo_branch ]]; then
+    return 1  # False
+  fi
+
+  return 0  # True
+}
+
 
 #------------------------------------------------------------------------------
 # Enviroment checks:
@@ -1573,10 +1644,10 @@ add-subrepo() {
 
 # Determine the upstream's default head branch:
 get-upstream-head-branch() {
-  OUT=true RUN git ls-remote $subrepo_remote
+  OUT=true RUN git ls-remote $override_remote
   local remotes="$output"
   [[ -n $remotes ]] ||
-    error "Failed to 'git ls-remote $subrepo_remote'."
+    error "Failed to 'git ls-remote $override_remote'."
   local commit="$(
     echo "$remotes" |
     grep HEAD |
@@ -1620,7 +1691,7 @@ get-commit-message() {
 
   local is_merge=""
   if [[ $command != push ]]; then
-    if git:is_merge_commit "$subrepo_commit_ref"; then
+    if git:is-merge-commit "$subrepo_commit_ref"; then
       is_merge=" (merge)"
     fi
   fi
@@ -1635,8 +1706,8 @@ subrepo:
   subdir:   "$subdir"
   merged:   "$merged"
 upstream:
-  origin:   "$subrepo_remote"
-  branch:   "$subrepo_branch"
+  origin:   "$override_remote"
+  branch:   "$override_branch"
   commit:   "$commit"
 git-subrepo:
   version:  "$VERSION"
@@ -1794,7 +1865,7 @@ git:make-ref() {
   RUN git update-ref "$ref_name" "$commit"
 }
 
-git:is_merge_commit() {
+git:is-merge-commit() {
   local commit="$1"
   git show --summary "$commit" | grep -q ^Merge:
 }

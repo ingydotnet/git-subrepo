@@ -35,11 +35,13 @@ is "$(
   "Created branch 'subrepo/bar' and worktree '.git/tmp/subrepo/bar'." \
   "subrepo branch command output is correct"
 
-is $(
+# Depending on the internal listing of rev-list --reverse --ancestry-path
+# we can get different results. Important thing is that we don't get both
+like "$(
   cd $OWNER/foo
   git rev-list subrepo/bar | wc -l
-) \
-  5 \
+)" \
+  "[56]" \
   "We have only created commits for one of the paths"
 
 done_testing

@@ -16,7 +16,20 @@ clone-foo-and-bar
 test-exists \
   "$OWNER/foo/bar/bard/"
 
-export XYZ=1
+# Test foo/bar/.gitrepo file contents:
+gitrepo=$OWNER/foo/bar/.gitrepo
+{
+  foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
+  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  test-gitrepo-comment-block
+  test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
+  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "merged" ""
+  test-gitrepo-field "parent" "$foo_clone_commit"
+  test-gitrepo-field "cmdver" "`git subrepo --version`"
+}
+
 is "$(
   cd $OWNER/foo
   git subrepo --force clone ../../../$UPSTREAM/bar
@@ -32,13 +45,37 @@ is "$(
 test-exists \
   "!$OWNER/foo/bar/bard/"
 
+{
+  foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
+  bar_ref_a_commit="$(cd $OWNER/bar; git rev-parse refs/tags/A)"
+  test-gitrepo-comment-block
+  test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
+  test-gitrepo-field "branch" "refs/tags/A"
+  test-gitrepo-field "commit" "$bar_ref_a_commit"
+  test-gitrepo-field "merged" ""
+  test-gitrepo-field "parent" "$foo_clone_commit"
+  test-gitrepo-field "cmdver" "`git subrepo --version`"
+}
+
 (
   cd $OWNER/foo
-  git subrepo --quiet clone -f ../../../$UPSTREAM/bar --branch=master
+  git subrepo --quiet clone --force ../../../$UPSTREAM/bar --branch=master
 )
 
 test-exists \
   "$OWNER/foo/bar/bard/"
+
+{
+  foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
+  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  test-gitrepo-comment-block
+  test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
+  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "commit" "$bar_head_commit"
+  test-gitrepo-field "merged" ""
+  test-gitrepo-field "parent" "$foo_clone_commit"
+  test-gitrepo-field "cmdver" "`git subrepo --version`"
+}
 
 done_testing
 
