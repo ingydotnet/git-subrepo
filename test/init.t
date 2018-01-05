@@ -49,6 +49,7 @@ is "$output" "Subrepo created from 'doc' (with no remote)." \
   test-gitrepo-field "merged" ""
   test-gitrepo-field "parent" ""
   test-gitrepo-field "method" "merge"
+  test-gitrepo-field "update" "auto"
   test-gitrepo-field "cmdver" "`git subrepo --version`"
 }
 
@@ -56,7 +57,7 @@ rm -fr "$OWNER/init"
 git clone $UPSTREAM/init $OWNER/init &>/dev/null
 (
   cd "$OWNER/init"
-  git subrepo init doc -r git@github.com:user/repo -b foo -M rebase
+  git subrepo init doc -r git@github.com:user/repo -b foo -M rebase -p manual
 ) >/dev/null
 
 test-gitrepo-field "remote" "git@github.com:user/repo"
@@ -65,6 +66,7 @@ test-gitrepo-field "commit" ""
 test-gitrepo-field "merged" ""
 test-gitrepo-field "parent" ""
 test-gitrepo-field "method" "rebase"
+test-gitrepo-field "update" "manual"
 test-gitrepo-field "cmdver" "`git subrepo --version`"
 
 done_testing
