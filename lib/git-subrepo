@@ -267,12 +267,9 @@ command:push() {
 # `git subrepo fetch <subdir>` command
 command:fetch() {
   command-setup +subdir
-  if [[ $subrepo_remote == "none" ]]; then
-    say "Ignored '$subdir', no remote."
-  else
-    subrepo:fetch
-    say "Fetched '$subdir' from '$override_remote' ($override_branch)."
-  fi
+
+  subrepo:fetch
+  say "Fetched '$subdir' from '$override_remote' ($override_branch)."
 }
 
 # `git subrepo branch <subdir>` command:
@@ -685,9 +682,8 @@ subrepo:push() {
 
 # Fetch the subrepo's remote branch content:
 subrepo:fetch() {
-  # TODO test this!
-  if [[ $override_remote == none ]]; then
-    error "Can't fetch subrepo. Remote is 'none' in '$subdir/.gitrepo'."
+  if [[ -z $override_remote ]]; then
+    error "Can't fetch subrepo. No remote specified. Use --remote"
   fi
 
   o "Fetch the upstream: $override_remote ($override_branch)."

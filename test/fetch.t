@@ -38,6 +38,40 @@ subrepo-clone-bar-into-foo
     'No tag is available'
 }
 
+(
+  cd $OWNER/foo
+  mkdir fie
+  add-new-files fie/bar
+  git subrepo init fie
+) &> /dev/null || die
+
+{
+  is "$(
+    cd $OWNER/foo
+    catch git subrepo fetch fie
+  )" \
+    "git-subrepo: Can't fetch subrepo. No remote specified. Use --remote" \
+    'Empty remote should trigger error'
+}
+
+{
+  is "$(
+    cd $OWNER/foo
+    catch git subrepo fetch fie --remote ../../../tmp/upstream/bar
+  )" \
+    "Fetched 'fie' from '../../../tmp/upstream/bar' ()." \
+    'Specify remote'
+}
+
+{
+  like "$(
+    cd $OWNER/foo
+    catch git subrepo fetch fie --remote ../../../tmp/upstream/bar --branch newbar
+  )" \
+    "Couldn't find remote ref newbar" \
+    'Unknown remote ref'
+}
+
 done_testing
 
 teardown
