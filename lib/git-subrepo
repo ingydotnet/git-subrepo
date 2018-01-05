@@ -74,6 +74,7 @@ f,force     Force certain operations
 F,fetch     Fetch the upstream content first
 M,method=   Method when you join, valid options are 'merge' or 'rebase'
             Default is 'merge'
+N,dry-run   For push, perform everything up to the push
 m,message=  Specify a commit message
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits in the branch step, ignore parent in .gitrepo
@@ -98,6 +99,7 @@ main() {
   local all_wanted=false        # Apply command to all subrepos
   local ALL_wanted=false        # Apply command to all subrepos and subsubrepos
   local clean_wanted=false      # Remove previous worktrees and branches
+  local dryrun_wanted=false     # Prepare to push, but do not push
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local squash_wanted=false     # Squash commits on push
@@ -584,9 +586,9 @@ subrepo:push() {
   local new_upstream=false
   local branch_created=false
 
-  if [[ -z $branch_name ]]; then
-    FAIL=false OUT=false CALL subrepo:fetch
+  FAIL=false OUT=false CALL subrepo:fetch
 
+  if [[ -z $branch_name ]]; then
     if ! OK; then
       # Check if we are pushing to a new upstream repo (or branch) and just
       # push the commit directly. This is common after a `git subrepo init`:
@@ -617,9 +619,10 @@ subrepo:push() {
     if ! OK; then
       return
     fi
-    cd "$worktree";
+    branch_created=true
 
     if [[ "$join_method" == "rebase" ]]; then
+      cd "$worktree";
       o "Rebase changes to $refs_subrepo_fetch"
       FAIL=false OUT=true RUN git rebase "$refs_subrepo_fetch" "$branch_name"
       if ! OK; then
@@ -629,9 +632,8 @@ subrepo:push() {
         CODE=$ERROR_JOIN_METHOD_FAILED
         return
       fi
+      cd "$start_pwd"
     fi
-    branch_created=true
-    cd "$start_pwd"
   else
     if $squash_wanted; then
       error "Squash option (-s) can't be used with branch parameter"
@@ -659,6 +661,12 @@ subrepo:push() {
 
   local force=''
   "$force_wanted" && force=' --force'
+
+  if $dryrun_wanted; then
+    say "Push prepared in branch '$branch_name', to continue run:
+ git subrepo push $subdir $branch_name [-r remote] [-b branch]"
+    return
+  fi
 
   o "Push$force branch '$branch_name' to '$override_remote' ($override_branch)."
   RUN git push$force "$override_remote" "$branch_name":"$override_branch"
@@ -1076,8 +1084,7 @@ get-command-options() {
           shift;;
       -M) join_method="$1"
           shift;;
-      -M) join_method="$1"
-          shift;;
+      -N) dryrun_wanted=true ;;
       -r) override_remote="$1"
           commit_msg_args+=("--remote=$1")
           shift ;;

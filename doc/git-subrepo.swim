@@ -371,7 +371,7 @@ the same arguments. Keep reading…
 - `--dry-run` (`-N`)
 
   For the push command, do everything up until the push and then print out the
-  actual `git push` command needed to finish the operation.
+  actual `git subrepo push` command needed to finish the operation.
 
 - `--edit` (`-e`)
 

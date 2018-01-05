@@ -417,7 +417,7 @@ Clean up previous temporary worktrees and branches.
 =item C<--dry-run> (C<-N>)
 
 For the push command, do everything up until the push and then print out the
-actual C<git push> command needed to finish the operation.
+actual C<git subrepo push> command needed to finish the operation.
 
 =item C<--edit> (C<-e>)
 

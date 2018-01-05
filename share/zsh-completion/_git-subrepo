@@ -27,6 +27,7 @@ _git-subrepo() {
         '(-F --fetch)'{-F,--fetch}'[Fetch the upstream content first]' \
         '(-M --method)'{-M,--method}'[Method when you join, valid options are '"'"'merge'"'"' or '"'"'rebase'"'"']:M' \
         '--Default[is '"'"'merge'"'"']' \
+        '(-N --dry-run)'{-N,--dry-run}'[For push, perform everything up to the push]' \
         '(-m --message)'{-m,--message}'[Specify a commit message]:m' \
         '(-r --remote)'{-r,--remote}'[Specify the upstream remote to push/pull/fetch]:r' \
         '(-s --squash)'{-s,--squash}'[Squash commits in the branch step, ignore parent in .gitrepo]' \
