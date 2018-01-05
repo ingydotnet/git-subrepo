@@ -170,7 +170,7 @@ values will be added to the C<< <subdir>/.gitrepo >> file. The C<--remote>
 option is the upstream URL, and the C<--branch> option is the upstream branch
 to push to. These values will be needed to do a C<git subrepo push> command,
 but they can be provided later on the C<push> command (and saved to C<<
-<subdir>/.gitrepo >> if you also specify the C<--update> option).
+<subdir>/.gitrepo >> if you also specify the C<--update> option to push).
 
 Note: You will need to create the empty upstream repo and push to it on your
       own, using C<< git subrepo push <subdir> >>.
@@ -180,9 +180,11 @@ performed. The default option is merge.
 
 The C<init> command accepts the C<--branch=> and C<--remote=> options.
 
-=item C<< git subrepo pull <subdir>|--all [-M|-R|-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u] >>
+=item C<< git subrepo pull <subdir>|--all [-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u] [-c] >>
 
-Update the subrepo subdir with the latest upstream changes.
+Update the subrepo subdir with the latest upstream changes. If -b or -r is
+used, it will merge these changes. If you want to switch tracking you need to
+add -u as well.
 
 The C<pull> command fetches the latest content from the remote branch pointed
 to by the subrepo's C<.gitrepo> file, and then tries to merge the changes into
@@ -214,12 +216,11 @@ used for a subrepo C<push> command. See 'push' below for more information. If
 you want to change the method you can use the C<config> command for this.
 
 When you pull you can assume a fast-forward strategy (default) or you can
-specify a C<--rebase>, C<--merge> or C<--force> strategy. The latter is the
-same as a C<clone --force> operation, using the current remote and branch.
+specify a C<--rebase> or C<--merge> strategy.
 
-When you pull you can assume a fast-forward strategy (default) or you can
-specify a C<--rebase>, C<--merge> or C<--force> strategy. The latter is the
-same as a C<clone --force> operation, using the current remote and branch.
+If you want to pull in changes tat doesn't have the previous changes in
+history, you can use C<--force>. It will ignore the requirement of having
+previous commits available.
 
 Like the C<clone> command, C<pull> will squash all the changes (since the last
 pull or clone) into one commit. This keeps your mainline history nice and
@@ -229,10 +230,10 @@ clean. You can easily see the subrepo's history with the C<git log> command:
 
 The set of commands used above are described in detail below.
 
-The C<pull> command accepts the C<--all>, C<--branch=>, C<--edit>, C<--force>,
-C<--message=>, C<--remote=> and C<--update> options.
+The C<pull> command accepts the C<--all>, C<--branch=>, C<--clean>, --editC<,
+>--forceC<, >--message=C<, >--remote=C<, >--squashC< and >--update` options.
 
-=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N] >>
+=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N] [-c] >>
 
 Push a properly merged subrepo branch back upstream.
 
@@ -256,9 +257,8 @@ The C<--force> option will do a force push. Force pushes are typically
 discouraged. Only use this option if you fully understand it. (The C<--force>
 option will NOT check for a proper merge. ANY branch will be force pushed!)
 
-The C<push> command accepts the C<--all>, C<--branch=>, C<--dry-run>, C<--
-force>, C<--merge>, C<--rebase>, C<--remote=>, C<--squash> and C<--
-update> options.
+The C<push> command accepts the C<--all>, C<--branch=>, C<--clean>, C<--dry-
+run>, C<--force>, C<--remote=>, C<--squash> and C<--update> options.
 
 =item C<< git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>] >>
 
@@ -272,7 +272,7 @@ them with the subrepo C<clean> command.
 The C<fetch> command accepts the C<--all>, C<--branch=> and C<--
 remote=> options.
 
-=item C<< git subrepo branch <subdir>|--all [-f] [-F] >>
+=item C<< git subrepo branch <subdir>|--all [-c] [-f] [-F] >>
 
 Create a branch with local subrepo commits.
 
@@ -281,10 +281,11 @@ and create a new branch from them called C<< subrepo/<subdir> >>.
 
 This is useful for doing C<pull> and C<push> commands by hand.
 
-Use the C<--force> option to write over an existing C<< subrepo/<subdir>
->> branch.
+Use the C<--clean> option to write over an existing C<< subrepo/<subdir> >>
+branch. Use the C<--force> option to ignore missing commits.
 
-The C<branch> command accepts the C<--all>, C<--fetch> and C<--force> options.
+The C<branch> command accepts the C<--all>, C<--clean>, C<--fetch> and C<--
+force> options.
 
 =item C<< git subrepo commit <subdir> [<subrepo-ref>] [-m <msg>] [-e] [-f] [-F] >>
 
@@ -409,6 +410,10 @@ commands that C<--all> works for.
 Use a different upstream branch-name than the remote HEAD or the one saved in
 C<.gitrepo> locally.
 
+=item C<--clean> (C<-c>)
+
+Clean up previous temporary worktrees and branches.
+
 =item C<--dry-run> (C<-N>)
 
 For the push command, do everything up until the push and then print out the
@@ -424,7 +429,9 @@ Use this option to fetch the upstream commits, before running the command.
 
 =item C<--force> (C<-f>)
 
-Use this option to force certain commands that fail in the general case.
+Use this option to force git-subrepo to ignore history restrictions. This
+way you can pull in changes from new places and handle if subrepos has been
+force pushed.
 
 NOTE: The C<--force> option means different things for different commands.
       Read the command specific doc for the exact meaning.
@@ -449,7 +456,9 @@ Use a different remote-url than the one saved in C<.gitrepo> locally.
 
 =item C<--squash> (C<-s>)
 
-Squash all commits on a push into one new commit.
+Squash all commits into one. This is applied when git-subrepo tries to re-
+create te commit structure. If -s is used, only the current state is relevant
+and the merge operation will be much easier.
 
 =item C<--update> (C<-u>)
 

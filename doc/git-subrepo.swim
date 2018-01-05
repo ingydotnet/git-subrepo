@@ -130,7 +130,7 @@ the same arguments. Keep reading…
   is the upstream URL, and the `--branch` option is the upstream branch to push
   to. These values will be needed to do a `git subrepo push` command, but they
   can be provided later on the `push` command (and saved to `<subdir>/.gitrepo`
-  if you also specify the `--update` option).
+  if you also specify the `--update` option to push).
 
   Note: You will need to create the empty upstream repo and push to it on your
   own, using `git subrepo push <subdir>`.
@@ -140,9 +140,11 @@ the same arguments. Keep reading…
 
   The `init` command accepts the `--branch=` and `--remote=` options.
 
-- `git subrepo pull <subdir>|--all [-M|-R|-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u]`
+- `git subrepo pull <subdir>|--all [-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u] [-c]`
 
-  Update the subrepo subdir with the latest upstream changes.
+  Update the subrepo subdir with the latest upstream changes. If -b or -r
+  is used, it will merge these changes. If you want to switch tracking
+  you need to add -u as well.
 
   The `pull` command fetches the latest content from the remote branch pointed
   to by the subrepo's `.gitrepo` file, and then tries to merge the changes into
@@ -174,12 +176,11 @@ the same arguments. Keep reading…
   If you want to change the method you can use the `config` command for this.
 
   When you pull you can assume a fast-forward strategy (default) or you can
-  specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
-  as a `clone --force` operation, using the current remote and branch.
+  specify a `--rebase` or `--merge` strategy.
 
-  When you pull you can assume a fast-forward strategy (default) or you can
-  specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
-  as a `clone --force` operation, using the current remote and branch.
+  If you want to pull in changes tat doesn't have the previous changes in
+  history, you can use `--force`. It will ignore the requirement of having
+  previous commits available.
 
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
@@ -189,10 +190,10 @@ the same arguments. Keep reading…
 
   The set of commands used above are described in detail below.
 
-  The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
-  `--message=`, `--remote=` and `--update` options.
+  The `pull` command accepts the `--all`, `--branch=`, `--clean`, --edit`,
+  `--force`, `--message=`, `--remote=`, `--squash` and `--update` options.
 
-- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]`
+- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-u] [-f] [-s] [-N] [-c]`
 
   Push a properly merged subrepo branch back upstream.
 
@@ -216,8 +217,8 @@ the same arguments. Keep reading…
   discouraged. Only use this option if you fully understand it. (The `--force`
   option will NOT check for a proper merge. ANY branch will be force pushed!)
 
-  The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
-  `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
+  The `push` command accepts the `--all`, `--branch=`, `--clean`, `--dry-run`,
+  `--force`, `--remote=`, `--squash` and `--update` options.
 
 - `git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>]`
 
@@ -230,7 +231,7 @@ the same arguments. Keep reading…
 
   The `fetch` command accepts the `--all`, `--branch=` and `--remote=` options.
 
-- `git subrepo branch <subdir>|--all [-f] [-F]`
+- `git subrepo branch <subdir>|--all [-c] [-f] [-F]`
 
   Create a branch with local subrepo commits.
 
@@ -239,9 +240,11 @@ the same arguments. Keep reading…
 
   This is useful for doing `pull` and `push` commands by hand.
 
-  Use the `--force` option to write over an existing `subrepo/<subdir>` branch.
+  Use the `--clean` option to write over an existing `subrepo/<subdir>` branch.
+  Use the `--force` option to ignore missing commits.
 
-  The `branch` command accepts the `--all`, `--fetch` and `--force` options.
+  The `branch` command accepts the `--all`, `--clean`, `--fetch` and `--force`
+  options.
 
 - `git subrepo commit <subdir> [<subrepo-ref>] [-m <msg>] [-e] [-f] [-F]`
 
@@ -361,6 +364,10 @@ the same arguments. Keep reading…
   Use a different upstream branch-name than the remote HEAD or the one saved in
   `.gitrepo` locally.
 
+- `--clean` (`-c`)
+
+  Clean up previous temporary worktrees and branches.
+
 - `--dry-run` (`-N`)
 
   For the push command, do everything up until the push and then print out the
@@ -376,7 +383,9 @@ the same arguments. Keep reading…
 
 - `--force` (`-f`)
 
-  Use this option to force certain commands that fail in the general case.
+  Use this option to force git-subrepo to ignore history restrictions. This
+  way you can pull in changes from new places and handle if subrepos has
+  been force pushed.
 
   NOTE: The `--force` option means different things for different commands.
   Read the command specific doc for the exact meaning.
@@ -401,7 +410,9 @@ the same arguments. Keep reading…
 
 - `--squash` (`-s`)
 
-  Squash all commits on a push into one new commit.
+  Squash all commits into one. This is applied when git-subrepo tries to
+  re-create te commit structure. If -s is used, only the current state is
+  relevant and the merge operation will be much easier.
 
 - `--update` (`-u`)
 
