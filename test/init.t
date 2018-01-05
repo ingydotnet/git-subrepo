@@ -20,6 +20,12 @@ gitrepo=$OWNER/init/doc/.gitrepo
     "!$gitrepo"
 }
 
+# Test that we can handle .gitrepo in .gitignore
+(
+  cd $OWNER/init/doc
+  echo .gitrepo > .gitignore
+)
+
 output="$(
   cd "$OWNER/init"
   git subrepo init doc
