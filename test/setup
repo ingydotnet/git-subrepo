@@ -56,9 +56,13 @@ clone-foo-and-bar() {
 }
 
 subrepo-clone-bar-into-foo() {
+  local method="$1"
+  if [[ -z $method ]]; then
+    method="merge"
+  fi
   (
     cd $OWNER/foo
-    git subrepo clone ../../../$UPSTREAM/bar
+    git subrepo clone ../../../$UPSTREAM/bar --method "$method"
   ) &> /dev/null || die
 }
 
