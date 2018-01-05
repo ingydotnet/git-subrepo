@@ -12,12 +12,6 @@ subrepo-clone-bar-into-foo
 
 note "Pull - Conflict - Use theirs - Push"
 
-#
-# When you perform rebase ours/theirs are reversed, so this test case will
-# test using the subrepo change (theirs) although in the step below
-# we actually use git checkout --ours to accomplish this
-#
-
 (
   cd $OWNER/bar
   add-new-files Bar2
