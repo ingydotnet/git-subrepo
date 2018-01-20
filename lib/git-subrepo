@@ -247,6 +247,13 @@ command:push() {
   command-setup +subdir branch
 
   subrepo:push
+  if [[ OK && -n $CODE ]]; then
+    if [[ $CODE -eq -3 ]]; then
+      say "Subrepo '$subdir' tag '$tag' pushed to '$subrepo_remote'."
+      return 0
+    fi
+  fi
+
   if OK; then
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
   elif [[ $CODE -eq -2 ]]; then
@@ -254,8 +261,6 @@ command:push() {
   elif [[ $CODE -eq 1 ]]; then
     error-join
     return "$CODE"
-  elif [[ $CODE -eq -3 ]]; then
-    say "Subrepo '$subdir' tag '$tag' pushed to '$subrepo_remote'."
   else
     die "Unknown push error code: '$CODE'"
   fi
@@ -644,7 +649,7 @@ subrepo:push() {
   new_upstream_head_commit="$(git rev-parse "$branch_name")"
   if ! $new_upstream; then
     if [[ $upstream_head_commit == $new_upstream_head_commit ]]; then
-      if ! [[ -n $tag && $tagrefresh_wanted == true ]]; then
+      if [[ -z $tag || $tagrefresh_wanted == false ]]; then
         CODE=-2
         OK=false
         return
@@ -681,18 +686,15 @@ subrepo:push() {
     git:delete-tag "$tag"
   fi
 
-  if [[ $tagrefresh_wanted == false ]]; then
-    o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
-    git:make-ref "$refs_subrepo_push" "$branch_name"
-  fi
+  o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
+  git:make-ref "$refs_subrepo_push" "$branch_name"
 
-  if [[ $tagrefresh_wanted == false ]]; then
-    o "Put updates into '$subdir/.gitrepo' file."
-    upstream_head_commit="$new_upstream_head_commit"
-    subrepo_commit_ref="$upstream_head_commit"
-    update-gitrepo-file
-    RUN git commit -m "$(get-commit-message)"
-  fi
+  o "Put updates into '$subdir/.gitrepo' file."
+  upstream_head_commit="$new_upstream_head_commit"
+  subrepo_commit_ref="$upstream_head_commit"
+  update-gitrepo-file
+  RUN git commit -m "$(get-commit-message)"
+
 }
 
 # Fetch the subrepo's remote branch content:
@@ -1043,8 +1045,6 @@ get-command-options() {
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
       -m) wanted_commit_message="$1"
-          shift;;
-      -M) join_method="$1"
           shift;;
       -M) join_method="$1"
           shift;;
