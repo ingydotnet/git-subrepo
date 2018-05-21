@@ -706,6 +706,11 @@ subrepo:branch() {
     o "Create new commits with parents into the subrepo fetch"
     OUT=true RUN git rev-list --reverse --ancestry-path "$subrepo_parent..HEAD"
     local commit_list="$output"
+
+    if [ -z "$commit_list" ]; then
+      error "Could not find the parent commit '$subrepo_parent' for subrepo '$subref' in the history of the current HEAD. Please manually chose a new parent and edit '$subdir/.gitrepo'."
+    fi
+
     for commit in $commit_list; do
       o "Working on $commit"
 
