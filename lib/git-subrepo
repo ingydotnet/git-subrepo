@@ -1514,7 +1514,12 @@ get-all-subrepos() {
   subrepos=()
   local path
   for path in "${paths[@]}"; do
-    add-subrepo "$path"
+    # Check if path is actually in the git repo (so it's not ignored)
+    if git:file-exists "$path"; then
+      add-subrepo "$path"
+    else
+      o "Not a valid git path $path"
+    fi
   done
 }
 
@@ -1717,6 +1722,10 @@ See "git help subrepo" for more help.
 
 git:branch-exists() {
   git:rev-exists "refs/heads/$1"
+}
+
+git:file-exists() {
+  git ls-files --error-unmatch "$1" &> /dev/null
 }
 
 git:rev-exists() {
