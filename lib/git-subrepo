@@ -1346,7 +1346,7 @@ update-gitrepo-file() {
   local newfile=false
   if [[ ! -e $gitrepo ]]; then
 
-    mkdir -p $(dirname "$gitrepo")
+    mkdir -p "$(dirname "$gitrepo")"
 
     FAIL=false RUN git cat-file -e "$original_head_commit":"$gitrepo"
 
