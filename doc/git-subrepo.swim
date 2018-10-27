@@ -49,7 +49,7 @@ The `git-subrepo` command benefits these roles in the following ways:
 * Users get your repo and all your subrepos just by cloning your repo.
 * Users do not need to install `git-subrepo`, ever.
 * Collaborators do not need to install unless they want to push/pull.
-* Collaborators know when a subdir is a subrepo (it has a `.gitrepo` file).
+* Collaborators know when a subdir is a subrepo (it has a `.gitrepo/config` file).
 * Well named branches and remotes are generated for manual operations.
 * Owners do not deal with the complications of keeping submodules in sync.
 * Subrepo repositories can contain subrepos themselves.
@@ -95,7 +95,7 @@ the same arguments. Keep reading…
 
   The subrepo history is /squashed/ into a single commit that contains the
   reference information. This information is also stored in a special file
-  called `<subdir>/.gitrepo`. The presence of this file indicates that the
+  called `<subdir>/.gitrepo/config`. The presence of this file indicates that the
   directory is a subrepo.
 
   All subsequent commands refer to the subrepo by the name of the /subdir/.
@@ -114,14 +114,14 @@ the same arguments. Keep reading…
   this command will do that. It will split out the content of a normal
   subdirectory into a branch and start tracking it as a subrepo. Afterwards
   your original repo will look exactly the same except that there will be a
-  `<subdir>/.gitrepo` file.
+  `<subdir>/.gitrepo/config` file.
 
   If you specify the `--remote` (and optionally the `--branch`) option, the
-  values will be added to the `<subdir>/.gitrepo` file. The `--remote` option
+  values will be added to the `<subdir>/.gitrepo/config` file. The `--remote` option
   is the upstream URL, and the `--branch` option is the upstream branch to
   push to. These values will be needed to do a `git subrepo push` command, but
   they can be provided later on the `push` command (and saved to
-  `<subdir>/.gitrepo` if you also specify the `--update` option).
+  `<subdir>/.gitrepo/config` if you also specify the `--update` option).
 
   Note: You will need to create the empty upstream repo and push to it on your
   own, using `git subrepo push <subdir>`.
@@ -307,7 +307,7 @@ the same arguments. Keep reading…
 - `--branch=<branch-name>` (`-b <branch-name>`)
 
   Use a different branch-name than the remote HEAD or the one saved in
-  `.gitrepo` locally.
+  `.gitrepo/config` locally.
 
 - `--force` (`-f`)
 
@@ -319,11 +319,11 @@ the same arguments. Keep reading…
 
 - `--remote=<remote-url>` (`-r <remote-url>`)
 
-  Use a different remote-url than the one saved in `.gitrepo` locally.
+  Use a different remote-url than the one saved in `.gitrepo/config` locally.
 
 - `--update` (`-u`)
 
-  If `-b` or `-r` are used, and the command updates the `.gitrepo` file,
+  If `-b` or `-r` are used, and the command updates the `.gitrepo/config` file,
   include these values to the update.
 
 = Output Options
@@ -517,7 +517,7 @@ If you want to chat about the `git-subrepo` command, join `#gitcommands` on
 * Works on various Windows environments. See "Windows" section above.
 * The `git-subrepo` repo itself has 2 subrepos under the `ext/` subdirectory.
 * Written in (very modern) Bash, with full test suite. Take a look.
-* A `.gitrepo` file never is in the top level dir (next to a `.git/` dir).
+* A `.gitrepo/config` file never is in the top level dir (next to a `.git/` dir).
 
 = Author
 

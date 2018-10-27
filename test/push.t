@@ -76,7 +76,7 @@ test-exists \
   "$OWNER/bar/FooBar" \
   "$OWNER/bar/bard/" \
   "$OWNER/bar/bargy" \
-  "!$OWNER/bar/.gitrepo" \
+  "!$OWNER/bar/.gitrepo/config" \
 
 # assert-original-state "$OWNER/foo" "bar"
 

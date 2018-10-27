@@ -27,14 +27,14 @@ subrepo-clone-bar-into-foo
 }
 
 # Test subrepo file content:
-gitrepo=$OWNER/foo/bar/.gitrepo
+gitrepo=$OWNER/foo/bar/.gitrepo/config
 {
   test-exists \
     "$OWNER/foo/bar/Bar2" \
     "$gitrepo"
 }
 
-# Test foo/bar/.gitrepo file contents:
+# Test foo/bar/.gitrepo/config file contents:
 {
   foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"

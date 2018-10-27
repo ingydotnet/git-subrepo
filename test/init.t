@@ -8,7 +8,7 @@ use Test::More
 
 git clone $UPSTREAM/init $OWNER/init &>/dev/null
 
-gitrepo=$OWNER/init/doc/.gitrepo
+gitrepo=$OWNER/init/doc/.gitrepo/config
 
 # Test that the initial repo look ok:
 {
@@ -33,7 +33,7 @@ is "$output" "Subrepo created from 'doc' (with no remote)." \
     "$gitrepo"
 }
 
-# Test init/doc/.gitrepo file contents:
+# Test init/doc/.gitrepo/config file contents:
 {
   init_clone_commit="$(cd $OWNER/init; git rev-parse HEAD^)"
   test-gitrepo-comment-block

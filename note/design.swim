@@ -9,7 +9,7 @@ Glossary:
 - `subdir` :: The directory in the work tree where the subrepo lives
 - `upstream` :: The remote repo that the subrepo is tracking
 - `local` :: The local parts of the subrepo
-- `.gitrepo` :: The subrepo state file
+- `.gitrepo/config` :: The subrepo state file
 - `remote` :: The subrepo url
 - `branch` :: The remote branch the subrepo is tracking
 - `commit` ::  The upstream commit id that we last synced to
@@ -38,8 +38,8 @@ Steps:
 * Subtree merge the remote subrepo history into the subdir
 * Squash the history to a single commit
 * Merge the subtree commit into the mainline HEAD
-* Add a .gitrepo file to the subdir
-* Amend the .gitrepo into the HEAD merge commit
+* Add a .gitrepo/config file to the subdir
+* Amend the .gitrepo/config into the HEAD merge commit
 * Create a branch .git/refs/subrepo/remote/<subdir>
 * Add a remote called subrepo/<subdir>
 
@@ -78,8 +78,8 @@ Steps:
     git subrepo clone <remote> <subdir>
 * Squash the upstream history
 * Merge the subtree into mainline
-* Update the .gitrepo file
-* Amend .gitrepo into HEAD
+* Update the .gitrepo/config file
+* Amend .gitrepo/config into HEAD
 * Delete the subrepo/<subdir> branch
 
 == push

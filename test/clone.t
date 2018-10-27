@@ -48,7 +48,7 @@ clone-foo-and-bar
 }
 
 # Check that subrepo files look ok:
-gitrepo=$OWNER/foo/bar/.gitrepo
+gitrepo=$OWNER/foo/bar/.gitrepo/config
 {
   test-exists \
     "$OWNER/foo/bar/" \
@@ -56,10 +56,10 @@ gitrepo=$OWNER/foo/bar/.gitrepo
     "$gitrepo" \
     "$OWNER/empty/bar/" \
     "$OWNER/empty/bar/Bar" \
-    "$OWNER/empty/bar/.gitrepo"
+    "$OWNER/empty/bar/.gitrepo/config"
 }
 
-# Test foo/bar/.gitrepo file contents:
+# Test foo/bar/.gitrepo/config file contents:
 {
   foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"

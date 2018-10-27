@@ -76,7 +76,7 @@ help:clone() {
 
   The subrepo history is /squashed/ into a single commit that contains the
   reference information. This information is also stored in a special file
-  called `<subdir>/.gitrepo`. The presence of this file indicates that the
+  called `<subdir>/.gitrepo/config`. The presence of this file indicates that the
   directory is a subrepo.
 
   All subsequent commands refer to the subrepo by the name of the /subdir/.
@@ -151,14 +151,14 @@ help:init() {
   this command will do that. It will split out the content of a normal
   subdirectory into a branch and start tracking it as a subrepo. Afterwards
   your original repo will look exactly the same except that there will be a
-  `<subdir>/.gitrepo` file.
+  `<subdir>/.gitrepo/config` file.
 
   If you specify the `--remote` (and optionally the `--branch`) option, the
-  values will be added to the `<subdir>/.gitrepo` file. The `--remote` option
+  values will be added to the `<subdir>/.gitrepo/config` file. The `--remote` option
   is the upstream URL, and the `--branch` option is the upstream branch to
   push to. These values will be needed to do a `git subrepo push` command, but
   they can be provided later on the `push` command (and saved to
-  `<subdir>/.gitrepo` if you also specify the `--update` option).
+  `<subdir>/.gitrepo/config` if you also specify the `--update` option).
 
   Note: You will need to create the empty upstream repo and push to it on your
   own, using `git subrepo push <subdir>`.

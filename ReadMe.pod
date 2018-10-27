@@ -69,7 +69,7 @@ The C<git-subrepo> command benefits these roles in the following ways:
 
 =item * Collaborators do not need to install unless they want to push/pull.
 
-=item * Collaborators know when a subdir is a subrepo (it has a C<.gitrepo> file).
+=item * Collaborators know when a subdir is a subrepo (it has a C<.gitrepo/config> file).
 
 =item * Well named branches and remotes are generated for manual operations.
 
@@ -134,7 +134,7 @@ and merged into the subdir.
 
 The subrepo history is I<squashed> into a single commit that contains the
 reference information. This information is also stored in a special file
-called C<< <subdir>/.gitrepo >>. The presence of this file indicates that the
+called C<< <subdir>/.gitrepo/config >>. The presence of this file indicates that the
 directory is a subrepo.
 
 All subsequent commands refer to the subrepo by the name of the
@@ -153,14 +153,14 @@ If you want to expose a subdirectory of your project as a published subrepo,
 this command will do that. It will split out the content of a normal
 subdirectory into a branch and start tracking it as a subrepo. Afterwards your
 original repo will look exactly the same except that there will be a C<<
-<subdir>/.gitrepo >> file.
+<subdir>/.gitrepo/config >> file.
 
 If you specify the C<--remote> (and optionally the C<--branch>) option, the
-values will be added to the C<< <subdir>/.gitrepo >> file. The C<--remote>
+values will be added to the C<< <subdir>/.gitrepo/config >> file. The C<--remote>
 option is the upstream URL, and the C<--branch> option is the upstream branch
 to push to. These values will be needed to do a C<git subrepo push> command,
 but they can be provided later on the C<push> command (and saved to C<<
-<subdir>/.gitrepo >> if you also specify the C<--update> option).
+<subdir>/.gitrepo/config >> if you also specify the C<--update> option).
 
 Note: You will need to create the empty upstream repo and push to it on your
       own, using C<< git subrepo push <subdir> >>.
@@ -349,7 +349,7 @@ commands that C<--all> works for.
 =item C<< --branch=<branch-name> >> (C<< -b <branch-name> >>)
 
 Use a different branch-name than the remote HEAD or the one saved in
-C<.gitrepo> locally.
+C<.gitrepo/config> locally.
 
 =item C<--force> (C<-f>)
 
@@ -361,11 +361,11 @@ Use this option to fetch the upstream commits, before running the command.
 
 =item C<< --remote=<remote-url> >> (C<< -r <remote-url> >>)
 
-Use a different remote-url than the one saved in C<.gitrepo> locally.
+Use a different remote-url than the one saved in C<.gitrepo/config> locally.
 
 =item C<--update> (C<-u>)
 
-If C<-b> or C<-r> are used, and the command updates the C<.gitrepo> file,
+If C<-b> or C<-r> are used, and the command updates the C<.gitrepo/config> file,
 include these values to the update.
 
 =back
@@ -590,7 +590,7 @@ C<irc.freenode.net>.
 
 =item * Written in (very modern) Bash, with full test suite. Take a look.
 
-=item * A C<.gitrepo> file never is in the top level dir (next to a C<.git/> dir).
+=item * A C<.gitrepo/config> file never is in the top level dir (next to a C<.git/> dir).
 
 =back
 

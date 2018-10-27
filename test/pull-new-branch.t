@@ -15,7 +15,7 @@ subrepo-clone-bar-into-foo
 ) &> /dev/null || die
 
 # Test subrepo file content:
-gitrepo=$OWNER/foo/bar/.gitrepo
+gitrepo=$OWNER/foo/bar/.gitrepo/config
 
 {
   foo_pull_commit=$(cd "$OWNER/foo"; git rev-parse HEAD^)
