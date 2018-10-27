@@ -1337,7 +1337,7 @@ update-gitrepo-file() {
   [[ ! -e $gitrepo ]] &&
     newfile=true
 
-  $newfile && mkdir -p $(dirname $gitrepo) && cat <<... > "$gitrepo"
+  $newfile && mkdir -p "$(dirname "$gitrepo")" && cat <<... > "$gitrepo"
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git "subrepo", and this file is maintained by the
