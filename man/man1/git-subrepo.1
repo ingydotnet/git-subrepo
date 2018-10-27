@@ -132,9 +132,9 @@ Users do not need to install \f(CW\*(C`git\-subrepo\*(C'\fR, ever.
 .IP "\(bu" 4
 Collaborators do not need to install unless they want to push/pull.
 .IP "\(bu" 4
-Collaborators know when a subdir is a subrepo (it has a \f(CW\*(C`.gitrepo\*(C'\fR file).
+Collaborators know when a subdir is a subrepo (it has a \f(CW\*(C`.gitrepo/config\*(C'\fR file).
 .IP "\(bu" 4
-The \f(CW\*(C`.gitrepo\*(C'\fR file never gets pushed back to the subrepo upstream.
+The \f(CW\*(C`.gitrepo/config\*(C'\fR file never gets pushed back to the subrepo upstream.
 .IP "\(bu" 4
 Well named branches and remotes are generated for manual operations.
 .IP "\(bu" 4
@@ -199,7 +199,7 @@ and merged into the subdir.
 .Sp
 The subrepo history is \fIsquashed\fR into a single commit that contains the
 reference information. This information is also stored in a special file
-called \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR. The presence of this file indicates that the
+called \f(CW\*(C`<subdir>/.gitrepo/config\*(C'\fR. The presence of this file indicates that the
 directory is a subrepo.
 .Sp
 All subsequent commands refer to the subrepo by the name of the
@@ -221,13 +221,13 @@ Turn an existing subdirectory into a subrepo.
 If you want to expose a subdirectory of your project as a published subrepo,
 this command will do that. It will split out the content of a normal
 subdirectory into a branch and start tracking it as a subrepo. Afterwards your
-original repo will look exactly the same except that there will be a \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR file.
+original repo will look exactly the same except that there will be a \f(CW\*(C`<subdir>/.gitrepo/config\*(C'\fR file.
 .Sp
 If you specify the \f(CW\*(C`\-\-remote\*(C'\fR (and optionally the \f(CW\*(C`\-\-branch\*(C'\fR) option, the
-values will be added to the \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR file. The \f(CW\*(C`\-\-remote\*(C'\fR
+values will be added to the \f(CW\*(C`<subdir>/.gitrepo/config\*(C'\fR file. The \f(CW\*(C`\-\-remote\*(C'\fR
 option is the upstream \s-1URL,\s0 and the \f(CW\*(C`\-\-branch\*(C'\fR option is the upstream branch
 to push to. These values will be needed to do a \f(CW\*(C`git subrepo push\*(C'\fR command,
-but they can be provided later on the \f(CW\*(C`push\*(C'\fR command (and saved to \f(CW\*(C`<subdir>/.gitrepo\*(C'\fR if you also specify the \f(CW\*(C`\-\-update\*(C'\fR option).
+but they can be provided later on the \f(CW\*(C`push\*(C'\fR command (and saved to \f(CW\*(C`<subdir>/.gitrepo/config\*(C'\fR if you also specify the \f(CW\*(C`\-\-update\*(C'\fR option).
 .Sp
 Note: You will need to create the empty upstream repo and push to it on your
       own, using \f(CW\*(C`git subrepo push <subdir>\*(C'\fR.
@@ -242,11 +242,11 @@ The \f(CW\*(C`init\*(C'\fR command accepts the \f(CW\*(C`\-\-branch=\*(C'\fR and
 Update the subrepo subdir with the latest upstream changes.
 .Sp
 The \f(CW\*(C`pull\*(C'\fR command fetches the latest content from the remote branch pointed
-to by the subrepo's \f(CW\*(C`.gitrepo\*(C'\fR file, and then tries to merge the changes into
+to by the subrepo's \f(CW\*(C`.gitrepo/config\*(C'\fR file, and then tries to merge the changes into
 the corresponding subdir. It does this by making a branch of the local commits
 to the subdir and then merging or rebasing (see below) it with the fetched
 upstream content. After the merge, the content of the new branch replaces your
-subdir, the \f(CW\*(C`.gitrepo\*(C'\fR file is updated and a single 'pull' commit is added to
+subdir, the \f(CW\*(C`.gitrepo/config\*(C'\fR file is updated and a single 'pull' commit is added to
 your mainline history.
 .Sp
 The \f(CW\*(C`pull\*(C'\fR command will attempt to do the following commands in one go:
@@ -400,9 +400,9 @@ The \f(CW\*(C`clean\*(C'\fR command accepts the \f(CW\*(C`\-\-all\*(C'\fR, \f(CW
 .ie n .IP """git subrepo config <subdir> <option> [<value>] [\-f]""" 4
 .el .IP "\f(CWgit subrepo config <subdir> <option> [<value>] [\-f]\fR" 4
 .IX Item "git subrepo config <subdir> <option> [<value>] [-f]"
-Read or update configuration values in the subdir/.gitrepo file.
+Read or update configuration values in the subdir/.gitrepo/config file.
 .Sp
-Because most of the values stored in the .gitrepo file are generated you
+Because most of the values stored in the .gitrepo/config file are generated you
 will need to use \f(CW\*(C`\-\-force\*(C'\fR if you want to change anything else then the
 \&\f(CW\*(C`method\*(C'\fR option.
 .Sp
@@ -467,7 +467,7 @@ commands that \f(CW\*(C`\-\-all\*(C'\fR works for.
 .el .IP "\f(CW\-\-branch=<branch\-name>\fR (\f(CW\-b <branch\-name>\fR)" 4
 .IX Item "--branch=<branch-name> (-b <branch-name>)"
 Use a different upstream branch-name than the remote \s-1HEAD\s0 or the one saved in
-\&\f(CW\*(C`.gitrepo\*(C'\fR locally.
+\&\f(CW\*(C`.gitrepo/config\*(C'\fR locally.
 .ie n .IP """\-\-dry\-run"" (""\-N"")" 4
 .el .IP "\f(CW\-\-dry\-run\fR (\f(CW\-N\fR)" 4
 .IX Item "--dry-run (-N)"
@@ -505,7 +505,7 @@ setup for push).
 .ie n .IP """\-\-remote=<remote\-url>"" (""\-r <remote\-url>"")" 4
 .el .IP "\f(CW\-\-remote=<remote\-url>\fR (\f(CW\-r <remote\-url>\fR)" 4
 .IX Item "--remote=<remote-url> (-r <remote-url>)"
-Use a different remote-url than the one saved in \f(CW\*(C`.gitrepo\*(C'\fR locally.
+Use a different remote-url than the one saved in \f(CW\*(C`.gitrepo/config\*(C'\fR locally.
 .ie n .IP """\-\-squash"" (""\-s"")" 4
 .el .IP "\f(CW\-\-squash\fR (\f(CW\-s\fR)" 4
 .IX Item "--squash (-s)"
@@ -514,7 +514,7 @@ Squash all commits on a push into one new commit.
 .el .IP "\f(CW\-\-update\fR (\f(CW\-u\fR)" 4
 .IX Item "--update (-u)"
 If \f(CW\*(C`\-\-branch\*(C'\fR or \f(CW\*(C`\-\-remote\*(C'\fR are used, and the command updates the
-\&\f(CW\*(C`.gitrepo\*(C'\fR file, include these values to the update.
+\&\f(CW\*(C`.gitrepo/config\*(C'\fR file, include these values to the update.
 .SH "Output Options"
 .IX Header "Output Options"
 .ie n .IP """\-\-quiet"" (""\-q"")" 4
@@ -735,7 +735,7 @@ The \f(CW\*(C`git\-subrepo\*(C'\fR repo itself has 2 subrepos under the \f(CW\*(
 .IP "\(bu" 4
 Written in (very modern) Bash, with full test suite. Take a look.
 .IP "\(bu" 4
-A \f(CW\*(C`.gitrepo\*(C'\fR file never is in the top level dir (next to a \f(CW\*(C`.git/\*(C'\fR dir).
+A \f(CW\*(C`.gitrepo/config\*(C'\fR file never is in the top level dir (next to a \f(CW\*(C`.git/\*(C'\fR dir).
 .SH "Author"
 .IX Header "Author"
 Written by Ingy döt Net <ingy@ingy.net>

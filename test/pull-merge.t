@@ -18,8 +18,8 @@ note "Pull - Conflict - Merge ours/theirs - Push"
   git push
 ) &> /dev/null || die
 
-gitrepo=$OWNER/foo/bar/.gitrepo
-# Test foo/bar/.gitrepo file contents:
+gitrepo=$OWNER/foo/bar/.gitrepo/config
+# Test foo/bar/.gitrepo/config file contents:
 {
   foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD^)"
@@ -71,7 +71,7 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
       "subrepo pull should have merge message"
 }
 
-# Test foo/bar/.gitrepo file contents:
+# Test foo/bar/.gitrepo/config file contents:
 {
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
   test-gitrepo-field "commit" "$bar_head_commit"

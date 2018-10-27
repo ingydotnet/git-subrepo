@@ -1,4 +1,9 @@
 ---
+version: 0.4.1
+date:    Tue Oct  25 23:08:56 PST 2018
+changes:
+- Move .gitrepo to .gitrepo/config
+---
 version: 0.3.1
 date:    Tue Jan  3 23:08:56 PST 2017
 changes:
