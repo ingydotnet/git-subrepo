@@ -600,12 +600,13 @@ If you want to chat about the `git-subrepo` command, join `#gitcommands` on
 * Written in (very modern) Bash, with full test suite. Take a look.
 * A `.gitrepo` file never is in the top level dir (next to a `.git/` dir).
 
-= Author
+= Authors
 
-Written by Ingy döt Net <ingy@ingy.net>
+* Ingy döt Net <ingy@ingy.net>
+* Magnus Carlsson <grimmymail@gmail.com>
 
 = License and Copyright
 
 The MIT License (MIT)
 
-Copyright (c) 2013-2017 Ingy döt Net
+Copyright (c) 2013-2018 Ingy döt Net

@@ -27,7 +27,6 @@ _git-subrepo() {
         '(-M --method)'{-M,--method}'[Method when you join, valid options are '"'"'merge'"'"' or '"'"'rebase'"'"']:M' \
         '--Default[is '"'"'merge'"'"']' \
         '(-m --message)'{-m,--message}'[Specify a commit message]:m' \
-        '(-N --dry-run)'{-N,--dry-run}'[Don'"'"'t push or commit (prints next commands to run)]' \
         '(-r --remote)'{-r,--remote}'[Specify the upstream remote to push/pull/fetch]:r' \
         '(-s --squash)'{-s,--squash}'[Squash commits on push]' \
         '(-u --update)'{-u,--update}'[Add the --branch and/or --remote overrides to .gitrepo]' \
@@ -39,7 +38,7 @@ _git-subrepo() {
 
     case $state in
     subcmd)
-        compadd branch clean clone clone clone commit commit commit config fetch fetch fetch help help help init pull pull pull push push push status status status upgrade version
+        compadd branch clean clone commit config fetch help init pull push status upgrade version
     ;;
 
     args)
@@ -58,7 +57,7 @@ _git-subrepo() {
                 esac
         ;;
 
-        branch|clean|commit|commit|commit|config|fetch|fetch|fetch|pull|pull|pull|push|push|push|status|status|status)
+        branch|clean|commit|config|fetch|pull|push|status)
             _compadd_subdirs
         ;;
 
@@ -67,7 +66,7 @@ _git-subrepo() {
         ;;
 
         help)
-            compadd branch clean clone clone clone commit commit commit config fetch fetch fetch help help help init pull pull pull push push push status status status upgrade version
+            compadd branch clean clone commit config fetch help init pull push status upgrade version
         ;;
         esac
     ;;

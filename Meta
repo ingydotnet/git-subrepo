@@ -1,11 +1,11 @@
 =meta: 0.0.2
 
 name: git-subrepo
-version: 0.3.1
+version: 0.4.0
 abstract: Git Submodule Alternative
 homepage: https://github.com/ingydotnet/git-subrepo#readme
 license: MIT
-copyright: 2013-2017
+copyright: 2013-2018
 
 author:
   name: Ingy döt Net

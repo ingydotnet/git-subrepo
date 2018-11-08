@@ -1,4 +1,40 @@
 ---
+version: 0.4.0
+date:    Thu Nov  8 12:26:38 CET 2018
+changes:
+- Fix #325 Do not squash main repo commits
+- Improve error message for worktree handling
+- Make version checking portable. #307
+- #307, improve version check
+- #307, update version requirement
+- Fix part #308, Add stderr output if commands fail
+- Fix #306: Add check to prevent following commits with no .gitrepo
+- Remove dry-run flag as it's not implemented. Make sure branch --force delete worktree
+- Fix #296, Replace --first-parent with --ancestry-path
+- Fix #291, specify Trusty host to get new 2.x git
+- Fix #258, add --no-tags to git fetch
+- Test that no remotes are created during clone
+- #257 Remove remote creation to avoid problems with fetch --all
+- (origin/issue/150_to_0.4.0) Fix remove-worktree, remove unused parameters
+- Regenerate completion files
+- filter-branch operation should not be done on HEAD
+- Cleanup push and add hint to push directly after pull
+- Simplify cleanup and add worktree to status
+- Add --method option to init/clone, add a 'config' command
+- Updated unit tests to support the new logic
+- Use 'git worktree' for merge/rebase
+- Update docs to reflect how things should work
+- Make it possible to specify commit messages
+- Redesign, trash the tree hash approach and use merges instead
+- Add release branches to travis-ci
+- Add --method option to init/clone, add a 'config' command
+- Detect multiple pulls, use -u flag to decide
+- Don't reuse previous commit message when using --all
+- Update the docs for pull and push
+- Update error messages when failing merge/rebase
+- Fix env var bug in test/push.t
+- Do not overwrite author information
+---
 version: 0.3.1
 date:    Tue Jan  3 23:08:56 PST 2017
 changes:
