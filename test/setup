@@ -65,6 +65,7 @@ subrepo-clone-bar-into-foo() {
 add-new-files() {
   local file
   for file in $*; do
+    mkdir -p -- "$(dirname -- "$file")"
     echo "new file $file" > "$file"
     git add "$file"
   done
