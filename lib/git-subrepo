@@ -71,7 +71,7 @@ M,method=   Method when you join, valid options are 'merge' or 'rebase'
 m,message=  Specify a commit message
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
-u,update    Add the --branch and/or --remote overrides to .gitrepo
+u,update    Add the --branch and/or --remote overrides to .gitrepo/config
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
@@ -94,7 +94,7 @@ main() {
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local squash_wanted=false     # Squash commits on push
-  local update_wanted=false     # Update .gitrepo with --branch and/or --remote
+  local update_wanted=false     # Update .gitrepo/config with --branch and/or --remote
 
   local quiet_wanted=false      # Output should be quiet
   local verbose_wanted=false    # Output should be verbose
@@ -102,7 +102,7 @@ main() {
 
   local subdir=                 # Subdirectory of the subrepo being used
   local subref=                 # Valid git ref format of subdir
-  local gitrepo=                # Path to .gitrepo file
+  local gitrepo=                # Path to .gitrepo/config file
   local worktree=               # Worktree created by 'git worktree'
   local start_pwd=$(pwd)        # Store the original directory
 
@@ -503,10 +503,10 @@ subrepo:init() {
   # Check if subdir is proper candidate for this init:
   assert-subdir-ready-for-init
 
-  o "Put info into '$subdir/.gitrepo' file."
+  o "Put info into '$subdir/.gitrepo/config' file."
   update-gitrepo-file
 
-  o "Add the new '$subdir/.gitrepo' file."
+  o "Add the new '$subdir/.gitrepo/config' file."
   # -f from pull request #219. TODO needs test.
   RUN git add -f -- "$gitrepo"
 
@@ -590,7 +590,7 @@ subrepo:push() {
       fi
     else
       # Check that we are up to date:
-      o "Check upstream head against .gitrepo commit."
+      o "Check upstream head against .gitrepo/config commit."
       if ! $force_wanted; then
         if [[ $upstream_head_commit != $subrepo_commit ]]; then
           error "There are new changes upstream, you need to pull first."
@@ -665,7 +665,7 @@ subrepo:push() {
     git:delete-branch "$branch_name"
   fi
 
-  o "Put updates into '$subdir/.gitrepo' file."
+  o "Put updates into '$subdir/.gitrepo/config' file."
   upstream_head_commit="$new_upstream_head_commit"
   subrepo_commit_ref="$upstream_head_commit"
   update-gitrepo-file
@@ -675,7 +675,7 @@ subrepo:push() {
 # Fetch the subrepo's remote branch content:
 subrepo:fetch() {
   if [[ $subrepo_remote == none ]]; then
-    error "Can't fetch subrepo. Remote is 'none' in '$subdir/.gitrepo'."
+    error "Can't fetch subrepo. Remote is 'none' in '$subdir/.gitrepo/config'."
   fi
 
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
@@ -710,14 +710,14 @@ subrepo:branch() {
       o "Working on $commit"
 
       FAIL=false OUT=true RUN git config --blob \
-        "$commit":"$subdir/.gitrepo" "subrepo.commit"
+        "$commit":"$subdir/.gitrepo/config" "subrepo.commit"
       if [[ -z "$output" ]]; then
-        o "Ignore commit, no .gitrepo file"
+        o "Ignore commit, no .gitrepo/config file"
         continue
       fi
 
       local gitrepo_commit="$output"
-      o ".gitrepo reference commit: $gitrepo_commit"
+      o ".gitrepo/config reference commit: $gitrepo_commit"
 
 
       # Only include the commit if it's a child of the previous commit
@@ -793,11 +793,11 @@ subrepo:branch() {
       "$subref" "$branch"
   fi
 
-  o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
+  o "Remove the .gitrepo/config file from $first_gitrepo_commit..$branch"
   local filter="$branch"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
   FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-    "rm -f .gitrepo" "$filter"
+    "rm -rf .gitrepo/config" "$filter"
 
   git:create-worktree "$branch"
 
@@ -828,7 +828,7 @@ subrepo:commit() {
   o "Put remote subrepo content into '$subdir/'."
   RUN git read-tree --prefix="$subdir" -u "$subrepo_commit_ref"
 
-  o "Put info into '$subdir/.gitrepo' file."
+  o "Put info into '$subdir/.gitrepo/config' file."
   update-gitrepo-file
   RUN git add -f -- "$gitrepo"
 
@@ -888,7 +888,7 @@ subrepo:status() {
     check-and-normalize-subdir
     encode-subdir
 
-    if [[ ! -f $subdir/.gitrepo ]]; then
+    if [[ ! -f $subdir/.gitrepo/config ]]; then
       echo "'$subdir' is not a subrepo"
       echo
       continue
@@ -1119,7 +1119,7 @@ command-setup() {
 
   check-and-normalize-subdir
   encode-subdir
-  gitrepo="$subdir/.gitrepo"
+  gitrepo="$subdir/.gitrepo/config"
 
   if ! $force_wanted; then
     o "Check for worktree with branch subrepo/$subdir"
@@ -1147,7 +1147,7 @@ Use the --force flag to override this check or remove the worktree with
   refs_subrepo_fetch="refs/subrepo/$subref/fetch"
   refs_subrepo_push="refs/subrepo/$subref/push"
 
-  # Read/parse the .gitrepo file (unless clone/init; doesn't exist yet)
+  # Read/parse the .gitrepo/config file (unless clone/init; doesn't exist yet)
   if [[ ! $command =~ ^(clone|init)$ ]]; then
     read-gitrepo-file
   fi
@@ -1293,18 +1293,18 @@ encode-subdir() {
 }
 
 #------------------------------------------------------------------------------
-# State file (`.gitrepo`) functions:
+# State file (`.gitrepo/config`) functions:
 #------------------------------------------------------------------------------
 
 # Set subdir and gitrepo vars:
 read-gitrepo-file() {
-  gitrepo="$subdir/.gitrepo"
+  gitrepo="$subdir/.gitrepo/config"
 
   if [[ ! -f $gitrepo ]]; then
     error "No '$gitrepo' file."
   fi
 
-  # Read .gitrepo values:
+  # Read .gitrepo/config values:
   if [[ -z $subrepo_remote ]]; then
     SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.remote
     subrepo_remote="$output"
@@ -1339,12 +1339,14 @@ read-gitrepo-file() {
 }
 
 
-# Update the subdir/.gitrepo state file:
+# Update the subdir/.gitrepo/config state file:
 update-gitrepo-file() {
   local short_commit=
 
   local newfile=false
   if [[ ! -e $gitrepo ]]; then
+
+    mkdir -p $(dirname "$gitrepo")
 
     FAIL=false RUN git cat-file -e "$original_head_commit":"$gitrepo"
 
@@ -1481,7 +1483,7 @@ assert-subdir-ready-for-init() {
   if [[ ! -e $subdir ]]; then
     error "The subdir '$subdir' does not exist."
   fi
-  if [[ -e $subdir/.gitrepo ]]; then
+  if [[ -e $subdir/.gitrepo/config ]]; then
     error "The subdir '$subdir' is already a subrepo."
   fi
   # Check that subdir is part of the repo
@@ -1502,7 +1504,7 @@ assert-subdir-empty() {
 #------------------------------------------------------------------------------
 
 # Find all the current subrepos by looking for all the subdirectories that
-# contain a `.gitrepo` file.
+# contain a `.gitrepo/config` file.
 get-all-subrepos() {
   local paths=($(
     find . -name '.gitrepo' |

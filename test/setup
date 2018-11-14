@@ -156,7 +156,7 @@ test-gitrepo-comment-block() {
 test-gitrepo-field() {
   is "`git config -f $gitrepo subrepo.$1`" \
     "$2" \
-    ".gitrepo $1 is correct"
+    ".gitrepo/config $1 is correct"
 }
 
 test-commit-count() {
@@ -169,14 +169,14 @@ save-original-state() {
   original_head_ref="$(cd $1; cat .git/HEAD)"
   original_branch="${original_head_ref#ref: refs/heads/}"
   original_head_commit="$(cd $1; git rev-parse HEAD)"
-  original_gitrepo="$(cd $1; cat $2/.gitrepo)"
+  original_gitrepo="$(cd $1; cat $2/.gitrepo/config)"
 }
 
 assert-original-state() {
   current_head_ref="$(cd $1; cat .git/HEAD)"
   current_branch="${current_head_ref#ref: refs/heads/}"
   current_head_commit="$(cd $1; git rev-parse HEAD)"
-  current_gitrepo="$(cd $1; cat $2/.gitrepo)"
+  current_gitrepo="$(cd $1; cat $2/.gitrepo/config)"
 
   is "$current_head_ref" \
     "$original_head_ref" \
@@ -192,7 +192,7 @@ assert-original-state() {
 
   is "$current_gitrepo" \
     "$original_gitrepo" \
-    "$2/.gitrepo has not changed"
+    "$2/.gitrepo/config has not changed"
 }
 
 catch() {

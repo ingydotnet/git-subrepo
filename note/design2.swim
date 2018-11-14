@@ -9,7 +9,7 @@ Glossary:
 - `subdir` :: The directory in the work tree where the subrepo lives
 - `upstream` :: The remote repo that the subrepo is tracking
 - `local` :: The local parts of the subrepo
-- `.gitrepo` :: The subrepo state file
+- `.gitrepo/config` :: The subrepo state file
 - `remote` :: The subrepo url
 - `branch` :: The remote branch the subrepo is tracking
 - `commit` ::  The upstream commit id that we last synced to
@@ -32,7 +32,7 @@ There are 4 main commands:
   # Single command pull:
   git subrepo pull --rebase ext/foo
   git subrepo pull --merge  ext/foo -b remote-branch
-  git subrepo pull --ours   ext/foo -B remote-branch  # change .gitrepo
+  git subrepo pull --ours   ext/foo -B remote-branch  # change .gitrepo/config
   git subrepo pull --rebase --all
 
   # Manual pull:
@@ -75,7 +75,7 @@ There are certain steps that each command must do first:
 * Assert the command arguments are valid.
 * Assert the subdir is a valid subrepo dir.
   * For `clone` make sure subdir does not exist yet.
-* Read the .gitrepo file (not for clone).
+* Read the .gitrepo/config file (not for clone).
 * For `clone`, make sure we know what upstream branch to use.
 * Note the starting point (branch and commit).
 

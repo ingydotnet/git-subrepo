@@ -78,8 +78,8 @@ clone-foo-and-bar
 # Check that all commits arrived in subrepo
 test-commit-count "$OWNER/bar" HEAD 7
 
-# Test foo/bar/.gitrepo file contents:
-gitrepo=$OWNER/foo/bar/.gitrepo
+# Test foo/bar/.gitrepo/config file contents:
+gitrepo=$OWNER/foo/bar/.gitrepo/config
 {
   foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
@@ -120,7 +120,7 @@ test-exists \
   "$OWNER/bar/FooBar" \
   "$OWNER/bar/bard/" \
   "$OWNER/bar/bargy" \
-  "!$OWNER/bar/.gitrepo" \
+  "!$OWNER/bar/.gitrepo/config" \
 
 (
   # In the main repo:

@@ -29,7 +29,7 @@ _git-subrepo() {
         '(-m --message)'{-m,--message}'[Specify a commit message]:m' \
         '(-r --remote)'{-r,--remote}'[Specify the upstream remote to push/pull/fetch]:r' \
         '(-s --squash)'{-s,--squash}'[Squash commits on push]' \
-        '(-u --update)'{-u,--update}'[Add the --branch and/or --remote overrides to .gitrepo]' \
+        '(-u --update)'{-u,--update}'[Add the --branch and/or --remote overrides to .gitrepo/config]' \
         '(-q --quiet)'{-q,--quiet}'[Show minimal output]' \
         '(-v --verbose)'{-v,--verbose}'[Show verbose output]' \
         '(-d --debug)'{-d,--debug}'[Show the actual commands used]' \
