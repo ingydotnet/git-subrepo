@@ -177,10 +177,6 @@ the same arguments. Keep reading…
   specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
   as a `clone --force` operation, using the current remote and branch.
 
-  When you pull you can assume a fast-forward strategy (default) or you can
-  specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
-  as a `clone --force` operation, using the current remote and branch.
-
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
   clean. You can easily see the subrepo's history with the `git log` command:
