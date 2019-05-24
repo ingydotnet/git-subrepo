@@ -354,8 +354,8 @@ Example to update the C<method> option for a subrepo:
 Same as C<git help subrepo>. Will launch the manpage. For the shorter usage,
 use C<git subrepo -h>.
 
-Use C<< git subrepo help <command> to get help for a specific command. Use >>--
-all` to get a summary of all commands.
+Use C<< git subrepo help <command> >> to get help for a specific command. Use C<--
+all> to get a summary of all commands.
 
 The C<help> command accepts the C<--all> option.
 
