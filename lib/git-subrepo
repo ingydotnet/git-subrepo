@@ -28,7 +28,7 @@ bash+:import :std can
 
 VERSION=0.4.0
 REQUIRED_GIT_VERSION=2.7.0
-GIT_TMP=.git/tmp
+GIT_TMP="$(git rev-parse --git-common-dir 2> /dev/null || echo .git)/tmp"
 
 # `git rev-parse` turns this into a getopt parser and a command usage message:
 GETOPT_SPEC="\
