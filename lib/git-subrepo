@@ -646,8 +646,8 @@ subrepo:push() {
   if ! $force_wanted; then
     o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
-      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: " \
-        "$upstream_head_commit"
+      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: \
+$upstream_head_commit"
     fi
   fi
 
