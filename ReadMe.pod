@@ -137,7 +137,13 @@ Add a repository as a subrepo in a subdir of your repository.
 
 This is similar in feel to C<git clone>. You just specify the remote repo url,
 and optionally a sub-directory and/or branch name. The repo will be fetched
-and merged into the subdir.
+and merged into the subdir. When you clone a subrepo:
+
+=item * The current working directory must be at the top of the parent repository.
+
+=item * The parent repository branch must be up to date with respect to the branch
+        of the subrepo you are cloning. The easiest way to do this is to set both
+        the parent repository and subrepo to the same branch (default C<master>).
 
 The subrepo history is I<squashed> into a single commit that contains the
 reference information. This information is also stored in a special file
