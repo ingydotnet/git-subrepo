@@ -31,7 +31,7 @@ setup-nested-repo() {
 		git add f$n.txt
 		git commit -m "added f$n.txt to s$n.ws"
 		cd -
-		git clone --bare s$n.ws s$n.git
+		git clone -q --bare s$n.ws s$n.git
 	done
 	
 	cd $workdir
@@ -124,23 +124,23 @@ Subrepo 's3' has no new commits to push." \
 	"subrepo push is done correctly"
 
 cd $workdir/s1.ws
-git pull ../s1.git
+git pull -q ../s1.git
 test-exists "s1.txt"
 test-exists "f1.txt"
 test-exists "!.gitrepo"
 test-exists "!s3/"
 
 cd $workdir/s2.ws
-git pull ../s2.git
+git pull -q ../s2.git
 test-exists s2.txt
 
 cd $workdir/s4.ws
-git pull ../s4.git
+git pull -q ../s4.git
 test-exists "s4.txt"
 test-exists "f4.txt"
 
 cd $workdir/s6.ws
-git pull ../s6.git
+git pull -q ../s6.git
 test-exists "s6.txt"
 
 
