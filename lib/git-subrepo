@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 #
 #
 # Copyright 2013-2017 - Ingy döt Net <ingy@ingy.net>
@@ -265,6 +265,18 @@ command:fetch() {
   fi
 }
 
+##
+# srg: subrepo/$subref creates issues with nested subrepos.
+#      i'd like to flatten it.
+##
+subrepo-branch-name() {
+	#local flatSubref=${subrer//\//^/}
+	local ref=${1:-$subref}
+	local flatSubref=`echo "$ref" | sed 's=/=-=g'`
+	echo "subrepo/$flatSubref"
+	#echo "subrepo/$subref/b"
+}
+
 # `git subrepo branch <subdir>` command:
 command:branch() {
   command-setup +subdir
@@ -272,7 +284,9 @@ command:branch() {
     CALL subrepo:fetch
   fi
 
-  local branch="subrepo/$subref"
+  local branch=$(subrepo-branch-name) #"subrepo/$flatSubref"
+	o "srg: branch for '$subref' is '$branch'"
+	
   if $force_wanted; then
     # We must make sure that the worktree is removed as well
     worktree="$GIT_TMP/$branch"
@@ -300,8 +314,9 @@ command:commit() {
     error "Can't find ref '$refs_subrepo_fetch'. Try using -F."
   upstream_head_commit="$(git rev-parse "$refs_subrepo_fetch")"
 
+	local subrepoBranchName=$(subrepo-branch-name)
   [[ -n $subrepo_commit_ref ]] ||
-    subrepo_commit_ref="subrepo/$subref"
+    subrepo_commit_ref="$subrepoBranchName"
   subrepo:commit
 
   say "Subrepo commit '$subrepo_commit_ref' committed as"
@@ -315,11 +330,12 @@ command:status() {
 
 status-refs() {
   local output=
+	local subrepoBranchName=$(subrepo-branch-name)
   while read line; do
-    [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subref/([a-z]+) ]] || continue
+    [[ $line =~ ^([0-9a-f]+)\ refs/$subrepoBranchName/([a-z]+) ]] || continue
     local sha1=; sha1="$(git rev-parse --short "${BASH_REMATCH[1]}")"
     local type="${BASH_REMATCH[2]}"
-    local ref="refs/subrepo/$subref/$type"
+    local ref="refs/$subrepoBranchName/$type"
     if [[ $type == branch ]]; then
       output+="    Branch Ref:    $sha1 ($ref)"$'\n'
     elif [[ $type == commit ]]; then
@@ -528,7 +544,7 @@ subrepo:pull() {
     OK=false; CODE=-1; return
   fi
 
-  local branch_name="subrepo/$subref"
+  local branch_name=$(subrepo-branch-name)
   git:delete-branch "$branch_name"
 
   subrepo_commit_ref="$branch_name"
@@ -575,6 +591,8 @@ subrepo:push() {
   local new_upstream=false
   local branch_created=false
 
+	o "srg: pusing $branch_name"
+	
   if [[ -z $branch_name ]]; then
     FAIL=false OUT=false CALL subrepo:fetch
 
@@ -598,7 +616,7 @@ subrepo:push() {
       fi
     fi
 
-    branch_name="subrepo/$subref"
+    branch_name=$(subrepo-branch-name)
     git:delete-branch "$branch_name"
 
     if $squash_wanted; then
@@ -692,7 +710,9 @@ subrepo:fetch() {
 
 # Create a subrepo branch containing all changes
 subrepo:branch() {
-  local branch="${1:-"subrepo/$subref"}"
+	local branch=$(subrepo-branch-name)
+  branch="${1:-$branch}" #"subrepo/$flatSubref"}"
+
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
@@ -704,6 +724,7 @@ subrepo:branch() {
     local prev_commit=
     local ancestor=
     o "Create new commits with parents into the subrepo fetch"
+
     OUT=true RUN git rev-list --reverse --ancestry-path "$subrepo_parent..HEAD"
     local commit_list="$output"
     for commit in $commit_list; do
@@ -796,9 +817,33 @@ subrepo:branch() {
   o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
   local filter="$branch"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
-  FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-    "rm -f .gitrepo" "$filter"
 
+  FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
+			"rm -f .gitrepo" "$filter"
+
+
+	##
+	# srg: removing nested subrepos from the parent
+	##
+	local nested=$(find $subref -name .gitrepo | sed "s=^$subref/==" | sed "s=^.gitrepo==" | sort)
+	local dirs=()
+	for file in $nested; do
+		if [ "x$file" == "x" ]; then continue; fi
+		local dir=$(dirname $file)
+		for dpath in "${dirs[@]}"; do
+			if [[ $dir =~ ^$dpath ]]; then
+				dir=""
+				break
+			fi
+		done
+		if [ "x$dir" == "x" ]; then continue; fi
+		dirs+=("$dir")
+		
+		o Removing nested subrepo $dir
+		FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
+				"rm -fr $dir" "$filter"
+  done
+	
   git:create-worktree "$branch"
 
   o "Create ref '$refs_subrepo_branch'."
@@ -894,7 +939,8 @@ subrepo:status() {
       continue
     fi
 
-    refs_subrepo_fetch="refs/subrepo/$subref/fetch"
+		local branchName=$(subrepo-branch-name)
+    refs_subrepo_fetch="refs/$branchName/fetch"
     upstream_head_commit="$(
       git rev-parse --short "$refs_subrepo_fetch" 2> /dev/null || true
     )"
@@ -912,12 +958,12 @@ subrepo:status() {
     fi
 
     echo "Git subrepo '$subdir':"
-    git:branch-exists "subrepo/$subref" &&
-      echo "  Subrepo Branch:  subrepo/$subref"
-    local remote="subrepo/$subref"
+    git:branch-exists "$branchName" &&
+      echo "  Subrepo Branch:  $branchName"
+    local remote="$branchName"
     FAIL=false OUT=true RUN git config "remote.$remote.url"
     [[ -n $output ]] &&
-      echo "  Remote Name:     subrepo/$subref"
+      echo "  Remote Name:     $branchName"
     echo "  Remote URL:      $subrepo_remote"
     [[ -n $upstream_head_commit ]] &&
       echo "  Upstream Ref:    $upstream_head_commit"
@@ -933,7 +979,8 @@ subrepo:status() {
     fi
 
     # Grep for directory, branch can be in detached state due to conflicts
-    local _worktree=$(git worktree list | grep "$GIT_TMP/subrepo/$subdir")
+		local branchName=$(subrepo-branch-name $subdir)
+    local _worktree=$(git worktree list | grep -P "$GIT_TMP/$branchName\s" ) #subrepo/$subdir")
     if [[ -n $_worktree  ]]; then
       echo "  Worktree: $_worktree"
     fi
@@ -947,8 +994,10 @@ subrepo:status() {
 }
 
 subrepo:clean() {
+	local branchName=$(subrepo-branch-name)
+
   # Remove subrepo branches if exist:
-  local branch="subrepo/$subref"
+  local branch="$branchName"
   local ref="refs/heads/$branch"
   local worktree="$GIT_TMP/$branch"
 
@@ -965,7 +1014,7 @@ subrepo:clean() {
     if "$all_wanted"; then
       RUN rm -fr .git/refs/subrepo/
     else
-      RUN rm -fr .git/refs/subrepo/$subref/
+      RUN rm -fr .git/refs/$branchName/
     fi
   fi
 }
@@ -1142,10 +1191,11 @@ Use the --force flag to override this check or remove the worktree with
   fi
 
   # Set refs_ variables:
-  refs_subrepo_branch="refs/subrepo/$subref/branch"
-  refs_subrepo_commit="refs/subrepo/$subref/commit"
-  refs_subrepo_fetch="refs/subrepo/$subref/fetch"
-  refs_subrepo_push="refs/subrepo/$subref/push"
+	local flatSubref=$(subrepo-branch-name)
+  refs_subrepo_branch="refs/$flatSubref/branch"
+  refs_subrepo_commit="refs/$flatSubref/commit"
+  refs_subrepo_fetch="refs/$flatSubref/fetch"
+  refs_subrepo_push="refs/$flatSubref/push"
 
   # Read/parse the .gitrepo file (unless clone/init; doesn't exist yet)
   if [[ ! $command =~ ^(clone|init)$ ]]; then
@@ -1223,7 +1273,8 @@ guess-subdir() {
 #
 encode-subdir() {
   subref=$subdir
-  if [[ ! $subref ]] || git check-ref-format "subrepo/$subref"; then
+	local branchName=$(subrepo-branch-name)
+  if [[ ! $subref ]] || git check-ref-format "$branchName"; then
     return
   fi
 
@@ -1504,8 +1555,12 @@ assert-subdir-empty() {
 # Find all the current subrepos by looking for all the subdirectories that
 # contain a `.gitrepo` file.
 get-all-subrepos() {
+	local top="."
+	if [ "x$1" != "x" ]; then
+		top="$1"
+	fi
   local paths=($(
-    find . -name '.gitrepo' |
+    find $top -name '.gitrepo' |
       grep -v '/.git/' |
       grep '/.gitrepo$' |
       sed 's/.gitrepo$//' |
