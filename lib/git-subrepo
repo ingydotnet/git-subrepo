@@ -270,11 +270,9 @@ command:fetch() {
 #      i'd like to flatten it.
 ##
 subrepo-branch-name() {
-	#local flatSubref=${subrer//\//^/}
 	local ref=${1:-$subref}
 	local flatSubref=`echo "$ref" | sed 's=/=-=g'`
 	echo "subrepo/$flatSubref"
-	#echo "subrepo/$subref/b"
 }
 
 # `git subrepo branch <subdir>` command:
@@ -1121,15 +1119,15 @@ get-command-options() {
 }
 
 options_help='all'
-options_branch='all fetch force'
+options_branch='ALL all fetch force'
 options_clean='ALL all force'
 options_clone='branch edit force message method'
 options_config='force'
 options_commit='edit fetch force message'
-options_fetch='all branch remote'
+options_fetch='ALL all branch remote'
 options_init='branch remote method'
-options_pull='all branch edit force message remote update'
-options_push='all branch force remote squash update'
+options_pull='ALL all branch edit force message remote update'
+options_push='ALL all branch force remote squash update'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
