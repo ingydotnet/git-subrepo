@@ -1,8 +1,13 @@
-dist: trusty
-sudo: false
-
 # Want 'bash' but 'c' works:
 language: c
+
+matrix:
+  include:
+    - name: "Git 2.21 on Ubuntu Xenial"
+      dist: xenial
+    # === This will need to removed when Travis drops support ===
+    - name: "Git 2.15.1 on Ubuntu Trusty"
+      dist: trusty
 
 script:
 # NOTE: we have to make sure we're on a branch (rather than on a detached HEAD) because tests rely on it.

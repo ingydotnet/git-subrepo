@@ -581,8 +581,9 @@ subrepo:push() {
     if ! OK; then
       # Check if we are pushing to a new upstream repo (or branch) and just
       # push the commit directly. This is common after a `git subrepo init`:
-      local re="(^|"$'\n'")fatal: Couldn't find remote ref "
-      if [[ $output =~ $re ]]; then
+      # Force to case in
+      local re="(^|"$'\n'")fatal: couldn't find remote ref "
+      if [[ ${output,,} =~ $re ]]; then
         o "Pushing to new upstream: $subrepo_remote ($subrepo_branch)."
         new_upstream=true
       else
