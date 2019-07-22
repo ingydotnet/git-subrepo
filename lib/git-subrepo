@@ -701,18 +701,19 @@ subrepo:branch() {
 
   o "Subrepo parent: $subrepo_parent"
 
-  # Check if the subrepo parent is an ancestor of HEAD.
-  # For example rebasing the commit that touched the subrepo
-  # could make the commit no longer match.
-  local parent_is_ancestor=
-  git merge-base --is-ancestor "$subrepo_parent" HEAD && parent_is_ancestor="true"
-  if [[ -z "$parent_is_ancestor" ]]; then
-    error "The previous commit where the subrepo was updated, '$subrepo_parent' is not an ancestor of HEAD. \n \
-      Did you rebase that commit?\n \
-      Try manually setting subrepo.parent in .gitrepo to the hash of the correct commit."
-  fi
-
   if [[ -n "$subrepo_parent" ]]; then
+
+    # Check if the subrepo parent is an ancestor of HEAD.
+    # For example rebasing the commit that touched the subrepo
+    # could make the commit no longer match.
+    local parent_is_ancestor=
+    git merge-base --is-ancestor "$subrepo_parent" HEAD && parent_is_ancestor="true"
+    if [[ -z "$parent_is_ancestor" ]]; then
+      error "The previous commit where the subrepo was updated, '$subrepo_parent' is not an ancestor of HEAD. \n \
+        Did you rebase that commit?\n \
+        Try manually setting subrepo.parent in .gitrepo to the hash of the correct commit."
+    fi
+
     local prev_commit=
     local ancestor=
     o "Create new commits with parents into the subrepo fetch"
