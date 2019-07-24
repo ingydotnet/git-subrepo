@@ -689,6 +689,7 @@ subrepo:push() {
   RUN git commit -m "$(get-commit-message)"
 }
 
+
 # Fetch the subrepo's remote branch content:
 subrepo:fetch() {
   if [[ $subrepo_remote == none ]]; then
@@ -707,6 +708,20 @@ subrepo:fetch() {
   git:make-ref "$refs_subrepo_fetch" FETCH_HEAD^0
 }
 
+#
+# creates file path and returns an absolute path for the file
+#
+create-file-path() {
+	local dirname=$(dirname $1)
+	local basename=$(basename $1)
+	mkdir -p $dirname
+
+	# realpath does not exist everywhere. this is a portable way.
+	local cwd=$PWD
+	cd $dirname
+	echo "$PWD/$basename"
+	cd $cwd
+}
 
 subrepo:branch() {
 	local branch=$(subrepo-branch-name)
@@ -733,8 +748,13 @@ subrepo:branch() {
 		local n=${n//$subref\//}
 		n=${n//\/\$/}
 		nestedSubrepos+=" $n"
-		
 	done
+
+
+	local msg_name=$(create-file-path "$GIT_TMP/${branch}.msg")
+	if [ $squash_branch_wanted ]; then
+		echo "Squashed multipe commits" > $msg_name
+	fi
 	
   local last_gitrepo_commit=
   local first_gitrepo_commit=
@@ -802,7 +822,24 @@ subrepo:branch() {
 			fi
 
 			o "Create a new commit $first_parent $second_parent"
+
+			# it is real if:
+			#   1. the subdir *is* in the commit
+			#   2. there are files which do not belong to subrepos, but belong to the current one
+			#
 			FAIL=false RUN git cat-file -e "$commit":"$subdir"
+			if [ $OK ] && [ -n "$nestedRegex" ]; then
+				OUT=true RUN git log --name-only --pretty=format:'' $commit -1
+				local files=$output
+				OK=false
+				for file in "$files"; do
+					if ! [[ $file =~ $nestedRegex ]] && [[ $file =~ $subdir ]] ; then
+						OK=true
+						break
+					fi
+				done
+			fi
+			
 			if OK; then
 				o "Create with content"
 				local PREVIOUS_IFS=$IFS
@@ -820,6 +857,11 @@ subrepo:branch() {
 																			 GIT_AUTHOR_EMAIL="${author_info[1]}" \
 																			 GIT_AUTHOR_NAME="${author_info[2]}" \
 																			 git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
+
+				if [ $squash_branch_wanted ]; then
+					git log $commit -1 --pretty="%n===%H%nAuthor: %an%nEmail:  %ae%nDate:   %ad%n%n%B" >> $msg_name
+				fi
+
 			else
 				o "Create empty placeholder"
 			  prev_commit=$(git commit-tree -m "EMPTY" \
@@ -844,16 +886,17 @@ subrepo:branch() {
 		git:create-worktree "$branch"
 		cd $worktree
 
-		local msg_name="../$(basename $branch).msg"
-		echo "Squashed commit with multiple logs" > $msg_name
-		git log --pretty="%n%H%nAuthor: %an%nEmail:  %ae%nDate:   %ad%n%n%B" >> $msg_name
-		
+		# this should squash everything to a single commit:
 		RUN git reset $gitrepo_commit
 		RUN git add -A
-		GIT_AUTHOR_DATE="${author_info[0]}" \
-									 GIT_AUTHOR_EMAIL="${author_info[1]}" \
-									 GIT_AUTHOR_NAME="${author_info[2]}" \
-									 RUN git commit -q -F $msg_name
+
+
+		# I think that the 'squasher's name should be here. All change info will be in the log. 
+		# GIT_AUTHOR_DATE="${author_info[0]}" \
+		#	GIT_AUTHOR_EMAIL="${author_info[1]}" \
+		# GIT_AUTHOR_NAME="${author_info[2]}" \
+
+		RUN git commit -q -F $msg_name
 		FAIL=false RUN rm -f $msg_name
 
 		# all the rest will be in $worktree
@@ -865,7 +908,7 @@ subrepo:branch() {
   local filter="$branch"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
 
-	local doBranchIndexFilter=false
+	local doBranchIndexFilter=true
 
 	if  ! $doBranchIndexFilter ; then
 		FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
@@ -882,9 +925,7 @@ subrepo:branch() {
   o "Create ref '$refs_subrepo_branch'."
   git:make-ref "$refs_subrepo_branch" "$branch"
 
-
 	cd $curdir
-
 }
 
 
