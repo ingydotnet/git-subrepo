@@ -37,7 +37,9 @@ help:branch() {
 
   Use the `--force` option to write over an existing `subrepo/<subdir>` branch.
 
-  The `branch` command accepts the `--all`, `--fetch` and `--force` options.
+  Use the `--squash_branch` option to squash all subrepo history into a single commit.
+
+  The `branch` command accepts the `--all`, `-ALL`, `--fetch`,  `--force`, and `--squash_branch` options.
 ...
 }
 
@@ -248,6 +250,8 @@ help:pull() {
   specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
   as a `clone --force` operation, using the current remote and branch.
 
+  Use the `--squash_branch` option to squash all subrepo branch history into a single commit.
+
   Like the `clone` command, `pull` will squash all the changes (since the last
   pull or clone) into one commit. This keeps your mainline history nice and
   clean. You can easily see the subrepo's history with the `git log` command:
@@ -256,8 +260,8 @@ help:pull() {
 
   The set of commands used above are described in detail below.
 
-  The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
-  `--message=`, `--remote=` and `--update` options.
+  The `pull` command accepts the `--all`, `-ALL`, `--branch=`, `--edit`, `--force`,
+  `--message=`, `--remote=`, `--squash_branch`, and `--update` options.
 ...
 }
 
@@ -289,8 +293,10 @@ help:push() {
   discouraged. Only use this option if you fully understand it. (The `--force`
   option will NOT check for a proper merge. ANY branch will be force pushed!)
 
-  The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
-  `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
+  Use the `--squash_branch` option to squash all subrepo branch history into a single commit.
+
+  The `push` command accepts the `--all`, `-ALL`, `--branch=`, `--dry-run`, `--force`,
+  `--merge`, `--rebase`, `--remote=`, `--squash`, `--squash_branch`, and `--update` options.
 ...
 }
 

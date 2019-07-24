@@ -71,6 +71,7 @@ M,method=   Method when you join, valid options are 'merge' or 'rebase'
 m,message=  Specify a commit message
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
+S,squash_branch    Squash intermediate subrepo branch
 u,update    Add the --branch and/or --remote overrides to .gitrepo
 
 q,quiet     Show minimal output
@@ -94,6 +95,7 @@ main() {
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local squash_wanted=false     # Squash commits on push
+  local squash_branch_wanted=false     # Squash subrepo brahcn 
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
 
   local quiet_wanted=false      # Output should be quiet
@@ -662,8 +664,7 @@ subrepo:push() {
   if ! $force_wanted; then
     o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
-      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: " \
-        "$upstream_head_commit"
+      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: $upstream_head_commit" 
     fi
   fi
 
@@ -706,7 +707,7 @@ subrepo:fetch() {
   git:make-ref "$refs_subrepo_fetch" FETCH_HEAD^0
 }
 
-# Create a subrepo branch containing all changes
+
 subrepo:branch() {
 	local branch=$(subrepo-branch-name)
   branch="${1:-$branch}" #"subrepo/$flatSubref"}"
@@ -714,8 +715,31 @@ subrepo:branch() {
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
+	local curdir=$PWD
+	
+	##
+	# srg: removing nested subrepos from the parent
+	##
+	o 'Looking for nested subrepos'
+	get-all-subrepos "$subdir -mindepth 2"
+	local nested=(${subrepos[@]})
+	local n=
+	local nestedSubrepos=
+	local nestedRegex=
+	for n in ${nested[@]}; do
+		[ -n "$nestedRegex" ] && nestedRegex+='|'
+		nestedRegex+="$n"
+
+		local n=${n//$subref\//}
+		n=${n//\/\$/}
+		nestedSubrepos+=" $n"
+		
+	done
+	
   local last_gitrepo_commit=
   local first_gitrepo_commit=
+	local new_commit=
+	local author_info=
 
   o "Subrepo parent: $subrepo_parent"
   if [[ -n "$subrepo_parent" ]]; then
@@ -760,51 +784,53 @@ subrepo:branch() {
         fi
       fi
 
-      o "Find parents"
-      local first_parent=
-      [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
-      local second_parent=
-      if [[ -z "$first_gitrepo_commit" ]]; then
-        first_gitrepo_commit="$gitrepo_commit"
-        second_parent="-p $gitrepo_commit"
-      fi
+			o "Find parents"
+			local first_parent=
+			[[ -n $prev_commit ]] && first_parent="-p $prev_commit"
+			local second_parent=
+			if [[ -z "$first_gitrepo_commit" ]]; then
+				first_gitrepo_commit="$gitrepo_commit"
+				second_parent="-p $gitrepo_commit"
+			fi
 
-      if [[ "$join_method" != "rebase" ]]; then
-        # In the rebase case we don't create merge commits
-        if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
-          second_parent="-p $gitrepo_commit"
-          last_gitrepo_commit="$gitrepo_commit"
-        fi
-      fi
+			if [[ "$join_method" != "rebase" ]]; then
+				# In the rebase case we don't create merge commits
+				if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
+					second_parent="-p $gitrepo_commit"
+					last_gitrepo_commit="$gitrepo_commit"
+				fi
+			fi
 
-      o "Create a new commit $first_parent $second_parent"
-      FAIL=false RUN git cat-file -e "$commit":"$subdir"
-      if OK; then
-        o "Create with content"
-        local PREVIOUS_IFS=$IFS
-        IFS=$'\n'
-        local author_info=( $(git log -1 --format=%ad%n%ae%n%an "$commit") )
-        IFS=$PREVIOUS_IFS
+			o "Create a new commit $first_parent $second_parent"
+			FAIL=false RUN git cat-file -e "$commit":"$subdir"
+			if OK; then
+				o "Create with content"
+				local PREVIOUS_IFS=$IFS
+				IFS=$'\n'
+				author_info=( $(git log -1 --format=%ad%n%ae%n%an "$commit") )
+				IFS=$PREVIOUS_IFS
 
-        # When we create new commits we leave the author information unchanged
-        # the committer will though be updated to the current user
-        # This should be analog how cherrypicking is handled allowing git
-        # to store both the original author but also the responsible committer
-        # that created the local version of the commit and pushed it.
-        prev_commit=$(git log -n 1 --format=%B "$commit" |
-          GIT_AUTHOR_DATE="${author_info[0]}" \
-          GIT_AUTHOR_EMAIL="${author_info[1]}" \
-          GIT_AUTHOR_NAME="${author_info[2]}" \
-          git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
-      else
-        o "Create empty placeholder"
-        prev_commit=$(git commit-tree -m "EMPTY" \
-          $first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
-      fi
+				# When we create new commits we leave the author information unchanged
+				# the committer will though be updated to the current user
+				# This should be analog how cherrypicking is handled allowing git
+				# to store both the original author but also the responsible committer
+				# that created the local version of the commit and pushed it.
+				prev_commit=$(git log -n 1 --format=%B "$commit" |
+												GIT_AUTHOR_DATE="${author_info[0]}" \
+																			 GIT_AUTHOR_EMAIL="${author_info[1]}" \
+																			 GIT_AUTHOR_NAME="${author_info[2]}" \
+																			 git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
+			else
+				o "Create empty placeholder"
+			  prev_commit=$(git commit-tree -m "EMPTY" \
+													$first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+			fi
+			
     done
 
-    o "Create branch '$branch' for this new commit set $prev_commit."
-    RUN git branch "$branch" "$prev_commit"
+		o "Create branch '$branch' for this new commit set $prev_commit"
+		RUN git branch "$branch" "$prev_commit"
+			
   else
     o "No parent setting, use the subdir content."
     RUN git branch "$branch" HEAD
@@ -812,41 +838,55 @@ subrepo:branch() {
       "$subref" "$branch"
   fi
 
-  o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
+	if [[ $squash_branch_wanted ]] && [ -n "$gitrepo_commit" ]; then
+		o "Squashing branch $branch to $gitrepo_commit"
+
+		git:create-worktree "$branch"
+		cd $worktree
+
+		local msg_name="../$(basename $branch).msg"
+		echo "Squashed commit with multiple logs" > $msg_name
+		git log --pretty="%n%H%nAuthor: %an%nEmail:  %ae%nDate:   %ad%n%n%B" >> $msg_name
+		
+		RUN git reset $gitrepo_commit
+		RUN git add -A
+		GIT_AUTHOR_DATE="${author_info[0]}" \
+									 GIT_AUTHOR_EMAIL="${author_info[1]}" \
+									 GIT_AUTHOR_NAME="${author_info[2]}" \
+									 RUN git commit -q -F $msg_name
+		FAIL=false RUN rm -f $msg_name
+
+		# all the rest will be in $worktree
+	fi
+
+	
+
+  o "Remove the .gitrepo $nestedSubrepos files from $first_gitrepo_commit..$branch"
   local filter="$branch"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
 
-  FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-			"rm -f .gitrepo" "$filter"
+	local doBranchIndexFilter=false
 
-
-	##
-	# srg: removing nested subrepos from the parent
-	##
-	local nested=$(find $subref -name .gitrepo | sed "s=^$subref/==" | sed "s=^.gitrepo==" | sort)
-	local dirs=()
-	for file in $nested; do
-		if [ "x$file" == "x" ]; then continue; fi
-		local dir=$(dirname $file)
-		for dpath in "${dirs[@]}"; do
-			if [[ $dir =~ ^$dpath ]]; then
-				dir=""
-				break
-			fi
-		done
-		if [ "x$dir" == "x" ]; then continue; fi
-		dirs+=("$dir")
-		
-		o Removing nested subrepo $dir
+	if  ! $doBranchIndexFilter ; then
 		FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-				"rm -fr $dir" "$filter"
-  done
+				"rm -rf .gitrepo $nestedSubrepos" "$filter"
+	else
+		FAIL=false RUN git filter-branch -f --prune-empty \
+				--index-filter "git rm -rf .gitrepo $nestedSubrepos --cached --ignore-unmatch" \
+				"$filter"
+	fi
 	
-  git:create-worktree "$branch"
+ 	[ ! $squash_branch_wanted ] && git:create-worktree "$branch"
+
 
   o "Create ref '$refs_subrepo_branch'."
   git:make-ref "$refs_subrepo_branch" "$branch"
+
+
+	cd $curdir
+
 }
+
 
 # Commit a merged subrepo branch:
 subrepo:commit() {
@@ -1066,6 +1106,7 @@ get-command-options() {
           commit_msg_args+=("--remote=$1")
           shift ;;
       -s) squash_wanted=true ;;
+      -S) squash_branch_wanted=true ;;
       -u) update_wanted=true
           commit_msg_args+=("--update") ;;
       -q) quiet_wanted=true ;;
@@ -1094,7 +1135,7 @@ get-command-options() {
   fi
   commit_msg_args+=("${command_arguments[@]}")
 
-  for option in all ALL edit fetch force squash; do
+  for option in all ALL edit fetch force squash squash_branch; do
     var="${option}_wanted"
     if ${!var}; then
       check_option $option
@@ -1119,19 +1160,19 @@ get-command-options() {
 }
 
 options_help='all'
-options_branch='ALL all fetch force'
+options_branch='ALL all fetch force squash_branch'
 options_clean='ALL all force'
 options_clone='branch edit force message method'
 options_config='force'
 options_commit='edit fetch force message'
-options_fetch='ALL all branch remote'
+options_fetch='ALL all branch remote squash_branch'
 options_init='branch remote method'
-options_pull='ALL all branch edit force message remote update'
-options_push='ALL all branch force remote squash update'
+options_pull='ALL all branch edit force message remote update squash_branch'
+options_push='ALL all branch force remote squash update squash_branch'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
-  [[ ${!var} =~ $1 ]] ||
+  [[ ${!var} =~ (^|[[:space:]])$1([[:space:]]|$) ]] ||
     usage-error "Invalid option '--$1' for '$command'."
 }
 
@@ -1555,7 +1596,7 @@ assert-subdir-empty() {
 get-all-subrepos() {
 	local top="."
 	if [ "x$1" != "x" ]; then
-		top="$1"
+		top="$*"
 	fi
   local paths=($(
     find $top -name '.gitrepo' |
