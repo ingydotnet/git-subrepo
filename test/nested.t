@@ -163,18 +163,19 @@ add-new-files sq1-1.txt
 
 cd $subrepos
 
+###
 is "$(git subrepo branch -S -F -f s1)" \
    "Created branch 'subrepo/s1' and worktree '.git/tmp/subrepo/s1'." \
    "Squashed subrepo branch s1 created"
 
-
-is "$(git log --format="%b" subrepo/s1 | grep -v -P '===|merged:|commit:|version:')" \
-   'Author: John Doe
+###
+is "$(git log --format="%B" subrepo/s1  | sed 's/===.*/===<commit>/' | grep -v -P 'merged:|commit:|version:|^\s*$')" \
+   'Squashed multipe commits
+===<commit>
+Author: John Doe
 Email:  jain@doe.com
 Date:   Mon Feb 16 14:00:00 2037 +0100
-
 git subrepo push s1
-
 subrepo:
   subdir:   "s1"
 upstream:
@@ -182,26 +183,29 @@ upstream:
   branch:   "master"
 git-subrepo:
   origin:   "https://github.com/ingydotnet/git-subrepo.git"
-
+===<commit>
 Author: John Doe
 Email:  jain@doe.com
 Date:   Mon Feb 16 14:00:00 2037 +0100
-
-add new file: sq1-1.txt' \
+add new file: sq1-1.txt
+add new file: s1.txt
+added f1.txt to s1.ws' \
    "squashed branch s1 created correctly"
 
-
+###
 is "$(git subrepo branch -S -F -f s1/s5)" \
       "Created branch 'subrepo/s1-s5' and worktree '.git/tmp/subrepo/s1-s5'." \
    "Squashed subrepo branch s1/s5 created"
 
-is "$(git log --format="%b" subrepo/s1-s5 | grep -v -P '===|merged:|commit:|version:')" \
-   'Author: John Doe
+###
+
+is "$(git log --format="%B" subrepo/s1-s5 | sed 's/===.*/===<commit>/' | grep -v -P 'merged:|commit:|version:|^\s*$')" \
+   'Squashed multipe commits
+===<commit>
+Author: John Doe
 Email:  jain@doe.com
 Date:   Mon Feb 16 14:00:00 2037 +0100
-
 git subrepo clone ../s5.git s1/s5
-
 subrepo:
   subdir:   "s1/s5"
 upstream:
@@ -209,24 +213,22 @@ upstream:
   branch:   "master"
 git-subrepo:
   origin:   "https://github.com/ingydotnet/git-subrepo.git"
-
+===<commit>
 Author: John Doe
 Email:  jain@doe.com
 Date:   Mon Feb 16 14:00:00 2037 +0100
-
 add new file: sq5-1.txt
-
+===<commit>
 Author: John Doe
 Email:  jain@doe.com
 Date:   Mon Feb 16 14:00:00 2037 +0100
-
 add new file: sq5-2.txt
-
+===<commit>
 Author: John Doe
 Email:  jain@doe.com
 Date:   Mon Feb 16 14:00:00 2037 +0100
-
-add new file: sq5-3.txt' \
+add new file: sq5-3.txt
+added f5.txt to s5.ws' \
  	"branch s1/s5 created correctly"
 
 
@@ -240,7 +242,7 @@ Subrepo 's1/s5' pushed to '../s5.git' (master).
 Subrepo 's1/s5/s6' has no new commits to push.
 Subrepo 's2' has no new commits to push.
 Subrepo 's3' has no new commits to push." \
-   "Push -ALL with branch squashig was done correctly"
+   "push --ALL with branch squashig was done correctly"
 
 
 done_testing

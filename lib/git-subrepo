@@ -839,9 +839,7 @@ subrepo:branch() {
 				local files=$output
 				OK=false
 				for file in "$files"; do
-					# echo "$commit: $file ($subdir): $nestedRegex"
 					if ! [[ $file =~ $nestedRegex ]] && [[ $file =~ $subdir ]] ; then
-						# echo "  ===match==="
 						OK=true
 						break
 					fi
@@ -891,31 +889,12 @@ subrepo:branch() {
       "$subref" "$branch"
   fi
 
-	
+
+	## squashing
 	if  $squash_branch_wanted  && [ -n "$gitrepo_commit" ] && [[ $(git rev-list $branch | wc -l) > 1 ]]; then
-		
-		o "Squashing branch $branch to $gitrepo_commit -- creating worktree"
-
-		git:create-worktree "$branch"
-		cd $worktree
-
-		o "Resetting $branch in $worktree"
-		# this should squash everything to a single commit:
-		RUN git reset $gitrepo_commit
-
-		o "Comitting $branch in $worktree"
-		RUN git add -A
-
-
-		# I think that the 'squasher's name should be here. All change info will be in the log. 
-		# GIT_AUTHOR_DATE="${author_info[0]}" \
-		#	GIT_AUTHOR_EMAIL="${author_info[1]}" \
-		# GIT_AUTHOR_NAME="${author_info[2]}" \
-
-		RUN git commit -q -F $msg_name
-		FAIL=false RUN rm -f $msg_name
-
-		# all the rest will be in the $worktree directory
+		o "Squashing branch $branch to $gitrepo_commit"
+		newCommit=$(git commit-tree "$branch^{tree}" -F $msg_name -p $gitrepo_commit)
+		git update-ref "refs/heads/$branch" $newCommit
 	fi
 
   o "Remove the .gitrepo $nestedSubrepos files from $first_gitrepo_commit..$branch"
@@ -933,8 +912,8 @@ subrepo:branch() {
 				"$filter"
 	fi
 	
- 	 if ! $squash_branch_wanted; then git:create-worktree "$branch"; fi
-
+	o "Creating worktree for $branch"
+	git:create-worktree "$branch"
 
   o "Create ref '$refs_subrepo_branch'."
   git:make-ref "$refs_subrepo_branch" "$branch"
