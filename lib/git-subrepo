@@ -750,9 +750,8 @@ subrepo:branch() {
 		nestedSubrepos+=" $n"
 	done
 
-
 	local msg_name=$(create-file-path "$GIT_TMP/${branch}.msg")
-	if [ $squash_branch_wanted ]; then
+	if $squash_branch_wanted ; then
 		echo "Squashed multipe commits" > $msg_name
 	fi
 	
@@ -767,7 +766,7 @@ subrepo:branch() {
     local ancestor=
     o "Create new commits with parents into the subrepo fetch"
 
-    OUT=true RUN git rev-list --reverse --ancestry-path "$subrepo_parent..HEAD"
+    OUT=true RUN git rev-list --reverse --ancestry-path --topo-order "$subrepo_parent..HEAD"
     local commit_list="$output"
     for commit in $commit_list; do
       o "Working on $commit"
@@ -828,19 +827,23 @@ subrepo:branch() {
 			#   2. there are files which do not belong to subrepos, but belong to the current one
 			#
 			FAIL=false RUN git cat-file -e "$commit":"$subdir"
-			if [ $OK ] && [ -n "$nestedRegex" ]; then
+
+			# do not check the very first commit: the files there are from the mapped repo itself. 
+			if OK && [ -n "$nestedRegex" ]; then
 				OUT=true RUN git log --name-only --pretty=format:'' $commit -1
 				local files=$output
 				OK=false
 				for file in "$files"; do
+					# echo "$commit: $file ($subdir): $nestedRegex"
 					if ! [[ $file =~ $nestedRegex ]] && [[ $file =~ $subdir ]] ; then
+						# echo "  ===match==="
 						OK=true
 						break
 					fi
 				done
 			fi
 			
-			if OK; then
+			if OK ; then
 				o "Create with content"
 				local PREVIOUS_IFS=$IFS
 				IFS=$'\n'
@@ -858,14 +861,17 @@ subrepo:branch() {
 																			 GIT_AUTHOR_NAME="${author_info[2]}" \
 																			 git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
 
-				if [ $squash_branch_wanted ]; then
+				if $squash_branch_wanted ; then
 					git log $commit -1 --pretty="%n===%H%nAuthor: %an%nEmail:  %ae%nDate:   %ad%n%n%B" >> $msg_name
 				fi
 
-			else
-				o "Create empty placeholder"
-			  prev_commit=$(git commit-tree -m "EMPTY" \
-													$first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+			# else
+			# 	#
+			# 	#srg: why do we need to create it?
+			# 	#
+			# 	o "Create empty placeholder"
+			#   prev_commit=$(git commit-tree -m "EMPTY" \
+			# 										$first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
 			fi
 			
     done
@@ -880,14 +886,19 @@ subrepo:branch() {
       "$subref" "$branch"
   fi
 
-	if [[ $squash_branch_wanted ]] && [ -n "$gitrepo_commit" ]; then
-		o "Squashing branch $branch to $gitrepo_commit"
+	
+	if  $squash_branch_wanted  && [ -n "$gitrepo_commit" ] && [[ $(git rev-list $branch | wc -l) > 1 ]]; then
+		
+		o "Squashing branch $branch to $gitrepo_commit -- creating worktree"
 
 		git:create-worktree "$branch"
 		cd $worktree
 
+		o "Resetting $branch in $worktree"
 		# this should squash everything to a single commit:
 		RUN git reset $gitrepo_commit
+
+		o "Comitting $branch in $worktree"
 		RUN git add -A
 
 
@@ -899,10 +910,8 @@ subrepo:branch() {
 		RUN git commit -q -F $msg_name
 		FAIL=false RUN rm -f $msg_name
 
-		# all the rest will be in $worktree
+		# all the rest will be in the $worktree directory
 	fi
-
-	
 
   o "Remove the .gitrepo $nestedSubrepos files from $first_gitrepo_commit..$branch"
   local filter="$branch"
@@ -919,7 +928,7 @@ subrepo:branch() {
 				"$filter"
 	fi
 	
- 	[ ! $squash_branch_wanted ] && git:create-worktree "$branch"
+ 	 if ! $squash_branch_wanted; then git:create-worktree "$branch"; fi
 
 
   o "Create ref '$refs_subrepo_branch'."
