@@ -13,8 +13,12 @@ use Test::More
 
 curdir=$PWD
 
+export GIT_AUTHOR_DATE="Wed Feb 16 14:00 2037 +0100"
+export GIT_AUTHOR_NAME="John Doe"
+export GIT_AUTHOR_EMAIL="jain@doe.com"
+
 setup-nested-repo() {
-	workdir="$OWNER/nsted"
+	workdir="$OWNER/nested"
 	if [ -e $workdir ]; then rm -rf $workdir; fi
 	
 	mkdir -p $workdir
@@ -144,6 +148,99 @@ git pull -q ../s6.git
 test-exists "s6.txt"
 
 
+#########################
+## check branch squasning
+#########################
+subrepos=$workdir/subrepos
+
+cd $subrepos/s1/s5
+add-new-files sq5-1.txt
+add-new-files sq5-2.txt
+add-new-files sq5-3.txt
+
+cd $subrepos/s1
+add-new-files sq1-1.txt
+
+cd $subrepos
+
+is "$(git subrepo branch -S -F -f s1)" \
+   "Created branch 'subrepo/s1' and worktree '.git/tmp/subrepo/s1'." \
+   "Squashed subrepo branch s1 created"
+
+
+is "$(git log --format="%b" subrepo/s1 | grep -v -P '===|merged:|commit:|version:')" \
+   'Author: John Doe
+Email:  jain@doe.com
+Date:   Mon Feb 16 14:00:00 2037 +0100
+
+git subrepo push s1
+
+subrepo:
+  subdir:   "s1"
+upstream:
+  origin:   "../s1.git"
+  branch:   "master"
+git-subrepo:
+  origin:   "https://github.com/ingydotnet/git-subrepo.git"
+
+Author: John Doe
+Email:  jain@doe.com
+Date:   Mon Feb 16 14:00:00 2037 +0100
+
+add new file: sq1-1.txt' \
+   "squashed branch s1 created correctly"
+
+
+is "$(git subrepo branch -S -F -f s1/s5)" \
+      "Created branch 'subrepo/s1-s5' and worktree '.git/tmp/subrepo/s1-s5'." \
+   "Squashed subrepo branch s1/s5 created"
+
+is "$(git log --format="%b" subrepo/s1-s5 | grep -v -P '===|merged:|commit:|version:')" \
+   'Author: John Doe
+Email:  jain@doe.com
+Date:   Mon Feb 16 14:00:00 2037 +0100
+
+git subrepo clone ../s5.git s1/s5
+
+subrepo:
+  subdir:   "s1/s5"
+upstream:
+  origin:   "../s5.git"
+  branch:   "master"
+git-subrepo:
+  origin:   "https://github.com/ingydotnet/git-subrepo.git"
+
+Author: John Doe
+Email:  jain@doe.com
+Date:   Mon Feb 16 14:00:00 2037 +0100
+
+add new file: sq5-1.txt
+
+Author: John Doe
+Email:  jain@doe.com
+Date:   Mon Feb 16 14:00:00 2037 +0100
+
+add new file: sq5-2.txt
+
+Author: John Doe
+Email:  jain@doe.com
+Date:   Mon Feb 16 14:00:00 2037 +0100
+
+add new file: sq5-3.txt' \
+ 	"branch s1/s5 created correctly"
+
+
+git subrepo clean s1
+#do not clean s5
+
+is "$(git subrepo push --ALL -S)" \
+   "Subrepo 's1' pushed to '../s1.git' (master).
+Subrepo 's1/s4' has no new commits to push.
+Subrepo 's1/s5' pushed to '../s5.git' (master).
+Subrepo 's1/s5/s6' has no new commits to push.
+Subrepo 's2' has no new commits to push.
+Subrepo 's3' has no new commits to push." \
+   "Push -ALL with branch squashig was done correctly"
 
 
 done_testing
