@@ -273,8 +273,8 @@ command:fetch() {
 ##
 subrepo-branch-name() {
 	local ref=${1:-$subref}
-	local flatSubref=`echo "$ref" | sed 's=/=-=g'`
-	echo "subrepo/$flatSubref"
+	subref=`echo "$ref" | sed 's=/=-=g'`
+	echo "subrepo/$subref"
 }
 
 # `git subrepo branch <subdir>` command:
@@ -599,7 +599,8 @@ subrepo:push() {
     if ! OK; then
       # Check if we are pushing to a new upstream repo (or branch) and just
       # push the commit directly. This is common after a `git subrepo init`:
-      local re="(^|"$'\n'")fatal: Couldn't find remote ref "
+			# git 2.22 changed casing in the message to 'could' instead of 'Could':
+      local re="(^|"$'\n'")fatal: [Cc]ouldn't find remote ref "
       if [[ $output =~ $re ]]; then
         o "Pushing to new upstream: $subrepo_remote ($subrepo_branch)."
         new_upstream=true
@@ -727,6 +728,10 @@ subrepo:branch() {
 	local branch=$(subrepo-branch-name)
   branch="${1:-$branch}" #"subrepo/$flatSubref"}"
 
+	# clean up the worktree reference. It gets reused at least in 'push'
+	# and is not updated from the previouse -ALL branch if the current one exists.
+	worktree=
+	
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
@@ -1362,8 +1367,16 @@ guess-subdir() {
 #
 encode-subdir() {
   subref=$subdir
+
+	#it will replace '/' with '-' in the subref.
 	local branchName=$(subrepo-branch-name)
-  if [[ ! $subref ]] || git check-ref-format "$branchName"; then
+
+	#
+	# there was an issue with subrepo/@.
+	# git-ref-format passed with it, but git worktree add failed.
+	# I added an additional check her for 'subref' itself
+	#
+  if [[ ! $subref ]] || ( git check-ref-format "$branchName" && git check-ref-format "$subref" ); then
     return
   fi
 
@@ -1424,10 +1437,16 @@ encode-subdir() {
 
   ## 9. They cannot be the single character @.
   ##    Note: 'subrepo/' be will prefixed, so this is always true.
+	##    not anylonger true. it dies with a git message in 2.22
+  subref=${subref//@/%40}
+	
 
   ## 10. They cannot contain a \.
   subref=${subref//\\/%5c}
 
+	## 11. begin with minus
+  subref=${subref//-/%5d}
+	
   subref=$(git check-ref-format --normalize --allow-onelevel "$subref") ||
     error "Can't determine valid subref from '$subdir'."
 }
