@@ -78,6 +78,10 @@ q,quiet     Show minimal output
 v,verbose   Show verbose output
 d,debug     Show the actual commands used
 x,DEBUG     Turn on -x Bash debugging
+
+use_tree_filter subrepo branch normally uses 'index-filter' for performance reasons.
+						It is noted that this could hit some git limitations for huge trees and many revisions.
+						This qualifier is supposed to be workaround solution. 
 "
 
 #------------------------------------------------------------------------------
@@ -96,6 +100,7 @@ main() {
   local fetch_wanted=false      # Fetch requested before a command
   local squash_wanted=false     # Squash commits on push
   local squash_branch_wanted=false     # Squash subrepo brahcn 
+	local use_tree_filter_wanted=false # use tree-filter instead of the index-filter.
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
 
   local quiet_wanted=false      # Output should be quiet
@@ -145,6 +150,7 @@ main() {
   # Check environment and parse CLI options:
   assert-environment-ok
 
+	
   # Parse and validate command options:
   get-command-options "$@"
 
@@ -273,7 +279,7 @@ command:fetch() {
 ##
 subrepo-branch-name() {
 	local ref=${1:-$subref}
-	subref=`echo "$ref" | sed 's=/=-=g'`
+	subref=${ref//\//-}
 	echo "subrepo/$subref"
 }
 
@@ -750,8 +756,8 @@ subrepo:branch() {
 		[ -n "$nestedRegex" ] && nestedRegex+='|'
 		nestedRegex+="$n"
 
-		local n=${n//$subref\//}
-		n=${n//\/\$/}
+		n=${n#$subref/}
+		n=${n%/}
 		nestedSubrepos+=" $n"
 	done
 
@@ -833,7 +839,6 @@ subrepo:branch() {
 			#
 			FAIL=false RUN git cat-file -e "$commit":"$subdir"
 
-			# do not check the very first commit: the files there are from the mapped repo itself. 
 			if OK && [ -n "$nestedRegex" ]; then
 				OUT=true RUN git log --name-only --pretty=format:'' $commit -1
 				local files=$output
@@ -853,6 +858,7 @@ subrepo:branch() {
 				author_info=( $(git log -1 --format=%ad%n%ae%n%an "$commit") )
 				IFS=$PREVIOUS_IFS
 
+
 				# When we create new commits we leave the author information unchanged
 				# the committer will though be updated to the current user
 				# This should be analog how cherrypicking is handled allowing git
@@ -865,16 +871,19 @@ subrepo:branch() {
 																			 git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
 
 				if $squash_branch_wanted ; then
+					# add to the squash commit message
 					git log $commit -1 --pretty="%n===%H%nAuthor: %an%nEmail:  %ae%nDate:   %ad%n%n%B" >> $msg_name
 				fi
 
-			# else
-			# 	#
-			# 	#srg: why do we need to create it?
-			# 	#
-			# 	o "Create empty placeholder"
-			#   prev_commit=$(git commit-tree -m "EMPTY" \
-			# 										$first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+			else
+				o "Create empty placeholder"
+
+				#
+				#srg: why do we need to create it?
+				# looks like a left-over from debug. It stays int he way of figuring out the set of non-empty commits. It is not get pruned later.
+				#
+				#   prev_commit=$(git commit-tree -m "EMPTY" \
+					# 										$first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
 			fi
 			
     done
@@ -893,17 +902,27 @@ subrepo:branch() {
 	## squashing
 	if  $squash_branch_wanted  && [ -n "$gitrepo_commit" ] && [[ $(git rev-list $branch | wc -l) > 1 ]]; then
 		o "Squashing branch $branch to $gitrepo_commit"
-		newCommit=$(git commit-tree "$branch^{tree}" -F $msg_name -p $gitrepo_commit)
-		git update-ref "refs/heads/$branch" $newCommit
+		local squashedCommit=$(git commit-tree "$branch^{tree}" -F $msg_name -p $gitrepo_commit)
+		if [[ $squashedCommit =~ ^[[:xdigit:]]{40}$ ]]; then
+			RUN git update-ref "refs/heads/$branch" $squashedCommit
+		else
+			say "error: Squashing branch $branch to $gitrepo_commit. commit-tree did not produce a valid commit sha1. Got '$squashedCommit'."
+			# will continue and do non-smashed version.
+		fi
 	fi
 
-  o "Remove the .gitrepo $nestedSubrepos files from $first_gitrepo_commit..$branch"
+  o "Remove the .gitrepo $nestedSubrepos files from $first_gitrepo_commit..$branch ( $(git rev-list $first_gitrepo_commit..$branch | wc -l) ) commits."
   local filter="$branch"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
 
-	local doBranchIndexFilter=true
+	##
+	# srg: There was an issue with git commit-index causing a git crash with 'xrealloc(-1ULL)' after checking about 96 revisions in filter-branch --index-filter.
+	# The thing worked with -tree-filter, but is way to slow.
+	# so, i decided to keep the tree fileter here and make it optional.
+	##
 
-	if  ! $doBranchIndexFilter ; then
+	if  $use_tree_filter_wanted ; then
+		o "Using --tree-filter"
 		FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
 				"rm -rf .gitrepo $nestedSubrepos" "$filter"
 	else
@@ -1108,7 +1127,7 @@ get-command-options() {
   [[ -n $GIT_SUBREPO_VERBOSE ]] && verbose_wanted=true
   [[ -n $GIT_SUBREPO_DEBUG ]] && debug_wanted=true
 
-  eval "$(
+	eval "$(
     echo "$GETOPT_SPEC" |
       git rev-parse --parseopt -- "$@" ||
     echo exit $?
@@ -1150,6 +1169,9 @@ get-command-options() {
       --version)
         echo "$VERSION"
         exit ;;
+			--use_tree_filter)
+				use_tree_filter_wanted=true
+				;;
       *) usage-error "Unexpected option: '$option'." ;;
     esac
   done
@@ -1169,7 +1191,7 @@ get-command-options() {
   fi
   commit_msg_args+=("${command_arguments[@]}")
 
-  for option in all ALL edit fetch force squash squash_branch; do
+  for option in all ALL edit fetch force squash squash_branch use_tree_filter; do
     var="${option}_wanted"
     if ${!var}; then
       check_option $option
@@ -1191,18 +1213,20 @@ get-command-options() {
       usage-error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
+
+	set --
 }
 
 options_help='all'
-options_branch='ALL all fetch force squash_branch'
+options_branch='ALL all fetch force squash_branch use_tree_filter'
 options_clean='ALL all force'
 options_clone='branch edit force message method'
 options_config='force'
 options_commit='edit fetch force message'
-options_fetch='ALL all branch remote squash_branch'
+options_fetch='ALL all branch remote squash_branch use_tree_filter'
 options_init='branch remote method'
-options_pull='ALL all branch edit force message remote update squash_branch'
-options_push='ALL all branch force remote squash update squash_branch'
+options_pull='ALL all branch edit force message remote update squash_branch use_tree_filter'
+options_push='ALL all branch force remote squash update squash_branch use_tree_filter'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
@@ -1658,6 +1682,7 @@ get-all-subrepos() {
   for path in "${paths[@]}"; do
     add-subrepo "$path"
   done
+
 }
 
 add-subrepo() {
