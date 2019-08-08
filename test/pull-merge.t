@@ -27,7 +27,8 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   test-gitrepo-field "parent" "$foo_pull_commit"
 }
 
-foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
+## i think this wrong and the parent should be moved after the pull
+#foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
 
 (
   cd $OWNER/foo
@@ -35,6 +36,9 @@ foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
   modify-files-ex bar/Bar2
   git push
 ) &> /dev/null || die
+
+#this is the right place
+foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
 
 (
   cd $OWNER/bar
