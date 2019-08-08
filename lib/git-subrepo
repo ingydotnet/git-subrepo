@@ -114,6 +114,7 @@ main() {
   local subrepo_branch=         # Upstream branch to clone/push/pull
   local subrepo_commit=         # Upstream HEAD from previous clone/pull
   local subrepo_parent=         # Local commit from before previous clone/pull
+  local subrepo_push_parent=    # Local commit from before previous push
   local subrepo_former=         # A retired gitrepo key that might still exist
 
   local refs_subrepo_branch=    # A subrepo ref -> commit of branch/pull command
@@ -494,7 +495,7 @@ subrepo:clone() {
 
   o "Commit the new '$subdir/' content."
   subrepo_commit_ref="$upstream_head_commit"
-  CALL subrepo:commit
+  CALL subrepo:commit clone		
 }
 
 # Init a new subrepo from current repo:
@@ -604,10 +605,12 @@ subrepo:push() {
     if $squash_wanted; then
       o "Squash commits"
       subrepo_parent="HEAD^"
+		elif [ -n "$subrepo_push_parent" ]; then
+			subrepo_parent=$subrepo_push_parent
     fi
 
     o "Create subrepo branch '$branch_name'."
-    CALL subrepo:branch "$branch_name"
+    CALL subrepo:branch "$branch_name" 
     cd "$worktree";
 
     if [[ "$join_method" == "rebase" ]]; then
@@ -669,6 +672,8 @@ subrepo:push() {
   upstream_head_commit="$new_upstream_head_commit"
   subrepo_commit_ref="$upstream_head_commit"
   update-gitrepo-file
+	RUN git config --file="$gitrepo" subrepo.push-parent "$original_head_commit"
+	RUN git add  -f -- "$gitrepo"
   RUN git commit -m "$(get-commit-message)"
 }
 
@@ -693,6 +698,7 @@ subrepo:fetch() {
 # Create a subrepo branch containing all changes
 subrepo:branch() {
   local branch="${1:-"subrepo/$subref"}"
+				
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
@@ -807,6 +813,7 @@ subrepo:branch() {
 
 # Commit a merged subrepo branch:
 subrepo:commit() {
+	local is_clone=$1
   o "Check that '$subrepo_commit_ref' exists."
   git:rev-exists "$subrepo_commit_ref" ||
     error "Commit ref '$subrepo_commit_ref' does not exist."
@@ -830,6 +837,9 @@ subrepo:commit() {
 
   o "Put info into '$subdir/.gitrepo' file."
   update-gitrepo-file
+	if [ "$is_clone" == "clone" ]; then
+		RUN git config --file="$gitrepo" subrepo.push-parent "$original_head_commit"
+	fi
   RUN git add -f -- "$gitrepo"
 
   local commit_message
@@ -1321,6 +1331,10 @@ read-gitrepo-file() {
   FAIL=false \
   SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
   subrepo_parent="$output"
+
+  FAIL=false \
+  SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.push-parent
+  subrepo_push_parent="$output"
 
   FAIL=false \
   SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.method
