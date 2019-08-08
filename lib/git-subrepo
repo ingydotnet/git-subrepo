@@ -941,6 +941,10 @@ subrepo:status() {
       printf "  Former Commit:   $(git rev-parse --short $subrepo_former)"
       echo " *** DEPRECATED ***"
     fi
+    [[ -n $subrepo_push_parent ]] &&
+      echo "  Push Parent:     $(git rev-parse --short $subrepo_push_parent)"
+
+			
 
     # Grep for directory, branch can be in detached state due to conflicts
     local _worktree=$(git worktree list | grep "$GIT_TMP/subrepo/$subdir")
