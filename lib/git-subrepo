@@ -704,7 +704,7 @@ subrepo:branch() {
     local prev_commit=
     local ancestor=
     o "Create new commits with parents into the subrepo fetch"
-    OUT=true RUN git rev-list --reverse --ancestry-path "$subrepo_parent..HEAD"
+    OUT=true RUN git rev-list --reverse --ancestry-path  "$subrepo_parent..HEAD"
     local commit_list="$output"
     for commit in $commit_list; do
       o "Working on $commit"
@@ -1374,13 +1374,20 @@ update-gitrepo-file() {
   fi
 
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
+	o " upstream_head_commit:'$upstream_head_commit', subrepo_commit_ref='$subrepo_commit_ref'"
+
   # Only write new parent when we are at the head of upstream
-  if [[ -n $upstream_head_commit && -n $subrepo_commit_ref ]]; then
-    OUT=true RUN git rev-parse "$subrepo_commit_ref"
-    o "$upstream_head_commit == $output"
-    if [[ $upstream_head_commit == $output ]]; then
-      RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
-    fi
+  if [[ -n $upstream_head_commit && -n $subrepo_commit_ref && -n $original_head_commit ]]; then
+		#
+		# srg: this check prevents from updating the parent after pull
+		#
+    # OUT=true RUN git rev-parse "$subrepo_commit_ref"
+    # o "$upstream_head_commit == $output"
+    # if [[ $upstream_head_commit == $output ]]; then
+
+		RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
+
+		#fi
   fi
 
   [[ -z $join_method ]] && join_method="merge"
