@@ -5,6 +5,7 @@ set -e
 source test/setup
 
 use Test::More
+ echo "===> $0: $PWD <===" > /dev/tty
 
 {
   output="$(git subrepo status)"
