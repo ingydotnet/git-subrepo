@@ -671,9 +671,9 @@ subrepo:push() {
   o "Put updates into '$subdir/.gitrepo' file."
   upstream_head_commit="$new_upstream_head_commit"
   subrepo_commit_ref="$upstream_head_commit"
-  update-gitrepo-file
-	RUN git config --file="$gitrepo" subrepo.push-parent "$original_head_commit"
-	RUN git add  -f -- "$gitrepo"
+  update-gitrepo-file "push"
+	# RUN git config --file="$gitrepo" subrepo.push-parent "$original_head_commit"
+	# RUN git add  -f -- "$gitrepo"
   RUN git commit -m "$(get-commit-message)"
 }
 
@@ -836,11 +836,14 @@ subrepo:commit() {
   RUN git read-tree --prefix="$subdir" -u "$subrepo_commit_ref"
 
   o "Put info into '$subdir/.gitrepo' file."
-  update-gitrepo-file
-	if [ "$is_clone" == "clone" ]; then
-		RUN git config --file="$gitrepo" subrepo.push-parent "$original_head_commit"
-	fi
-  RUN git add -f -- "$gitrepo"
+	local push_update=
+  [ "$is_clone" == "clone" ] && push_update="push"
+  update-gitrepo-file "$push_update"
+
+	# if [ "$is_clone" == "clone" ]; then
+	# 	RUN git config --file="$gitrepo" subrepo.push-parent "$original_head_commit"
+	# fi
+  # RUN git add -f -- "$gitrepo"
 
   local commit_message
   if [[ -n "$wanted_commit_message" ]]; then
@@ -1360,7 +1363,8 @@ read-gitrepo-file() {
 # Update the subdir/.gitrepo state file:
 update-gitrepo-file() {
   local short_commit=
-
+  local is_push=$1
+	
   local newfile=false
   if [[ ! -e $gitrepo ]]; then
 
@@ -1404,7 +1408,9 @@ update-gitrepo-file() {
     # if [[ $upstream_head_commit == $output ]]; then
 
 		RUN git config --file="$gitrepo" subrepo.parent "$original_head_commit"
-
+		if [ "$is_push" == "push" ]; then
+				RUN git config --file="$gitrepo" subrepo.push-parent "$original_head_commit"
+		fi
 		#fi
   fi
 
