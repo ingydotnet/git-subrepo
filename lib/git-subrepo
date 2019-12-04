@@ -488,6 +488,13 @@ subrepo:clone() {
     fi
     o "Remove the old subdir."
     RUN git rm -r -- "$subdir"
+
+    if [[ -z $override_branch ]]; then
+      o "Determine the upstream head branch."
+      get-upstream-head-branch
+      subrepo_branch="$output"
+      override_branch="$output" # Force update of the branch in .gitrepo
+    fi
   else
     assert-subdir-empty
     if [[ -z $subrepo_branch ]]; then
