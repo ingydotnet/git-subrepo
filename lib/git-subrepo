@@ -963,11 +963,15 @@ subrepo:clean() {
 
   if "$force_wanted"; then
     o "Remove all subrepo refs."
-    if "$all_wanted"; then
-      RUN rm -fr .git/refs/subrepo/
-    else
-      RUN rm -fr .git/refs/subrepo/$subref/
+    local suffix=""
+    if ! $all_wanted; then
+      suffix="$subref/"
     fi
+    git show-ref | while read hash ref; do
+      if [[ "$ref" == refs/subrepo/$suffix* ]]; then
+        git update-ref -d "$ref"
+      fi
+    done
   fi
 }
 
