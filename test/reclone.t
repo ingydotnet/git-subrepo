@@ -16,6 +16,7 @@ clone-foo-and-bar
 test-exists \
   "$OWNER/foo/bar/bard/"
 
+# Test that reclone is not done if not needed.
 export XYZ=1
 is "$(
   cd "$OWNER/foo"
@@ -24,19 +25,25 @@ is "$(
   "Subrepo 'bar' is up to date." \
   "No reclone if same commit"
 
+# Test that reclone of a different ref works.
 (
   cd "$OWNER/foo"
   git subrepo --quiet clone --force "$UPSTREAM/bar" --branch=refs/tags/A
 )
 
+is "$(git -C "$OWNER"/foo subrepo config bar branch)" \
+  "Subrepo 'bar' option 'branch' has value 'refs/tags/A'."
 test-exists \
   "!$OWNER/foo/bar/bard/"
 
+# Test that reclone back to (implicit) master works.
 (
   cd "$OWNER/foo"
-  git subrepo --quiet clone -f "$UPSTREAM/bar" --branch=master
+  git subrepo --quiet clone -f "$UPSTREAM/bar"
 )
 
+is "$(git -C "$OWNER"/foo subrepo config bar branch)" \
+  "Subrepo 'bar' option 'branch' has value 'master'."
 test-exists \
   "$OWNER/foo/bar/bard/"
 
