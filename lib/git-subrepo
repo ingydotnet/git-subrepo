@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 #
 #
 # Copyright 2013-2017 - Ingy döt Net <ingy@ingy.net>
@@ -71,12 +71,17 @@ M,method=   Method when you join, valid options are 'merge' or 'rebase'
 m,message=  Specify a commit message
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
+S,squash_branch    Squash intermediate subrepo branch
 u,update    Add the --branch and/or --remote overrides to .gitrepo
 
 q,quiet     Show minimal output
 v,verbose   Show verbose output
 d,debug     Show the actual commands used
 x,DEBUG     Turn on -x Bash debugging
+
+use_tree_filter subrepo branch normally uses 'index-filter' for performance reasons.
+						It is noted that this could hit some git limitations for huge trees and many revisions.
+						This qualifier is supposed to be workaround solution. 
 "
 
 #------------------------------------------------------------------------------
@@ -94,6 +99,8 @@ main() {
   local force_wanted=false      # Force certain operations
   local fetch_wanted=false      # Fetch requested before a command
   local squash_wanted=false     # Squash commits on push
+  local squash_branch_wanted=false     # Squash subrepo brahcn 
+	local use_tree_filter_wanted=false # use tree-filter instead of the index-filter.
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
 
   local quiet_wanted=false      # Output should be quiet
@@ -143,6 +150,7 @@ main() {
   # Check environment and parse CLI options:
   assert-environment-ok
 
+	
   # Parse and validate command options:
   get-command-options "$@"
 
@@ -265,6 +273,16 @@ command:fetch() {
   fi
 }
 
+##
+# srg: subrepo/$subref creates issues with nested subrepos.
+#      i'd like to flatten it.
+##
+subrepo-branch-name() {
+	local ref=${1:-$subref}
+	subref=${ref//\//-}
+	echo "subrepo/$subref"
+}
+
 # `git subrepo branch <subdir>` command:
 command:branch() {
   command-setup +subdir
@@ -272,7 +290,9 @@ command:branch() {
     CALL subrepo:fetch
   fi
 
-  local branch="subrepo/$subref"
+  local branch=$(subrepo-branch-name) #"subrepo/$flatSubref"
+	o "srg: branch for '$subref' is '$branch'"
+	
   if $force_wanted; then
     # We must make sure that the worktree is removed as well
     worktree="$GIT_TMP/$branch"
@@ -300,8 +320,9 @@ command:commit() {
     error "Can't find ref '$refs_subrepo_fetch'. Try using -F."
   upstream_head_commit="$(git rev-parse "$refs_subrepo_fetch")"
 
+	local subrepoBranchName=$(subrepo-branch-name)
   [[ -n $subrepo_commit_ref ]] ||
-    subrepo_commit_ref="subrepo/$subref"
+    subrepo_commit_ref="$subrepoBranchName"
   subrepo:commit
 
   say "Subrepo commit '$subrepo_commit_ref' committed as"
@@ -315,11 +336,12 @@ command:status() {
 
 status-refs() {
   local output=
+	local subrepoBranchName=$(subrepo-branch-name)
   while read line; do
-    [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subref/([a-z]+) ]] || continue
+    [[ $line =~ ^([0-9a-f]+)\ refs/$subrepoBranchName/([a-z]+) ]] || continue
     local sha1=; sha1="$(git rev-parse --short "${BASH_REMATCH[1]}")"
     local type="${BASH_REMATCH[2]}"
-    local ref="refs/subrepo/$subref/$type"
+    local ref="refs/$subrepoBranchName/$type"
     if [[ $type == branch ]]; then
       output+="    Branch Ref:    $sha1 ($ref)"$'\n'
     elif [[ $type == commit ]]; then
@@ -528,7 +550,7 @@ subrepo:pull() {
     OK=false; CODE=-1; return
   fi
 
-  local branch_name="subrepo/$subref"
+  local branch_name=$(subrepo-branch-name)
   git:delete-branch "$branch_name"
 
   subrepo_commit_ref="$branch_name"
@@ -575,13 +597,16 @@ subrepo:push() {
   local new_upstream=false
   local branch_created=false
 
+	o "srg: pusing $branch_name"
+	
   if [[ -z $branch_name ]]; then
     FAIL=false OUT=false CALL subrepo:fetch
 
     if ! OK; then
       # Check if we are pushing to a new upstream repo (or branch) and just
       # push the commit directly. This is common after a `git subrepo init`:
-      local re="(^|"$'\n'")fatal: Couldn't find remote ref "
+			# git 2.22 changed casing in the message to 'could' instead of 'Could':
+      local re="(^|"$'\n'")fatal: [Cc]ouldn't find remote ref "
       if [[ $output =~ $re ]]; then
         o "Pushing to new upstream: $subrepo_remote ($subrepo_branch)."
         new_upstream=true
@@ -598,7 +623,7 @@ subrepo:push() {
       fi
     fi
 
-    branch_name="subrepo/$subref"
+    branch_name=$(subrepo-branch-name)
     git:delete-branch "$branch_name"
 
     if $squash_wanted; then
@@ -646,8 +671,7 @@ subrepo:push() {
   if ! $force_wanted; then
     o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
-      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: " \
-        "$upstream_head_commit"
+      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: $upstream_head_commit" 
     fi
   fi
 
@@ -672,6 +696,7 @@ subrepo:push() {
   RUN git commit -m "$(get-commit-message)"
 }
 
+
 # Fetch the subrepo's remote branch content:
 subrepo:fetch() {
   if [[ $subrepo_remote == none ]]; then
@@ -690,21 +715,69 @@ subrepo:fetch() {
   git:make-ref "$refs_subrepo_fetch" FETCH_HEAD^0
 }
 
-# Create a subrepo branch containing all changes
+#
+# creates file path and returns an absolute path for the file
+#
+create-file-path() {
+	local dirname=$(dirname $1)
+	local basename=$(basename $1)
+	mkdir -p $dirname
+
+	# realpath does not exist everywhere. this is a portable way.
+	local cwd=$PWD
+	cd $dirname
+	echo "$PWD/$basename"
+	cd $cwd
+}
+
 subrepo:branch() {
-  local branch="${1:-"subrepo/$subref"}"
+	local branch=$(subrepo-branch-name)
+  branch="${1:-$branch}" #"subrepo/$flatSubref"}"
+
+	# clean up the worktree reference. It gets reused at least in 'push'
+	# and is not updated from the previouse -ALL branch if the current one exists.
+	worktree=
+	
   o "Check if the '$branch' branch already exists."
   git:branch-exists "$branch" && return
 
+	local curdir=$PWD
+	
+	##
+	# srg: removing nested subrepos from the parent
+	##
+	o 'Looking for nested subrepos'
+	get-all-subrepos "$subdir -mindepth 2"
+	local nested=(${subrepos[@]})
+	local n=
+	local nestedSubrepos=
+	local nestedRegex=
+	for n in ${nested[@]}; do
+		[ -n "$nestedRegex" ] && nestedRegex+='|'
+		nestedRegex+="$n"
+
+		n=${n#$subref/}
+		n=${n%/}
+		nestedSubrepos+=" $n"
+	done
+
+	local msg_name=$(create-file-path "$GIT_TMP/${branch}.msg")
+	if $squash_branch_wanted ; then
+		echo "Squashed multipe commits" > $msg_name
+	fi
+	
   local last_gitrepo_commit=
   local first_gitrepo_commit=
+	local new_commit=
+	local author_info=
 
   o "Subrepo parent: $subrepo_parent"
   if [[ -n "$subrepo_parent" ]]; then
     local prev_commit=
     local ancestor=
     o "Create new commits with parents into the subrepo fetch"
-    OUT=true RUN git rev-list --reverse --ancestry-path "$subrepo_parent..HEAD"
+
+    OUT=true RUN git rev-list --reverse --ancestry-path --topo-order "$subrepo_parent..HEAD"
     local commit_list="$output"
     for commit in $commit_list; do
       o "Working on $commit"
@@ -741,51 +814,83 @@ subrepo:branch() {
         fi
       fi
 
-      o "Find parents"
-      local first_parent=
-      [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
-      local second_parent=
-      if [[ -z "$first_gitrepo_commit" ]]; then
-        first_gitrepo_commit="$gitrepo_commit"
-        second_parent="-p $gitrepo_commit"
-      fi
+			o "Find parents"
+			local first_parent=
+			[[ -n $prev_commit ]] && first_parent="-p $prev_commit"
+			local second_parent=
+			if [[ -z "$first_gitrepo_commit" ]]; then
+				first_gitrepo_commit="$gitrepo_commit"
+				second_parent="-p $gitrepo_commit"
+			fi
 
-      if [[ "$join_method" != "rebase" ]]; then
-        # In the rebase case we don't create merge commits
-        if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
-          second_parent="-p $gitrepo_commit"
-          last_gitrepo_commit="$gitrepo_commit"
-        fi
-      fi
+			if [[ "$join_method" != "rebase" ]]; then
+				# In the rebase case we don't create merge commits
+				if [[ "$gitrepo_commit" != "$last_gitrepo_commit" ]]; then
+					second_parent="-p $gitrepo_commit"
+					last_gitrepo_commit="$gitrepo_commit"
+				fi
+			fi
 
-      o "Create a new commit $first_parent $second_parent"
-      FAIL=false RUN git cat-file -e "$commit":"$subdir"
-      if OK; then
-        o "Create with content"
-        local PREVIOUS_IFS=$IFS
-        IFS=$'\n'
-        local author_info=( $(git log -1 --format=%ad%n%ae%n%an "$commit") )
-        IFS=$PREVIOUS_IFS
+			o "Create a new commit $first_parent $second_parent"
 
-        # When we create new commits we leave the author information unchanged
-        # the committer will though be updated to the current user
-        # This should be analog how cherrypicking is handled allowing git
-        # to store both the original author but also the responsible committer
-        # that created the local version of the commit and pushed it.
-        prev_commit=$(git log -n 1 --format=%B "$commit" |
-          GIT_AUTHOR_DATE="${author_info[0]}" \
-          GIT_AUTHOR_EMAIL="${author_info[1]}" \
-          GIT_AUTHOR_NAME="${author_info[2]}" \
-          git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
-      else
-        o "Create empty placeholder"
-        prev_commit=$(git commit-tree -m "EMPTY" \
-          $first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
-      fi
+			# it is real if:
+			#   1. the subdir *is* in the commit
+			#   2. there are files which do not belong to subrepos, but belong to the current one
+			#
+			FAIL=false RUN git cat-file -e "$commit":"$subdir"
+
+			if OK && [ -n "$nestedRegex" ]; then
+				OUT=true RUN git log --name-only --pretty=format:'' $commit -1
+				local files=$output
+				OK=false
+				for file in "$files"; do
+					if ! [[ $file =~ $nestedRegex ]] && [[ $file =~ $subdir ]] ; then
+						OK=true
+						break
+					fi
+				done
+			fi
+			
+			if OK ; then
+				o "Create with content"
+				local PREVIOUS_IFS=$IFS
+				IFS=$'\n'
+				author_info=( $(git log -1 --format=%ad%n%ae%n%an "$commit") )
+				IFS=$PREVIOUS_IFS
+
+
+				# When we create new commits we leave the author information unchanged
+				# the committer will though be updated to the current user
+				# This should be analog how cherrypicking is handled allowing git
+				# to store both the original author but also the responsible committer
+				# that created the local version of the commit and pushed it.
+				prev_commit=$(git log -n 1 --format=%B "$commit" |
+												GIT_AUTHOR_DATE="${author_info[0]}" \
+																			 GIT_AUTHOR_EMAIL="${author_info[1]}" \
+																			 GIT_AUTHOR_NAME="${author_info[2]}" \
+																			 git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
+
+				if $squash_branch_wanted ; then
+					# add to the squash commit message
+					git log $commit -1 --pretty="%n===%H%nAuthor: %an%nEmail:  %ae%nDate:   %ad%n%n%B" >> $msg_name
+				fi
+
+			else
+				o "Create empty placeholder"
+
+				#
+				#srg: why do we need to create it?
+				# looks like a left-over from debug. It stays int he way of figuring out the set of non-empty commits. It is not get pruned later.
+				#
+				#   prev_commit=$(git commit-tree -m "EMPTY" \
+					# 										$first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+			fi
+			
     done
 
-    o "Create branch '$branch' for this new commit set $prev_commit."
-    RUN git branch "$branch" "$prev_commit"
+		o "Create branch '$branch' for this new commit set $prev_commit"
+		RUN git branch "$branch" "$prev_commit"
+			
   else
     o "No parent setting, use the subdir content."
     RUN git branch "$branch" HEAD
@@ -793,17 +898,48 @@ subrepo:branch() {
       "$subref" "$branch"
   fi
 
-  o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
+
+	## squashing
+	if  $squash_branch_wanted  && [ -n "$gitrepo_commit" ] && [[ $(git rev-list $branch | wc -l) > 1 ]]; then
+		o "Squashing branch $branch to $gitrepo_commit"
+		local squashedCommit=$(git commit-tree "$branch^{tree}" -F $msg_name -p $gitrepo_commit)
+		if [[ $squashedCommit =~ ^[[:xdigit:]]{40}$ ]]; then
+			RUN git update-ref "refs/heads/$branch" $squashedCommit
+		else
+			say "error: Squashing branch $branch to $gitrepo_commit. commit-tree did not produce a valid commit sha1. Got '$squashedCommit'."
+			# will continue and do non-smashed version.
+		fi
+	fi
+
+  o "Remove the .gitrepo $nestedSubrepos files from $first_gitrepo_commit..$branch ( $(git rev-list $first_gitrepo_commit..$branch | wc -l) ) commits."
   local filter="$branch"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
-  FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-    "rm -f .gitrepo" "$filter"
 
-  git:create-worktree "$branch"
+	##
+	# srg: There was an issue with git commit-index causing a git crash with 'xrealloc(-1ULL)' after checking about 96 revisions in filter-branch --index-filter.
+	# The thing worked with -tree-filter, but is way to slow.
+	# so, i decided to keep the tree fileter here and make it optional.
+	##
+
+	if  $use_tree_filter_wanted ; then
+		o "Using --tree-filter"
+		FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
+				"rm -rf .gitrepo $nestedSubrepos" "$filter"
+	else
+		FAIL=false RUN git filter-branch -f --prune-empty \
+				--index-filter "git rm -rf .gitrepo $nestedSubrepos --cached --ignore-unmatch" \
+				"$filter"
+	fi
+	
+	o "Creating worktree for $branch"
+	git:create-worktree "$branch"
 
   o "Create ref '$refs_subrepo_branch'."
   git:make-ref "$refs_subrepo_branch" "$branch"
+
+	cd $curdir
 }
+
 
 # Commit a merged subrepo branch:
 subrepo:commit() {
@@ -894,7 +1030,8 @@ subrepo:status() {
       continue
     fi
 
-    refs_subrepo_fetch="refs/subrepo/$subref/fetch"
+		local branchName=$(subrepo-branch-name)
+    refs_subrepo_fetch="refs/$branchName/fetch"
     upstream_head_commit="$(
       git rev-parse --short "$refs_subrepo_fetch" 2> /dev/null || true
     )"
@@ -912,12 +1049,12 @@ subrepo:status() {
     fi
 
     echo "Git subrepo '$subdir':"
-    git:branch-exists "subrepo/$subref" &&
-      echo "  Subrepo Branch:  subrepo/$subref"
-    local remote="subrepo/$subref"
+    git:branch-exists "$branchName" &&
+      echo "  Subrepo Branch:  $branchName"
+    local remote="$branchName"
     FAIL=false OUT=true RUN git config "remote.$remote.url"
     [[ -n $output ]] &&
-      echo "  Remote Name:     subrepo/$subref"
+      echo "  Remote Name:     $branchName"
     echo "  Remote URL:      $subrepo_remote"
     [[ -n $upstream_head_commit ]] &&
       echo "  Upstream Ref:    $upstream_head_commit"
@@ -933,7 +1070,8 @@ subrepo:status() {
     fi
 
     # Grep for directory, branch can be in detached state due to conflicts
-    local _worktree=$(git worktree list | grep "$GIT_TMP/subrepo/$subdir")
+		local branchName=$(subrepo-branch-name $subdir)
+    local _worktree=$(git worktree list | grep -P "$GIT_TMP/$branchName\s" ) #subrepo/$subdir")
     if [[ -n $_worktree  ]]; then
       echo "  Worktree: $_worktree"
     fi
@@ -947,8 +1085,10 @@ subrepo:status() {
 }
 
 subrepo:clean() {
+	local branchName=$(subrepo-branch-name)
+
   # Remove subrepo branches if exist:
-  local branch="subrepo/$subref"
+  local branch="$branchName"
   local ref="refs/heads/$branch"
   local worktree="$GIT_TMP/$branch"
 
@@ -965,7 +1105,7 @@ subrepo:clean() {
     if "$all_wanted"; then
       RUN rm -fr .git/refs/subrepo/
     else
-      RUN rm -fr .git/refs/subrepo/$subref/
+      RUN rm -fr .git/refs/$branchName/
     fi
   fi
 }
@@ -987,7 +1127,7 @@ get-command-options() {
   [[ -n $GIT_SUBREPO_VERBOSE ]] && verbose_wanted=true
   [[ -n $GIT_SUBREPO_DEBUG ]] && debug_wanted=true
 
-  eval "$(
+	eval "$(
     echo "$GETOPT_SPEC" |
       git rev-parse --parseopt -- "$@" ||
     echo exit $?
@@ -1019,6 +1159,7 @@ get-command-options() {
           commit_msg_args+=("--remote=$1")
           shift ;;
       -s) squash_wanted=true ;;
+      -S) squash_branch_wanted=true ;;
       -u) update_wanted=true
           commit_msg_args+=("--update") ;;
       -q) quiet_wanted=true ;;
@@ -1028,6 +1169,9 @@ get-command-options() {
       --version)
         echo "$VERSION"
         exit ;;
+			--use_tree_filter)
+				use_tree_filter_wanted=true
+				;;
       *) usage-error "Unexpected option: '$option'." ;;
     esac
   done
@@ -1047,7 +1191,7 @@ get-command-options() {
   fi
   commit_msg_args+=("${command_arguments[@]}")
 
-  for option in all ALL edit fetch force squash; do
+  for option in all ALL edit fetch force squash squash_branch use_tree_filter; do
     var="${option}_wanted"
     if ${!var}; then
       check_option $option
@@ -1069,22 +1213,24 @@ get-command-options() {
       usage-error "Can't use '--update' without '--branch' or '--remote'."
     fi
   fi
+
+	set --
 }
 
 options_help='all'
-options_branch='all fetch force'
+options_branch='ALL all fetch force squash_branch use_tree_filter'
 options_clean='ALL all force'
 options_clone='branch edit force message method'
 options_config='force'
 options_commit='edit fetch force message'
-options_fetch='all branch remote'
+options_fetch='ALL all branch remote squash_branch use_tree_filter'
 options_init='branch remote method'
-options_pull='all branch edit force message remote update'
-options_push='all branch force remote squash update'
+options_pull='ALL all branch edit force message remote update squash_branch use_tree_filter'
+options_push='ALL all branch force remote squash update squash_branch use_tree_filter'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
-  [[ ${!var} =~ $1 ]] ||
+  [[ ${!var} =~ (^|[[:space:]])$1([[:space:]]|$) ]] ||
     usage-error "Invalid option '--$1' for '$command'."
 }
 
@@ -1142,10 +1288,11 @@ Use the --force flag to override this check or remove the worktree with
   fi
 
   # Set refs_ variables:
-  refs_subrepo_branch="refs/subrepo/$subref/branch"
-  refs_subrepo_commit="refs/subrepo/$subref/commit"
-  refs_subrepo_fetch="refs/subrepo/$subref/fetch"
-  refs_subrepo_push="refs/subrepo/$subref/push"
+	local flatSubref=$(subrepo-branch-name)
+  refs_subrepo_branch="refs/$flatSubref/branch"
+  refs_subrepo_commit="refs/$flatSubref/commit"
+  refs_subrepo_fetch="refs/$flatSubref/fetch"
+  refs_subrepo_push="refs/$flatSubref/push"
 
   # Read/parse the .gitrepo file (unless clone/init; doesn't exist yet)
   if [[ ! $command =~ ^(clone|init)$ ]]; then
@@ -1223,7 +1370,16 @@ guess-subdir() {
 #
 encode-subdir() {
   subref=$subdir
-  if [[ ! $subref ]] || git check-ref-format "subrepo/$subref"; then
+
+	#it will replace '/' with '-' in the subref.
+	local branchName=$(subrepo-branch-name)
+
+	#
+	# there was an issue with subrepo/@.
+	# git-ref-format passed with it, but git worktree add failed.
+	# I added an additional check her for 'subref' itself
+	#
+  if [[ ! $subref ]] || ( git check-ref-format "$branchName" && git check-ref-format "$subref" ); then
     return
   fi
 
@@ -1284,10 +1440,16 @@ encode-subdir() {
 
   ## 9. They cannot be the single character @.
   ##    Note: 'subrepo/' be will prefixed, so this is always true.
+	##    not anylonger true. it dies with a git message in 2.22
+  subref=${subref//@/%40}
+	
 
   ## 10. They cannot contain a \.
   subref=${subref//\\/%5c}
 
+	## 11. begin with minus
+  subref=${subref//-/%5d}
+	
   subref=$(git check-ref-format --normalize --allow-onelevel "$subref") ||
     error "Can't determine valid subref from '$subdir'."
 }
@@ -1504,8 +1666,12 @@ assert-subdir-empty() {
 # Find all the current subrepos by looking for all the subdirectories that
 # contain a `.gitrepo` file.
 get-all-subrepos() {
+	local top="."
+	if [ "x$1" != "x" ]; then
+		top="$*"
+	fi
   local paths=($(
-    find . -name '.gitrepo' |
+    find $top -name '.gitrepo' |
       grep -v '/.git/' |
       grep '/.gitrepo$' |
       sed 's/.gitrepo$//' |
@@ -1516,6 +1682,7 @@ get-all-subrepos() {
   for path in "${paths[@]}"; do
     add-subrepo "$path"
   done
+
 }
 
 add-subrepo() {
