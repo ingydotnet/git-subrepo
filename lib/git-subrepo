@@ -738,7 +738,7 @@ subrepo:branch() {
       o "Check for rebase"
       if git:rev-exists "$refs_subrepo_fetch"; then
         if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
-          error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' of add the '-F' flag to always fetch the latest content."
+          error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' or add the '-F' flag to always fetch the latest content."
         fi
       fi
 
