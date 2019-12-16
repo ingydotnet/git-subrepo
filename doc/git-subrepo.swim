@@ -78,7 +78,7 @@ The best short answer is:
 
 The complete "Installation Instructions" can be found below.
 
-Note: git-subrepo needs a git version (> 2.5) that supports worktree:s.
+Note: git-subrepo needs a git version (> 2.7) that supports worktree:s.
 
 = Commands
 
