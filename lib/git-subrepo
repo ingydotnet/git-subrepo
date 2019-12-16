@@ -1417,6 +1417,15 @@ assert-environment-ok() {
     error "Requires git version $REQUIRED_GIT_VERSION or higher; "`
          `"you have '$git_version'."
   fi
+
+  if [[ ${BASH_VERSINFO[0]} -lt 4 ]] ; then
+    local msg='Bash 4+ required'
+    if [[ $OSTYPE == darwin* ]]; then
+      echo 'Try: brew install bash'
+      echo 'This will not change your user shell, it just installs Bash 5.x'
+    fi
+    error
+  fi
 }
 
 # Make sure git repo is ready:
