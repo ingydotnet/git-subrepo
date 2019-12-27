@@ -705,7 +705,7 @@ subrepo:branch() {
     local prev_commit=
     local ancestor=
     o "Create new commits with parents into the subrepo fetch"
-    OUT=true RUN git rev-list --reverse --ancestry-path "$subrepo_parent..HEAD"
+    OUT=true RUN git rev-list --reverse --ancestry-path --topo-order "$subrepo_parent..HEAD"
     local commit_list="$output"
     for commit in $commit_list; do
       o "Working on $commit"
