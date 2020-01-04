@@ -117,8 +117,14 @@ clone-foo-and-bar
 
 {
   is "$(
-      cd .git
-      catch git subrepo status
+     # the test was failing inside a submodule. there is no .git directory, just a ref
+     if [ -d .git ]; then
+	 	cd .git
+	 else
+		cd $(git rev-parse --git-dir)
+	 fi 		 
+
+     catch git subrepo status
     )" \
     "git-subrepo: Can't 'subrepo status' outside a working tree." \
     "Error OK: check inside working tree"
