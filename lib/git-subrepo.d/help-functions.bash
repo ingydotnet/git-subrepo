@@ -165,7 +165,7 @@ help:help() {
   Same as `git help subrepo`. Will launch the manpage. For the shorter usage,
   use `git subrepo -h`.
 
-  Use `git subrepo help <command> to get help for a specific command. Use
+  Use `git subrepo help <command>` to get help for a specific command. Use
   `--all` to get a summary of all commands.
 
   The `help` command accepts the `--all` option.
@@ -239,10 +239,6 @@ help:pull() {
   But it does affect the resulting `subrepo/<subdir>` branch, which is often
   used for a subrepo `push` command. See 'push' below for more information.
   If you want to change the method you can use the `config` command for this.
-
-  When you pull you can assume a fast-forward strategy (default) or you can
-  specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same
-  as a `clone --force` operation, using the current remote and branch.
 
   When you pull you can assume a fast-forward strategy (default) or you can
   specify a `--rebase`, `--merge` or `--force` strategy. The latter is the same

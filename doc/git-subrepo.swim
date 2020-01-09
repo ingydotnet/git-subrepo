@@ -306,7 +306,7 @@ the same arguments. Keep reading…
   Same as `git help subrepo`. Will launch the manpage. For the shorter usage,
   use `git subrepo -h`.
 
-  Use `git subrepo help <command> to get help for a specific command. Use
+  Use `git subrepo help <command>` to get help for a specific command. Use
   `--all` to get a summary of all commands.
 
   The `help` command accepts the `--all` option.
