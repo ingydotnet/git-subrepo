@@ -19,7 +19,8 @@ matrix:
           update: true
 
 script:
-# NOTE: we have to make sure we're on a branch (rather than on a detached HEAD) because tests rely on it.
+# NOTE: we have to make sure we're on a branch (rather than on a detached HEAD)
+# because tests rely on it.
 - git checkout -b travis-ci-dummy-branch-name
 - GIT_COMMITTER_NAME=Bob
   GIT_COMMITTER_EMAIL=bob@blob.net
