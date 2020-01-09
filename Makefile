@@ -57,20 +57,22 @@ env:
 .PHONY: doc
 update: doc compgen
 
+force:
+
 doc: ReadMe.pod Intro.pod $(MAN1)/$(NAME).1
 	perl pkg/bin/generate-help-functions.pl $(DOC) > \
 	    $(EXT)/help-functions.bash
 
-ReadMe.pod: $(DOC)
+ReadMe.pod: $(DOC) force
 	swim --to=pod --wrap --complete $< > $@
 
-Intro.pod: doc/intro-to-subrepo.swim
+Intro.pod: doc/intro-to-subrepo.swim force
 	swim --to=pod --wrap --complete $< > $@
 
-$(MAN1)/%.1: doc/%.swim Makefile
+$(MAN1)/%.1: doc/%.swim Makefile force
 	swim --to=man --wrap $< > $@
 
-compgen:
+compgen: force
 	perl pkg/bin/generate-completion.pl bash $(DOC) $(LIB) > \
 	    $(SHARE)/completion.bash
 	perl pkg/bin/generate-completion.pl zsh $(DOC) $(LIB) > \
