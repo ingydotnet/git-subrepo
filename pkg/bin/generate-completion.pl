@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 use strict;
-use XXX;
+# use XXX;
 
 sub main {
     my ($cmd) = @_;
