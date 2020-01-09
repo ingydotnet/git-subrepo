@@ -5,7 +5,7 @@ version: 0.4.0
 abstract: Git Submodule Alternative
 homepage: https://github.com/ingydotnet/git-subrepo#readme
 license: MIT
-copyright: 2013-2018
+copyright: 2013-2020
 
 author:
   name: Ingy döt Net
