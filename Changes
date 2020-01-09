@@ -1,4 +1,27 @@
 ---
+version: 0.4.1
+date:    Thu Jan  9 17:11:21 CST 2020
+- Fix Bash version error messages and add to .rc
+- Nicer YAML formatting in .travis.yml
+- Wrap a long line
+- Update the docs
+- Force `make update` to always update docs
+- Don't use XXX in perl stuff
+- Add testing on MacOS
+- Remove conflicting -C from install -d commands.
+- Update version requirement documentation
+- Correct error message in branch
+- Use topo-order in subrepo branch
+- Make “git subrepo clean -f ...” delete refs correctly
+- Fix #410 Push empty repositories with recent git versions
+- Make subrepo work when run in a worktree
+- Simplify finding subrepos
+- Ask git to find the .gitrepo files
+- Doc: fix sentence repetition
+- Fix typos
+- Fixed typo
+- Travis CI not checking out a branch.
+---
 version: 0.4.0
 date:    Thu Nov  8 12:26:38 CET 2018
 changes:

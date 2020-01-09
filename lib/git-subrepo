@@ -26,7 +26,7 @@ else
 fi
 bash+:import :std can
 
-VERSION=0.4.0
+VERSION=0.4.1
 REQUIRED_GIT_VERSION=2.7.0
 GIT_TMP="$(git rev-parse --git-common-dir 2> /dev/null || echo .git)/tmp"
 
