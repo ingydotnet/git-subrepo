@@ -6,7 +6,7 @@
 
 == Development
 
-- Add version commit id to cmdver in .gitrepo.
+- Add version commit id to cmdver in .gitrepo/config.
   - Update Makefile to install:
     - git-subrepo.d/remote
     - git-subrepo.d/commit
@@ -28,7 +28,7 @@
 - Update VERSION to 0.1.1
   - Tag when ready.
 
-- When .gitrepo is stable:
+- When .gitrepo/config is stable:
   - Delete and re-clone all subrepos in all repos using them
 
 - Rewrite the Intro doc.

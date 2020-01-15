@@ -49,7 +49,7 @@ test-exists \
   "$OWNER/bar/Bar" \
   "$OWNER/bar/FooBar1" \
   "$OWNER/bar/FooBar2" \
-  "!$OWNER/bar/.gitrepo" \
+  "!$OWNER/bar/.gitrepo/config" \
 
 done_testing
 

@@ -194,7 +194,7 @@ Consider the equivalent subrepo commands:
   $ git subrepo pull foo
   $ git subrepo push foo
 
-Collaborators see a file called 'foo/.gitrepo', and know that the subdir is a
+Collaborators see a file called 'foo/.gitrepo/config', and know that the subdir is a
 subrepo. The file contains all the information needed by future commands
 applied to that subrepo.
 
@@ -255,7 +255,7 @@ Given this we do the following steps internally:
 * Read the remote head tree into the index
 * Checkout the index into the new subdir
 * Create a new subrepo commit object for the subdir content
-* Add a state file called .gitrepo to the new subrepo/subdir
+* Add a state file called .gitrepo/config to the new subrepo/subdir
 * Amend the merge commit with this new file
 
 This process adds something like this to the top of your history:
@@ -268,7 +268,7 @@ your history.  This is important as it keeps your history as clean as possible.
 You don't need to have the subrepo history in your main project, since it is
 immutably available elsewhere, and you have a pointer to that place.
 
-The new foo/.gitrepo file looks like this:
+The new foo/.gitrepo/config file looks like this:
 
   [subrepo]
           remote = git@github.com:you/foo.git
@@ -285,7 +285,7 @@ need this url to pull/push in the future.
 
 The next command is the pull command. Normally you just give it the subrepo's
 subdir path (although you can change the branch with -b), and it will get the
-other info from the subdir/.gitrepo file.
+other info from the subdir/.gitrepo/config file.
 
 The pull command does these steps:
 
@@ -294,7 +294,7 @@ The pull command does these steps:
 * Create a branch of local subrepo commits since last pull
 * Rebase this branch onto the upstream commits
 * Commit the HEAD of the rebased content
-* Update/amend the .gitrepo file
+* Update/amend the .gitrepo/config file
 
 === Clean History
 

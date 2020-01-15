@@ -25,6 +25,7 @@ date:    Thu Jan  9 17:11:21 CST 2020
 version: 0.4.0
 date:    Thu Nov  8 12:26:38 CET 2018
 changes:
+- Moved .gitrepo to .gitrepo/config
 - Fix #325 Do not squash main repo commits
 - Improve error message for worktree handling
 - Make version checking portable. #307
@@ -57,6 +58,11 @@ changes:
 - Update error messages when failing merge/rebase
 - Fix env var bug in test/push.t
 - Do not overwrite author information
+---
+version: 0.4.0
+date:    Tue Oct  25 23:08:56 PST 2018
+changes:
+- Move .gitrepo to .gitrepo/config
 ---
 version: 0.3.1
 date:    Tue Jan  3 23:08:56 PST 2017

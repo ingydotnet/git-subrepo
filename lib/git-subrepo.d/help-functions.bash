@@ -82,7 +82,7 @@ help:clone() {
 
   The subrepo history is /squashed/ into a single commit that contains the
   reference information. This information is also stored in a special file
-  called `<subdir>/.gitrepo`. The presence of this file indicates that the
+  called `<subdir>/.gitrepo/config`. The presence of this file indicates that the
   directory is a subrepo.
 
   All subsequent commands refer to the subrepo by the name of the /subdir/.
@@ -127,9 +127,9 @@ help:config() {
   Usage: git subrepo config <subdir> <option> [<value>] [-f]
 
 
-  Read or update configuration values in the subdir/.gitrepo file.
+  Read or update configuration values in the subdir/.gitrepo/config file.
 
-  Because most of the values stored in the .gitrepo file are generated you
+  Because most of the values stored in the .gitrepo/config file are generated you
   will need to use `--force` if you want to change anything else then the
   `method` option.
 
@@ -184,13 +184,13 @@ help:init() {
   this command will do that. It will split out the content of a normal
   subdirectory into a branch and start tracking it as a subrepo. Afterwards
   your original repo will look exactly the same except that there will be a
-  `<subdir>/.gitrepo` file.
+  `<subdir>/.gitrepo/config` file.
 
   If you specify the `--remote` (and optionally the `--branch`) option, the
-  values will be added to the `<subdir>/.gitrepo` file. The `--remote` option
+  values will be added to the `<subdir>/.gitrepo/config` file. The `--remote` option
   is the upstream URL, and the `--branch` option is the upstream branch to push
   to. These values will be needed to do a `git subrepo push` command, but they
-  can be provided later on the `push` command (and saved to `<subdir>/.gitrepo`
+  can be provided later on the `push` command (and saved to `<subdir>/.gitrepo/config`
   if you also specify the `--update` option).
 
   Note: You will need to create the empty upstream repo and push to it on your
@@ -212,11 +212,11 @@ help:pull() {
   Update the subrepo subdir with the latest upstream changes.
 
   The `pull` command fetches the latest content from the remote branch pointed
-  to by the subrepo's `.gitrepo` file, and then tries to merge the changes into
+  to by the subrepo's `.gitrepo/config` file, and then tries to merge the changes into
   the corresponding subdir. It does this by making a branch of the local
   commits to the subdir and then merging or rebasing (see below) it with the
   fetched upstream content. After the merge, the content of the new branch
-  replaces your subdir, the `.gitrepo` file is updated and a single 'pull'
+  replaces your subdir, the `.gitrepo/config` file is updated and a single 'pull'
   commit is added to your mainline history.
 
   The `pull` command will attempt to do the following commands in one go:

@@ -28,8 +28,8 @@ output="$(
 is "$output" "Subrepo 'doc' pushed to '../upstream' (master)." \
   'Command output is correct'
 
-# Test init/doc/.gitrepo file contents:
-gitrepo=$OWNER/init/doc/.gitrepo
+# Test init/doc/.gitrepo/config file contents:
+gitrepo=$OWNER/init/doc/.gitrepo/config
 {
   test-gitrepo-field "remote" "../upstream"
   test-gitrepo-field "branch" "master"
@@ -43,7 +43,7 @@ gitrepo=$OWNER/init/doc/.gitrepo
 {
   test-exists \
     "$OWNER/up/.git/" \
-    "!$OWNER/up/.gitrepo"
+    "!$OWNER/up/.gitrepo/config"
 }
 
 done_testing

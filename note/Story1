@@ -5,7 +5,7 @@
 - create local branch repo/genius
 - checkout repo/genius into ext/genius
 - SYNC-DANCE:
-  - add ext/genius/.gitrepo
+  - add ext/genius/.gitrepo/config
   - commit the add and prune the commit
   - merge the pruned commit into mianline
 
@@ -20,7 +20,7 @@
 
 == git subrepo branch ext/genius
 - filter-branch subdir ext/genius
-- filter-branch 'rm .gitrepo'
+- filter-branch 'rm -rf .gitrepo/config'
 - add parent of original
 - name the commit subrepo/ext/genius
 

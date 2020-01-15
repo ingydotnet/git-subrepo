@@ -15,7 +15,7 @@ before="$(date -r $OWNER/foo/Foo '+%s')"
 (
   cd $OWNER/foo
   add-new-files bar/file
-  add-new-files .gitrepo
+  add-new-files .gitrepo/config
 )
 
 save-original-state $OWNER/foo bar

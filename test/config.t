@@ -8,14 +8,14 @@ use Test::More
 
 git clone $UPSTREAM/init $OWNER/init &>/dev/null
 
-gitrepo=$OWNER/init/doc/.gitrepo
+gitrepo=$OWNER/init/doc/.gitrepo/config
 
 (
   cd "$OWNER/init"
   git subrepo init doc
 ) > /dev/null
 
-# Test init/doc/.gitrepo file contents:
+# Test init/doc/.gitrepo/config file contents:
 {
   test-gitrepo-field "remote" "none"
   test-gitrepo-field "branch" "master"

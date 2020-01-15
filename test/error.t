@@ -97,7 +97,7 @@ clone-foo-and-bar
       cd $OWNER/bar
       catch git subrepo pull lala
     )" \
-    "git-subrepo: No 'lala/.gitrepo' file." \
+    "git-subrepo: No 'lala/.gitrepo/config' file." \
     "Error OK: check for valid subrepo subdir"
 }
 
