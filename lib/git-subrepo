@@ -8,6 +8,8 @@
 # Exit on any errors:
 set -e
 
+export FILTER_BRANCH_SQUELCH=1
+
 # Import Bash+ helper functions:
 SOURCE="$BASH_SOURCE"
 while [[ -h $SOURCE ]]; do
