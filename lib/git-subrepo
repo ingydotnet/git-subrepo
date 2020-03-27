@@ -8,7 +8,7 @@
 # Exit on any errors:
 set -e
 
-export FILTER_BRANCH_SQUELCH=1
+export FILTER_BRANCH_SQUELCH_WARNING=1
 
 # Import Bash+ helper functions:
 SOURCE="$BASH_SOURCE"
