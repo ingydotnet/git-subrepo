@@ -69,6 +69,7 @@ F,fetch     Fetch the upstream content first
 M,method=   Method when you join, valid options are 'merge' or 'rebase'
             Default is 'merge'
 m,message=  Specify a commit message
+p,prefix=   Specify a prefix for any commit message
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
@@ -126,6 +127,7 @@ main() {
 
   local edit_wanted=false       # Edit commit message using -e
   local wanted_commit_message=  # Custom commit message using -m
+  local prefix_commit_message=  # Custom commit prefix message using -p
 
   local join_method=            # Current join method (rebase/merge)
 
@@ -1015,6 +1017,8 @@ get-command-options() {
       -F) fetch_wanted=true ;;
       -m) wanted_commit_message="$1"
           shift;;
+      -p) prefix_commit_message="$1"
+          shift;;
       -M) join_method="$1"
           shift;;
       -M) join_method="$1"
@@ -1595,7 +1599,7 @@ get-commit-message() {
 
   # Format subrepo commit message:
   cat <<...
-git subrepo $command$is_merge ${args[@]}
+${prefix_commit_message}git subrepo $command$is_merge ${args[@]}
 
 subrepo:
   subdir:   "$subdir"
