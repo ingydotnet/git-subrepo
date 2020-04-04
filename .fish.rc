@@ -13,7 +13,7 @@
 #
 #------------------------------------------------------------------------------
 
-set GIT_SUBREPO_ROOT (readlink -f (dirname (status --current-filename)))
+set GIT_SUBREPO_ROOT (dirname (realpath (status --current-filename)))
 set PATH $GIT_SUBREPO_ROOT/lib $PATH
 
 set -q MANPATH || set MANPATH ''
