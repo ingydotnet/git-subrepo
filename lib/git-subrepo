@@ -955,7 +955,7 @@ subrepo:clean() {
 
   o "Clean $subdir"
   git:remove-worktree
-  if [[ -e .git/$ref ]]; then
+  if git:branch-exists "$branch"; then
     o "Remove branch '$branch'."
     RUN git update-ref -d "$ref"
     clean_list+=("branch '$branch'")
