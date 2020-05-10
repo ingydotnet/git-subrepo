@@ -71,6 +71,8 @@ M,method=   Method when you join, valid options are 'merge' or 'rebase'
 m,message=  Specify a commit message
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
+t,tag=	    Push a tag to subrepos
+T,tag-refresh Push the provided tag to all subrepos even when there was no commit changes.
 u,update    Add the --branch and/or --remote overrides to .gitrepo
 
 q,quiet     Show minimal output
@@ -92,6 +94,9 @@ main() {
   local all_wanted=false        # Apply command to all subrepos
   local ALL_wanted=false        # Apply command to all subrepos and subsubrepos
   local force_wanted=false      # Force certain operations
+  local tagrefresh_wanted=false # Push the tag to all remote subrepos HEAD,
+                                # regardless of commit changes
+
   local fetch_wanted=false      # Fetch requested before a command
   local squash_wanted=false     # Squash commits on push
   local update_wanted=false     # Update .gitrepo with --branch and/or --remote
@@ -105,6 +110,7 @@ main() {
   local gitrepo=                # Path to .gitrepo file
   local worktree=               # Worktree created by 'git worktree'
   local start_pwd=$(pwd)        # Store the original directory
+  local tag=                    # Tag to push to subrepos
 
   local original_head_commit=   # HEAD commit id at start of command
   local original_head_branch=   # HEAD ref at start of command
@@ -241,6 +247,13 @@ command:push() {
   command-setup +subdir branch
 
   subrepo:push
+  if [[ OK && -n $CODE ]]; then
+    if [[ $CODE -eq -3 ]]; then
+      say "Subrepo '$subdir' tag '$tag' pushed to '$subrepo_remote'."
+      return 0
+    fi
+  fi
+
   if OK; then
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
   elif [[ $CODE -eq -2 ]]; then
@@ -573,7 +586,6 @@ subrepo:pull() {
 subrepo:push() {
   local branch_name="$branch"
   local new_upstream=false
-  local branch_created=false
 
   if [[ -z $branch_name ]]; then
     FAIL=false OUT=false CALL subrepo:fetch
@@ -638,9 +650,13 @@ subrepo:push() {
   new_upstream_head_commit="$(git rev-parse "$branch_name")"
   if ! $new_upstream; then
     if [[ $upstream_head_commit == $new_upstream_head_commit ]]; then
-      OK=false
-      CODE=-2
-      return
+      if [[ -z $tag || $tagrefresh_wanted == false ]]; then
+        CODE=-2
+        OK=false
+        return
+      else
+        CODE=-3
+      fi
     fi
   fi
 
@@ -652,25 +668,34 @@ subrepo:push() {
     fi
   fi
 
+  local tags=''
+  if [[ -n $tag ]]; then
+    tags=' --tags'
+    git:check-worktree "$branch_name" && git:create-worktree "$branch_name"
+    cd "$worktree";
+    CALL subrepo:tag-head "$tag"
+    cd "$start_pwd";
+  fi
+
   local force=''
   "$force_wanted" && force=' --force'
 
   o "Push$force branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push$force "$subrepo_remote" "$branch_name":"$subrepo_branch"
+  RUN git push$force$tags "$subrepo_remote" "$branch_name":"$subrepo_branch"
+
+  if [[ -n $tag ]]; then
+    git:delete-tag "$tag"
+  fi
 
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
-
-  if $branch_created; then
-    o "Remove branch '$branch_name'."
-    git:delete-branch "$branch_name"
-  fi
 
   o "Put updates into '$subdir/.gitrepo' file."
   upstream_head_commit="$new_upstream_head_commit"
   subrepo_commit_ref="$upstream_head_commit"
   update-gitrepo-file
   RUN git commit -m "$(get-commit-message)"
+
 }
 
 # Fetch the subrepo's remote branch content:
@@ -694,8 +719,8 @@ subrepo:fetch() {
 # Create a subrepo branch containing all changes
 subrepo:branch() {
   local branch="${1:-"subrepo/$subref"}"
-  o "Check if the '$branch' branch already exists."
-  git:branch-exists "$branch" && return
+  o "Check if the '$branch' branch already exists with its associated worktree."
+  git:branch-exists "$branch" && git:check-worktree "$branch" && return
 
   local last_gitrepo_commit=
   local first_gitrepo_commit=
@@ -804,6 +829,17 @@ subrepo:branch() {
 
   o "Create ref '$refs_subrepo_branch'."
   git:make-ref "$refs_subrepo_branch" "$branch"
+}
+
+# Apply a tag to the head of a merged subrepo branch:
+subrepo:tag-head() {
+  o "Check that tag '$tag' does not already exist."
+  if (git --no-pager tag | grep -x "$tag"); then
+    error "Tag '$tag' already exists."
+  fi
+
+  o "Tag '$tag' to HEAD"
+  RUN git tag "$tag"
 }
 
 # Commit a merged subrepo branch:
@@ -1017,13 +1053,14 @@ get-command-options() {
           shift;;
       -M) join_method="$1"
           shift;;
-      -M) join_method="$1"
-          shift;;
       -r) subrepo_remote="$1"
           override_remote="$1"
           commit_msg_args+=("--remote=$1")
           shift ;;
       -s) squash_wanted=true ;;
+      -t) tag="$1"
+          shift ;;
+      -T) tagrefresh_wanted=true ;;
       -u) update_wanted=true
           commit_msg_args+=("--update") ;;
       -q) quiet_wanted=true ;;
@@ -1052,7 +1089,7 @@ get-command-options() {
   fi
   commit_msg_args+=("${command_arguments[@]}")
 
-  for option in all ALL edit fetch force squash; do
+  for option in all ALL edit fetch force tagrefresh squash; do
     var="${option}_wanted"
     if ${!var}; then
       check_option $option
@@ -1064,6 +1101,9 @@ get-command-options() {
   fi
   if [[ -n $override_remote ]]; then
     check_option remote
+  fi
+  if [[ -n $tag ]]; then
+    check_option tag
   fi
   if [[ -n $wanted_commit_message ]]; then
     check_option message
@@ -1085,7 +1125,7 @@ options_commit='edit fetch force message'
 options_fetch='all branch remote'
 options_init='branch remote method'
 options_pull='all branch edit force message remote update'
-options_push='all branch force remote squash update'
+options_push='all branch force remote squash tag tagrefresh update'
 options_status='ALL all fetch'
 check_option() {
   local var="options_${command//-/_}"
@@ -1765,9 +1805,17 @@ git:is_merge_commit() {
   git show --summary "$commit" | grep -q ^Merge:
 }
 
+git:check-worktree() {
+  local branch="$1"
+  worktree="$GIT_TMP/$branch"
+  o "Check worktree '$worktree' existence."
+  RUN git worktree list --porcelain|grep "$worktree" > /dev/null
+}
+
 git:create-worktree() {
   local branch="$1"
   worktree="$GIT_TMP/$branch"
+  o "Create worktree '$worktree' pointing to branch '$branch'"
   RUN git worktree add "$worktree" "$branch"
 }
 
@@ -1787,12 +1835,17 @@ git:remove-worktree() {
 
 git:delete-branch() {
   local branch="$1"
+  worktree="$GIT_TMP/$branch"
   o "Deleting old '$branch' branch."
   # Remove worktree first, otherwise you can't delete the branch
   git:remove-worktree
   FAIL=false RUN git branch -D "$branch"
 }
 
+git:delete-tag() {
+  local tag="$1"
+  RUN git tag -d "$tag"
+}
 
 #------------------------------------------------------------------------------
 # Low level sugar commands:

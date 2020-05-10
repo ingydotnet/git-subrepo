@@ -188,7 +188,7 @@ the same arguments. Keep reading…
   The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
   `--message=`, `--remote=` and `--update` options.
 
-- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]`
+- `git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N] [-t] [-T]`
 
   Push a properly merged subrepo branch back upstream.
 
@@ -212,8 +212,16 @@ the same arguments. Keep reading…
   discouraged. Only use this option if you fully understand it. (The `--force`
   option will NOT check for a proper merge. ANY branch will be force pushed!)
 
+  The `--tag` option will apply a given (non-annotated) tag to the specified
+  subrepos' upstream HEAD, provided that they were staged for changes, leaving
+  the parent repository unchanged.
+
+  The `--tag-refresh` will apply the given tag (with `--tag`) to all specified
+  subrepos' upstream HEAD even if they were not staged for changes.
+
   The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
-  `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
+  `--merge`, `--rebase`, `--remote=`, `--squash`, `--tag`, `--tag-refresh` and
+  `--update` options.
 
 - `git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>]`
 
