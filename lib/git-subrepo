@@ -1813,22 +1813,15 @@ RUN() {
   if $debug_wanted && $TTY && interactive; then
     "$@"
   else
-    if $OUT; then
-      out="$("$@")"
-    else
-      "$@"
-    fi
+    # FIXME: output is actually used even if OUT=false
+    out="$("$@")"
   fi
   rc=$?
   set -e
 
   if [[ $rc -ne 0 ]]; then
     OK=false
-    if $OUT; then
-      $FAIL && error "Command failed: '$*'.\n$out"
-    else
-      $FAIL && error "Command failed: '$*'."
-    fi
+    $FAIL && error "Command failed: '$*'.\n$out"
   fi
   output="$out"
 }
