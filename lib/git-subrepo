@@ -680,7 +680,7 @@ subrepo:fetch() {
   fi
 
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
-  RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch"
+  RUN git fetch --no-tags "$subrepo_remote" "$subrepo_branch"
   OK || return
 
   o "Get the upstream subrepo HEAD commit."
@@ -1814,9 +1814,9 @@ RUN() {
     "$@"
   else
     if $OUT; then
-      out="$("$@" 2>/dev/null)"
+      out="$("$@")"
     else
-      out="$("$@" 2>&1)"
+      "$@"
     fi
   fi
   rc=$?
@@ -1824,7 +1824,11 @@ RUN() {
 
   if [[ $rc -ne 0 ]]; then
     OK=false
-    $FAIL && error "Command failed: '$*'.\n$out"
+    if $OUT; then
+      $FAIL && error "Command failed: '$*'.\n$out"
+    else
+      $FAIL && error "Command failed: '$*'."
+    fi
   fi
   output="$out"
 }
