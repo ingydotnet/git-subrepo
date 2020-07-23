@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
+# Set this locally for Windows:
+git config core.autocrlf input
+
 set -e
 
 # Set the GIT_SUBREPO_ROOT for testing.
 source $PWD/.rc
-
-# Set this locally for Windows:
-git config core.autocrlf input
 
 export BASHLIB="`
   find $PWD -type d |
