@@ -180,12 +180,15 @@ main() {
 #------------------------------------------------------------------------------
 
 command:reset() {
-  command-setup +subdir
+  command-setup +subdir forced_commit
 
   local reclone_up_to_date=false
-  force_wanted=true
-  subrepo:clone
+  local force_wanted=true
+  if [ -n "$forced_commit" ]; then
+    forced_commit="$(git rev-parse "$forced_commit")"
+  fi
 
+  subrepo:clone
   say "Subrepo '$subdir' reset to '$subrepo_remote' ($subrepo_branch)."
 }
 
@@ -481,6 +484,9 @@ subrepo:clone() {
   if $force_wanted; then
     o "--force indicates a reclone."
     CALL subrepo:fetch
+    if [ -n "$forced_commit" ]; then
+        upstream_head_commit=$forced_commit
+    fi
     read-gitrepo-file
     o "Check if we already are up to date."
     if [[ $upstream_head_commit == $subrepo_commit ]]; then
