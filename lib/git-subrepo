@@ -37,6 +37,7 @@ git subrepo <command> <arguments> <options>
 Commands:
   clone     Clone a remote repository into a local subdirectory
   init      Turn a current subdirectory into a subrepo
+  reset     Reset subrepo performing a forced reclone
   pull      Pull upstream changes to the subrepo
   push      Push local subrepo changes upstream
 
@@ -177,6 +178,16 @@ main() {
 # subrepo:* worker functions are meant to be called internally and don't print
 # info to the user.
 #------------------------------------------------------------------------------
+
+command:reset() {
+  command-setup +subdir
+
+  local reclone_up_to_date=false
+  force_wanted=true
+  subrepo:clone
+
+  say "Subrepo '$subdir' reset to '$subrepo_remote' ($subrepo_branch)."
+}
 
 # `git subrepo clone <url> [<subdir>]` command:
 command:clone() {
@@ -1077,6 +1088,7 @@ get-command-options() {
 }
 
 options_help='all'
+options_reset='branch remote'
 options_branch='all fetch force'
 options_clean='ALL all force'
 options_clone='branch edit force message method'
