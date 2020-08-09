@@ -799,8 +799,8 @@ subrepo:branch() {
   o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
   local filter="$branch"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
-  FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
-    "rm -f .gitrepo" "$filter"
+  FAIL=false RUN git filter-branch -f --prune-empty --index-filter \
+    "git rm --cached --ignore-unmatch .gitrepo" "$filter"
 
   git:create-worktree "$branch"
 
