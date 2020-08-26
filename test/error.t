@@ -162,7 +162,7 @@ clone-foo-and-bar
       cd $OWNER/bar
       catch git subrepo clone dummy-repo
     )" \
-    "git-subrepo: Command failed: 'git ls-remote dummy-repo'." \
+    "git-subrepo: Command failed: 'git ls-remote --symref dummy-repo'." \
     "Error OK: clone non-repo"
 }
 
