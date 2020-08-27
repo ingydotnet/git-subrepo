@@ -6,13 +6,13 @@ git config core.autocrlf input
 set -e
 
 # Set the GIT_SUBREPO_ROOT for testing.
-source $PWD/.rc
+source "$PWD"/.rc
 
-export BASHLIB="`
-  find $PWD -type d |
-  grep -E '/(bin|lib)$' |
-  xargs -n1 printf "%s:"
-`"
+BASHLIB="$(
+  find "$PWD"/ -type d -name bin -o -type d -name lib | tr '\n' ':'
+)"
+export BASHLIB
+
 export PATH="$BASHLIB:$PATH"
 source bash+ :std
 
@@ -64,7 +64,7 @@ subrepo-clone-bar-into-foo() {
 
 add-new-files() {
   local file
-  for file in $*; do
+  for file in "$@"; do
     echo "new file $file" > "$file"
     git add "$file"
   done
@@ -73,7 +73,7 @@ add-new-files() {
 
 remove-files() {
   local file
-  for file in $*; do
+  for file in "$@"; do
     git rm "$file"
   done
   git commit --quiet -m "Removed file: $file" &> /dev/null
@@ -81,7 +81,7 @@ remove-files() {
 
 modify-files() {
   local file
-  for file in $*; do
+  for file in "$@"; do
     echo 'a new line' >> "$file"
     git add "$file"
   done
@@ -90,7 +90,7 @@ modify-files() {
 
 modify-files-ex() {
   local file
-  for file in $*; do
+  for file in "$@"; do
     echo "$file" >> "$file"
     git add "$file"
   done
@@ -102,18 +102,18 @@ test-exists() {
     if [[ $f =~ ^! ]]; then
       f="${f#!}"
       if [[ $f =~ /$ ]]; then
-        ok "`[ ! -d "$f" ]`" \
+        ok "$([ ! -d "$f" ])" \
           "Directory '$f' does not exist"
       else
-        ok "`[ ! -f "$f" ]`" \
+        ok "$([ ! -f "$f" ])" \
           "File '$f' does not exist"
       fi
     else
       if [[ $f =~ /$ ]]; then
-        ok "`[ -d "$f" ]`" \
+        ok "$([ -d "$f" ])" \
           "Directory '$f' exists"
       else
-        ok "`[ -f "$f" ]`" \
+        ok "$([ -f "$f" ])" \
           "File '$f' exists"
       fi
     fi
@@ -121,22 +121,22 @@ test-exists() {
 }
 
 test-exists-in-index() {
-  for f in $*; do
+  for f in "$@"; do
     if [[ "$f" =~ ^! ]]; then
       f="${f#!}"
       if [[ "$f" =~ /$ ]]; then
-        ok "`[ ! $(git ls-tree --full-tree --name-only -r HEAD "$f") ]`" \
+        ok "$([ ! "$(git ls-tree --full-tree --name-only -r HEAD "$f")" ])" \
           "Directory '$f' does not exist in index"
       else
-        ok "`[ ! $(git ls-tree --full-tree --name-only -r HEAD "$f") ]`" \
+        ok "$([ ! "$(git ls-tree --full-tree --name-only -r HEAD "$f")" ])" \
           "File '$f' does not exist in index"
       fi
     else
       if [[ "$f" =~ /$ ]]; then
-        ok "`[ $(git ls-tree --full-tree --name-only -r HEAD "$f") ]`" \
+        ok "$([ "$(git ls-tree --full-tree --name-only -r HEAD "$f")" ])" \
           "Directory '$f' exists in index"
       else
-        ok "`[ $(git ls-tree --full-tree --name-only -r HEAD "$f") ]`" \
+        ok "$([ "$(git ls-tree --full-tree --name-only -r HEAD "$f")" ])" \
           "File '$f' exists in index"
       fi
     fi
@@ -144,7 +144,7 @@ test-exists-in-index() {
 }
 
 test-gitrepo-comment-block() {
-  is "$(grep -E '^;' $gitrepo)" "\
+  is "$(grep -E '^;' "$gitrepo")" "\
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git \"subrepo\", and this file is maintained by the
@@ -154,29 +154,29 @@ test-gitrepo-comment-block() {
 }
 
 test-gitrepo-field() {
-  is "`git config -f $gitrepo subrepo.$1`" \
+  is "$(git config -f "$gitrepo" subrepo."$1")" \
     "$2" \
     ".gitrepo $1 is correct"
 }
 
 test-commit-count() {
-  is "`cd $1; git rev-list --count $2`" \
+  is "$(cd "$1"; git rev-list --count "$2")" \
     "$3" \
     "commit count is correct"
 }
 
 save-original-state() {
-  original_head_ref="$(cd $1; cat .git/HEAD)"
+  original_head_ref="$(cd "$1"; cat .git/HEAD)"
   original_branch="${original_head_ref#ref: refs/heads/}"
-  original_head_commit="$(cd $1; git rev-parse HEAD)"
-  original_gitrepo="$(cd $1; cat $2/.gitrepo)"
+  original_head_commit="$(cd "$1"; git rev-parse HEAD)"
+  original_gitrepo="$(cd "$1"; cat "$2"/.gitrepo)"
 }
 
 assert-original-state() {
-  current_head_ref="$(cd $1; cat .git/HEAD)"
+  current_head_ref="$(cd "$1"; cat .git/HEAD)"
   current_branch="${current_head_ref#ref: refs/heads/}"
-  current_head_commit="$(cd $1; git rev-parse HEAD)"
-  current_gitrepo="$(cd $1; cat $2/.gitrepo)"
+  current_head_commit="$(cd "$1"; git rev-parse HEAD)"
+  current_gitrepo="$(cd "$1"; cat "$2"/.gitrepo)"
 
   is "$current_head_ref" \
     "$original_head_ref" \
