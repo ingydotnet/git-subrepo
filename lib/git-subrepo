@@ -788,6 +788,7 @@ subrepo:branch() {
     if [[ -z "$prev_commit" ]]; then # i.e. there are no new reachable commits
       o "Create branch '$branch' for subrepo commit $subrepo_commit."
       prev_commit="$subrepo_commit"
+      first_gitrepo_commit="$subrepo_commit" # force neutralization of $filter to avoid unnecessary large range (see below)
     else
       o "Create branch '$branch' for this new commit set $prev_commit."
     fi
