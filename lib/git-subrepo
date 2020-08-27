@@ -640,9 +640,14 @@ subrepo:push() {
   new_upstream_head_commit="$(git rev-parse "$branch_name")"
   if ! $new_upstream; then
     if [[ $upstream_head_commit == $new_upstream_head_commit ]]; then
-      OK=false
-      CODE=-2
-      return
+      # We must make sure that branch and worktree are removed (as they would
+      # later below, if there were any changes) to avoid having a stale worktree
+      # on further calls
+      if $branch_created; then
+        o "Remove branch '$branch_name'."
+        git:delete-branch "$branch_name"
+      fi
+      OK=false; CODE=-2; return
     fi
   fi
 
