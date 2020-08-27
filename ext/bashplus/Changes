@@ -1,4 +1,9 @@
 ---
+version: 0.0.8
+date:    Fri Aug 21 08:00:45 PDT 2020
+changes:
+- Support paths with spaces @admorgan++
+---
 version: 0.0.7
 date:    Sat Jan 23 16:28:59 PST 2016
 changes:

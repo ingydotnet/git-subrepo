@@ -7,6 +7,6 @@ source bash+ :std
 
 ok $? '`source bash+` works'
 
-is "$BASHPLUS_VERSION" '0.0.7' 'BASHPLUS_VERSION is 0.0.7'
+is "$BASHPLUS_VERSION" '0.0.8' 'BASHPLUS_VERSION is 0.0.8'
 
 done_testing 2

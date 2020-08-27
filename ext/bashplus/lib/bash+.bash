@@ -1,6 +1,6 @@
 # bash+ - Modern Bash Programming
 #
-# Copyright (c) 2013-2016 Ingy döt Net
+# Copyright (c) 2013-2020 Ingy döt Net
 
 {
   bash+:version-check() {
@@ -17,7 +17,7 @@ set -e
 
 [ -z "$BASHPLUS_VERSION" ] || return 0
 
-BASHPLUS_VERSION='0.0.7'
+BASHPLUS_VERSION='0.0.8'
 
 @() { echo "$@"; }
 bash+:export:std() { @ use die warn; }
@@ -63,9 +63,9 @@ bash+:findlib() {
   local library_name=; library_name="$(tr 'A-Z' 'a-z' <<< "${1//:://}").bash"
   local lib="${BASHPLUSLIB:-${BASHLIB:-$PATH}}"
   library_name="${library_name//+/\\+}"
-  find ${lib//:/ } -name ${library_name##*/} 2>/dev/null |
+  ( IFS=':'; find $lib -name ${library_name##*/} 2>/dev/null |
     grep -E "$library_name\$" |
-    head -n1
+    head -n1 )
 }
 
 bash+:die() {
