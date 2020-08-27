@@ -616,6 +616,8 @@ subrepo:push() {
     fi
 
     branch_name=subrepo/$subref
+    # We must make sure that a stale worktree is removed as well
+    worktree=$GIT_TMP/$branch_name
     git:delete-branch "$branch_name"
 
     if $squash_wanted; then
