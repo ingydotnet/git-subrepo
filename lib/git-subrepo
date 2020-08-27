@@ -1542,8 +1542,8 @@ add-subrepo() {
 # Determine the upstream's default head branch:
 get-upstream-head-branch() {
   local remotes branch
-  OUT=true RUN git ls-remote --symref $subrepo_remote
-  remotes="$output"
+  OUT=true RUN git ls-remote --symref "$subrepo_remote"
+  remotes=$output
   [[ -n $remotes ]] ||
     error "Failed to 'git ls-remote --symref $subrepo_remote'."
 
@@ -1553,7 +1553,7 @@ get-upstream-head-branch() {
     grep "^ref:" | grep 'HEAD$' | cut -f2 -d':' | cut -f1 |
     head -n1
   )"
-  branch="${branch/ }"
+  branch=${branch/ }
   [[ $branch =~ refs/heads/ ]] ||
     error "Problem finding remote default head branch."
   output="${branch#refs/heads/}"
