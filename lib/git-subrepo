@@ -656,6 +656,10 @@ subrepo:push() {
   new_upstream_head_commit=$(git rev-parse "$branch_name")
   if ! $new_upstream; then
     if [[ $upstream_head_commit == "$new_upstream_head_commit" ]]; then
+      if $branch_created; then
+        o "Remove branch '$branch_name'."
+        git:delete-branch "$branch_name"
+      fi
       OK=false
       CODE=-2
       return
