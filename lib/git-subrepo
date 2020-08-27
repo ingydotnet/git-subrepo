@@ -785,7 +785,12 @@ subrepo:branch() {
       fi
     done
 
-    o "Create branch '$branch' for this new commit set $prev_commit."
+    if [[ -z "$prev_commit" ]]; then # i.e. there are no new reachable commits
+      o "Create branch '$branch' for subrepo commit $subrepo_commit."
+      prev_commit="$subrepo_commit"
+    else
+      o "Create branch '$branch' for this new commit set $prev_commit."
+    fi
     RUN git branch "$branch" "$prev_commit"
   else
     o "No parent setting, use the subdir content."
