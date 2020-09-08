@@ -3,7 +3,7 @@
 source test/setup
 use Test::More
 
-plan tests 5
+plan tests 6
 
 pass 'This test always passes'
 
@@ -18,3 +18,8 @@ ok "`[[ ! team =~ I ]]`" "There's no I in team"
 # diag "A msg for stderr"
 
 note "A msg for stdout"
+
+expected=(line1 line2)
+
+command_output=(line1 line2 )
+cmp-array command_output expected "command output more"

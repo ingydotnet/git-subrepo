@@ -1,4 +1,10 @@
 ---
+version: 0.0.4
+date:    Fri Sep  4 12:21:30 PDT 2020
+changes:
+- Make up to date
+- Apply a few PRs
+---
 version: 0.0.3
 date:    Sat Jan 23 16:39:20 PST 2016
 changes:
