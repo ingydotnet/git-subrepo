@@ -24,7 +24,7 @@ subrepo-clone-bar-into-foo
     cd $OWNER/foo
     git subrepo fetch bar
   )" \
-    "Fetched 'bar' from '../../../tmp/upstream/bar' (master)." \
+    "Fetched 'bar' from '$UPSTREAM/bar' (master)." \
     'subrepo fetch command output is correct'
 }
 

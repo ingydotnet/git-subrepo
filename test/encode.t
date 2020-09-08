@@ -6,7 +6,6 @@ source test/setup
 
 use Test::More
 
-
 export round=0
 test_round() {
   clone-foo-and-bar
@@ -19,12 +18,12 @@ test_round() {
 
   clone_output="$(
     cd $OWNER/foo
-    git subrepo clone ../../../$UPSTREAM/bar -- "$normalize_dir"
+    git subrepo clone $UPSTREAM/bar -- "$normalize_dir"
   )"
 
   # Check output is correct:
   is "$clone_output" \
-    "Subrepo '../../../tmp/upstream/bar' (master) cloned into '$normalize_dir'." \
+    "Subrepo '$UPSTREAM/bar' (master) cloned into '$normalize_dir'." \
     'subrepo clone command output is correct'
 
   test-exists "$OWNER/foo/$normalize_dir/"
@@ -42,7 +41,7 @@ test_round() {
        cd $OWNER/foo
        git subrepo pull -- "$normalize_dir"
        )" \
-       "Subrepo '$normalize_dir' pulled from '../../../tmp/upstream/bar' (master)." \
+       "Subrepo '$normalize_dir' pulled from '$UPSTREAM/bar' (master)." \
        'subrepo pull command output is correct'
   }
 
@@ -61,7 +60,7 @@ test_round() {
        cd $OWNER/foo
        git subrepo push -- "$normalize_dir"
        )" \
-       "Subrepo '$normalize_dir' pushed to '../../../tmp/upstream/bar' (master)." \
+       "Subrepo '$normalize_dir' pushed to '$UPSTREAM/bar' (master)." \
        'subrepo push command output is correct'
   }
 }
@@ -85,6 +84,7 @@ test_round '_under_scores_'
 
 test_round '.str%a\nge...'
 test_round '~////......s:a^t?r a*n[g@{e.lock'
+
 
 done_testing
 

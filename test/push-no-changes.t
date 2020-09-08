@@ -13,7 +13,7 @@ clone-foo-and-bar
 {
   is "$(
     cd $OWNER/bar
-    git subrepo --quiet clone ../../../$UPSTREAM/foo
+    git subrepo --quiet clone $UPSTREAM/foo
     catch git subrepo push foo
   )" \
     "Subrepo 'foo' has no new commits to push." \

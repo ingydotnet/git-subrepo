@@ -28,12 +28,12 @@ clone-foo-and-bar
 {
   clone_output="$(
     cd $OWNER/foo
-    git subrepo clone ../../../$UPSTREAM/bar
+    git subrepo clone $UPSTREAM/bar
   )"
 
   # Check output is correct:
   is "$clone_output" \
-    "Subrepo '../../../tmp/upstream/bar' (master) cloned into 'bar'." \
+    "Subrepo '$UPSTREAM/bar' (master) cloned into 'bar'." \
     'subrepo clone command output is correct'
 
   remote_output="$(
@@ -50,7 +50,7 @@ clone-foo-and-bar
 
   clone_output_empty="$(
     cd $OWNER/empty
-    catch git subrepo clone ../../../$UPSTREAM/bar
+    catch git subrepo clone $UPSTREAM/bar
   )"
 
   # Check output is correct:
@@ -74,7 +74,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   foo_clone_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
   test-gitrepo-comment-block
-  test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
+  test-gitrepo-field "remote" "$UPSTREAM/bar"
   test-gitrepo-field "branch" "master"
   test-gitrepo-field "commit" "$bar_head_commit"
   test-gitrepo-field "parent" "$foo_clone_commit"

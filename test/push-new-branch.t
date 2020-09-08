@@ -14,7 +14,7 @@ clone-foo-and-bar
   cd $OWNER/foo
 
   # Clone the subrepo into a subdir
-  git subrepo clone ../../../$UPSTREAM/bar
+  git subrepo clone $UPSTREAM/bar
 
   # Make a commit:
   add-new-files bar/FooBar
@@ -29,7 +29,7 @@ clone-foo-and-bar
 
   # Test the output:
   is "$message" \
-    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (newbar)." \
+    "Subrepo 'bar' pushed to '$UPSTREAM/bar' (newbar)." \
     'First push message is correct '
 }
 
