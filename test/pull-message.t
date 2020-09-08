@@ -23,7 +23,7 @@ subrepo-clone-bar-into-foo
     cd $OWNER/foo
     git subrepo pull -m 'Hello World' bar
   )" \
-    "Subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)." \
+    "Subrepo 'bar' pulled from '$UPSTREAM/bar' (master)." \
     'subrepo pull command output is correct'
 }
 
@@ -47,7 +47,7 @@ subrepo-clone-bar-into-foo
     cd $OWNER/foo
     GIT_EDITOR='echo cowabunga >' git subrepo pull -e bar
   )" \
-    "Subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)." \
+    "Subrepo 'bar' pulled from '$UPSTREAM/bar' (master)." \
     'subrepo pull command output is correct'
 }
 
@@ -71,7 +71,7 @@ subrepo-clone-bar-into-foo
     cd $OWNER/foo
     GIT_EDITOR=true git subrepo pull -e -m original bar
   )" \
-    "Subrepo 'bar' pulled from '../../../tmp/upstream/bar' (master)." \
+    "Subrepo 'bar' pulled from '$UPSTREAM/bar' (master)." \
     'subrepo pull command output is correct'
 }
 

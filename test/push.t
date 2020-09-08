@@ -16,7 +16,7 @@ clone-foo-and-bar
   cd $OWNER/foo
 
   # Clone the subrepo into a subdir
-  git subrepo clone ../../../$UPSTREAM/bar
+  git subrepo clone $UPSTREAM/bar
 
   # Make a series of commits:
   add-new-files bar/FooBar
@@ -44,7 +44,7 @@ clone-foo-and-bar
 
   # Test the output:
   is "$message" \
-    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)." \
+    "Subrepo 'bar' pushed to '$UPSTREAM/bar' (master)." \
     'push message is correct'
 }
 
@@ -83,7 +83,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 {
   foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
   bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
-  test-gitrepo-field "remote" "../../../$UPSTREAM/bar"
+  test-gitrepo-field "remote" "$UPSTREAM/bar"
   test-gitrepo-field "branch" "master"
   test-gitrepo-field "commit" "$bar_head_commit"
   test-gitrepo-field "parent" "$foo_pull_commit"
@@ -105,7 +105,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
   # Test the output:
   is "$message" \
-    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)." \
+    "Subrepo 'bar' pushed to '$UPSTREAM/bar' (master)." \
     'push message is correct'
 }
 
@@ -140,7 +140,7 @@ test-exists \
 
   # Test the output:
   is "$message" \
-    "Subrepo 'bar' pushed to '../../../tmp/upstream/bar' (master)." \
+    "Subrepo 'bar' pushed to '$UPSTREAM/bar' (master)." \
     'Seqential pushes are correct'
 }
 

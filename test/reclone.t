@@ -10,7 +10,7 @@ clone-foo-and-bar
 
 (
   cd $OWNER/foo
-  git subrepo --quiet clone ../../../$UPSTREAM/bar
+  git subrepo --quiet clone $UPSTREAM/bar
 )
 
 test-exists \
@@ -19,14 +19,14 @@ test-exists \
 export XYZ=1
 is "$(
   cd $OWNER/foo
-  git subrepo --force clone ../../../$UPSTREAM/bar
+  git subrepo --force clone $UPSTREAM/bar
 )" \
   "Subrepo 'bar' is up to date." \
   "No reclone if same commit"
 
 (
   cd $OWNER/foo
-  git subrepo --quiet clone --force ../../../$UPSTREAM/bar --branch=refs/tags/A
+  git subrepo --quiet clone --force $UPSTREAM/bar --branch=refs/tags/A
 )
 
 test-exists \
@@ -34,7 +34,7 @@ test-exists \
 
 (
   cd $OWNER/foo
-  git subrepo --quiet clone -f ../../../$UPSTREAM/bar --branch=master
+  git subrepo --quiet clone -f $UPSTREAM/bar --branch=master
 )
 
 test-exists \
