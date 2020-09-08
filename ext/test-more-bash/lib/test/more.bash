@@ -1,10 +1,10 @@
 # test/more.bash - Complete TAP test framework for Bash
 #
-# Copyright (c) 2013-2016. Ingy döt Net.
+# Copyright (c) 2013-2020. Ingy döt Net.
 
 set -e
 
-Test__More_VERSION=0.0.3
+Test__More_VERSION=0.0.4
 
 source bash+ :std
 use Test::Tap
@@ -32,10 +32,10 @@ is() {
 Test::More:is-fail() {
   local Test__Tap_CALL_STACK_LEVEL=
   Test__Tap_CALL_STACK_LEVEL=$(( Test__Tap_CALL_STACK_LEVEL + 1 ))
-  if [[ "$want" =~ \n ]]; then
+  if [[ $want =~ $'\n' ]]; then
     echo "$got" > /tmp/got-$$
     echo "$want" > /tmp/want-$$
-    diff -u /tmp/{want,got}-$$ >&2
+    diff -u /tmp/{want,got}-$$ >&2 || true
     wc /tmp/{want,got}-$$ >&2
     rm -f /tmp/{got,want}-$$
   else
@@ -92,4 +92,15 @@ unlike() {
 
 Test::More:unlike-fail() {
     Test::Tap:diag "Got: '$got'"
+}
+
+cmp-array() {
+    local arrayname="$1[@]"
+    local expname="$2[@]"
+    local label="$3"
+
+    local array=(${!arrayname})
+    local expected=(${!expname})
+
+    is "$(printf "%s\n" "${array[@]}")" "$(printf "%s\n" "${expected[@]}")" "$label"
 }

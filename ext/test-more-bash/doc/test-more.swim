@@ -46,6 +46,10 @@ Write a test file like this. Maybe call it `test/test.t`:
 
   note "A message for stdout"
 
+  output=( $(ls) )
+  expected=(README lib bin)
+  cmp-array output expected "list files"
+
 Run the test with `prove` like this:
 
   prove test/test.t
@@ -75,15 +79,16 @@ This is the basic usage:
 * `done_testing $count`
 * `plan skip_all "$reason"`
 * `BAIL_OUT "$reason"`
+* `cmp-array output expected "message"
 
 More detailed info coming soon.
 
 = Author
 
-Ingy döt Net <ingy@bpan.org>
+Ingy döt Net <ingy@ingy.net>
 
 = Copyright & License
 
-Copyright 2013-2016. Ingy döt Net.
+Copyright 2013-2020. Ingy döt Net.
 
 The MIT License (MIT)

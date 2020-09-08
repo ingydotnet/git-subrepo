@@ -12,9 +12,23 @@ like "$output" 'not ok 2' \
   'fail with no label'
 like "$output" 'not ok 3 - is foo bar' \
   'fail output is correct'
+like "$output" 'not ok 4 - command output more' \
+  'fail output is correct'
+like "$output" 'not ok 5 - command output less' \
+  'fail output is correct'
+like "$output" 'not ok 6 - command output diff' \
+  'fail output is correct'
 like "$output" "#     got: 'foo'" \
   'difference reporting - got'
 like "$output" "#   expected: 'bar'" \
   'difference reporting - want'
 
-done_testing 5
+like "$output" "line2. *\+line3." \
+  'array comparison (more)'
+like "$output" "line1. *-line2." \
+  'array comparison (less)'
+like "$output" "-line2.*\+foo" \
+  'array comparison (diff)'
+
+
+done_testing 11
