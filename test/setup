@@ -8,6 +8,9 @@ set -e
 # Set the GIT_SUBREPO_ROOT for testing.
 source "$PWD"/.rc
 
+# Get the location of this script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 BASHLIB="$(
   find "$PWD"/ -type d -name bin -o -type d -name lib | tr '\n' ':'
 )"
@@ -18,8 +21,7 @@ source bash+ :std
 
 source 'lib/git-subrepo'
 
-# TODO: Move to test/tmp
-export TMP="tmp"
+export TMP="$SCRIPT_DIR/tmp"
 rm -fr $TMP
 
 #export GIT_EXEC_PATH="$PWD/lib:$(git --exec-path)"
@@ -58,7 +60,7 @@ clone-foo-and-bar() {
 subrepo-clone-bar-into-foo() {
   (
     cd $OWNER/foo
-    git subrepo clone ../../../$UPSTREAM/bar
+    git subrepo clone $UPSTREAM/bar
   ) &> /dev/null || die
 }
 

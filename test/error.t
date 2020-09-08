@@ -14,7 +14,7 @@ clone-foo-and-bar
 {
   is "$(
       cd $OWNER/bar
-      git subrepo --quiet clone ../../../$UPSTREAM/foo
+      git subrepo --quiet clone $UPSTREAM/foo
       add-new-files foo/file
       git subrepo --quiet branch foo
       catch git subrepo branch foo
@@ -129,7 +129,7 @@ clone-foo-and-bar
       cd $OWNER/bar
       touch me
       git add me
-      catch git subrepo clone ../../../$UPSTREAM/foo
+      catch git subrepo clone $UPSTREAM/foo
     )" \
     "git-subrepo: Can't clone subrepo. Working tree has changes." \
     "Error OK: check no working tree changes"
