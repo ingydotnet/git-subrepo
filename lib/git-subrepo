@@ -524,6 +524,12 @@ subrepo:init() {
 subrepo:pull() {
   CALL subrepo:fetch
 
+  # If forced pull, then clone instead
+  if $force_wanted; then
+    CALL subrepo:clone
+    return
+  fi
+
   # Check if we already are up to date
   # If the -u flag is present, always perform the operation
   if [[ $upstream_head_commit == $subrepo_commit ]] && ! $update_wanted; then
