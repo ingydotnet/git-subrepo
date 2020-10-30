@@ -40,7 +40,6 @@ skips=(
   SC2219  # Instead of 'let expr', prefer (( expr )) .
   SC2221  # This pattern always overrides a later one on line 1028.
   SC2222  # This pattern never matches because of a previous pattern on line 1026.
-  SC2239  # Ensure the shebang uses an absolute path to the interpreter.
 )
 skip=$(IFS=,; echo "${skips[*]}")
 
