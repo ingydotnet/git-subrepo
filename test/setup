@@ -146,6 +146,7 @@ test-exists-in-index() {
 }
 
 test-gitrepo-comment-block() {
+  # shellcheck disable=2154
   is "$(grep -E '^;' "$gitrepo")" "\
 ; DO NOT EDIT (unless you know what you are doing)
 ;

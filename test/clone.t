@@ -36,11 +36,6 @@ clone-foo-and-bar
     "Subrepo '$UPSTREAM/bar' (master) cloned into 'bar'." \
     'subrepo clone command output is correct'
 
-  remote_output=$(
-    cd "$OWNER/foo"
-    git remote -v
-  )
-
   is "$(
     cd "$OWNER/foo"
     git remote -v | grep subrepo/bar

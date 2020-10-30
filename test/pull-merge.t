@@ -18,6 +18,7 @@ note "Pull - Conflict - Merge ours/theirs - Push"
   git push
 ) &> /dev/null || die
 
+# shellcheck disable=2034
 gitrepo=$OWNER/foo/bar/.gitrepo
 # Test foo/bar/.gitrepo file contents:
 {

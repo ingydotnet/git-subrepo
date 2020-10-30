@@ -35,7 +35,6 @@ is "$output" "Subrepo created from 'doc' (with no remote)." \
 
 # Test init/doc/.gitrepo file contents:
 {
-  init_clone_commit=$(cd "$OWNER/init"; git rev-parse HEAD^)
   test-gitrepo-comment-block
   test-gitrepo-field "remote" "none"
   test-gitrepo-field "branch" "master"

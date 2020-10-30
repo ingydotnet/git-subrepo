@@ -79,6 +79,7 @@ clone-foo-and-bar
 test-commit-count "$OWNER/bar" HEAD 7
 
 # Test foo/bar/.gitrepo file contents:
+# shellcheck disable=2034
 gitrepo=$OWNER/foo/bar/.gitrepo
 {
   foo_pull_commit=$(cd "$OWNER/foo"; git rev-parse HEAD^)
