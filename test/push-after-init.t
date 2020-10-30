@@ -29,6 +29,7 @@ is "$output" "Subrepo 'doc' pushed to '../upstream' (master)." \
   'Command output is correct'
 
 # Test init/doc/.gitrepo file contents:
+# shellcheck disable=2034
 gitrepo=$OWNER/init/doc/.gitrepo
 {
   test-gitrepo-field "remote" "../upstream"

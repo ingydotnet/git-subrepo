@@ -15,6 +15,7 @@ subrepo-clone-bar-into-foo
 ) &> /dev/null || die
 
 # Test subrepo file content:
+# shellcheck disable=2034
 gitrepo=$OWNER/foo/bar/.gitrepo
 
 {

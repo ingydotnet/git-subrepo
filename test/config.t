@@ -8,6 +8,7 @@ use Test::More
 
 git clone "$UPSTREAM/init" "$OWNER/init" &>/dev/null
 
+# shellcheck disable=2034
 gitrepo=$OWNER/init/doc/.gitrepo
 
 (

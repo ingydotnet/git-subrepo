@@ -4,6 +4,7 @@
 # Copyright 2013-2020 - Ingy döt Net <ingy@ingy.net>
 #
 
+# shellcheck disable=1090,1091,2034
 
 # Exit on any errors:
 set -e
@@ -352,6 +353,7 @@ command:clean() {
 # Wrap git config $gitrepo
 command:config() {
   command-setup +subdir +config_option config_value
+  # shellcheck disable=2154
   o "Update '$subdir' configuration with $config_option=$config_value"
 
   if [[ ! $config_option =~ ^(branch|cmdver|commit|method|remote|version)$ ]]; then
@@ -1888,8 +1890,7 @@ usage-error() {
 
 # Nicely report common error messages:
 error() {
-  local msg="git-subrepo: $1" usage=
-  echo -e "$msg" >&2
+  echo -e "git-subrepo: $1" >&2
   exit 1
 }
 
