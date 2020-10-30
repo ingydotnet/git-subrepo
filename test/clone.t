@@ -78,7 +78,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   test-gitrepo-field "branch" "master"
   test-gitrepo-field "commit" "$bar_head_commit"
   test-gitrepo-field "parent" "$foo_clone_commit"
-  test-gitrepo-field "cmdver" "`git subrepo --version`"
+  test-gitrepo-field "cmdver" "$(git subrepo --version)"
 }
 
 # Make sure status is clean:

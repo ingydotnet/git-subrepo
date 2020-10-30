@@ -64,7 +64,7 @@ msg_main1="main1 initial add to subrepo"
   git subrepo push share
 ) &> /dev/null
 
-ok "`! git:branch-exists "subrepo-push/share"`" \
+ok "$(! git:branch-exists "subrepo-push/share")" \
   "The subrepo-push/share branch was deleted after push"
 
 # TODO Check the state of refs made
