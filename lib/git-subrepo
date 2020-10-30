@@ -459,8 +459,6 @@ If you used 'make install' to install git-subrepo, then just do this:
 
 # Clone by fetching remote content into our subdir:
 subrepo:clone() {
-  re=$1
-
   FAIL=false RUN git rev-parse HEAD
   if ! OK; then
     error "You can't clone into an empty repository"
@@ -703,6 +701,7 @@ subrepo:fetch() {
 }
 
 # Create a subrepo branch containing all changes
+# shellcheck disable=2120
 subrepo:branch() {
   local branch=${1:-"subrepo/$subref"}
   o "Check if the '$branch' branch already exists."
