@@ -23,8 +23,6 @@ skips=(
   SC1091  # Not following: bash+ was not specified as input (see shellcheck -x).
 
   # These are errors/warnings we can fix one at a time:
-  SC2059  # Don't use variables in the printf format string. Use printf "..%s.." "$foo".
-
   SC2119  # Use subrepo:clone "$@" if function's $1 should mean script's $1.
   SC2120  # ____ references arguments, but none are ever passed.
 

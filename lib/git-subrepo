@@ -336,7 +336,7 @@ status-refs() {
     fi
   done < <(git show-ref)
   if [[ $output ]]; then
-    printf "  Refs:\n$output"
+    printf "  Refs:\n%s" "$output"
   fi
 }
 
@@ -942,7 +942,7 @@ subrepo:status() {
       echo "  Pull Parent:     $(git rev-parse --short $subrepo_parent)"
     # TODO Remove this eventually:
     elif [[ $subrepo_former ]]; then
-      printf "  Former Commit:   $(git rev-parse --short $subrepo_former)"
+      printf "  Former Commit:   %s" "$(git rev-parse --short $subrepo_former)"
       echo " *** DEPRECATED ***"
     fi
 
@@ -1172,6 +1172,7 @@ Use the --force flag to override this check or remove the worktree with
 }
 
 # Parse command line args according to a simple dsl spec:
+# shellcheck disable=2059
 get-params() {
   local i=0
   local num=${#command_arguments[@]}
@@ -1419,7 +1420,7 @@ assert-environment-ok() {
   git_version=$(git --version | cut -d ' ' -f3)
 
   if [[ $(
-          printf "$REQUIRED_GIT_VERSION\n$git_version" |
+          printf "%s\n%s" "$REQUIRED_GIT_VERSION" "$git_version" |
           sort -t. -k 1,1n -k 2,2n -k 3,3n |
           head -n1
         ) == "$git_version" &&
