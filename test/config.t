@@ -22,7 +22,7 @@ gitrepo=$OWNER/init/doc/.gitrepo
   test-gitrepo-field "commit" ""
   test-gitrepo-field "parent" ""
   test-gitrepo-field "method" "merge"
-  test-gitrepo-field "cmdver" "`git subrepo --version`"
+  test-gitrepo-field "cmdver" "$(git subrepo --version)"
 }
 
 is "$(
@@ -37,7 +37,7 @@ is "$(
   test-gitrepo-field "commit" ""
   test-gitrepo-field "parent" ""
   test-gitrepo-field "method" "rebase"
-  test-gitrepo-field "cmdver" "`git subrepo --version`"
+  test-gitrepo-field "cmdver" "$(git subrepo --version)"
 }
 
 is "$(

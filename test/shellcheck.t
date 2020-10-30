@@ -23,11 +23,6 @@ skips=(
   SC1091  # Not following: bash+ was not specified as input (see shellcheck -x).
 
   # These are errors/warnings we can fix one at a time:
-  SC1007  # Remove space after = if trying to assign a value (for empty string, use var='' ... ).
-  SC1083  # This { is literal. Check expression (missing ;/\n?) or quote it.
-  SC1087  # Use braces when expanding arrays, e.g. ${array[idx]} (or ${var}[.. to quiet).
-  SC2004  # $/${} is unnecessary on arithmetic variables.
-  SC2006  # Use $(...) notation instead of legacy backticked `...`.
   SC2016  # Expressions don't expand in single quotes, use double quotes for that.
   SC2030  # Modification of branch is local (to subshell caused by (..) group).
   SC2031  # ____ was modified in a subshell. That change might be lost.

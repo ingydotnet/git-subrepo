@@ -42,7 +42,7 @@ is "$output" "Subrepo created from 'doc' (with no remote)." \
   test-gitrepo-field "commit" ""
   test-gitrepo-field "parent" ""
   test-gitrepo-field "method" "merge"
-  test-gitrepo-field "cmdver" "`git subrepo --version`"
+  test-gitrepo-field "cmdver" "$(git subrepo --version)"
 }
 
 rm -fr "$OWNER/init"
@@ -57,7 +57,7 @@ test-gitrepo-field "branch" "foo"
 test-gitrepo-field "commit" ""
 test-gitrepo-field "parent" ""
 test-gitrepo-field "method" "rebase"
-test-gitrepo-field "cmdver" "`git subrepo --version`"
+test-gitrepo-field "cmdver" "$(git subrepo --version)"
 
 done_testing
 
