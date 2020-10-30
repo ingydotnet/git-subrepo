@@ -775,7 +775,8 @@ subrepo:branch() {
         o "Create with content"
         local PREVIOUS_IFS=$IFS
         IFS=$'\n'
-        local author_info=( $(git log -1 --date=default --format=%ad%n%ae%n%an "$commit") )
+        local author_info
+        mapfile -t author_info < <(git log -1 --date=default --format=%ad%n%ae%n%an "$commit")
         IFS=$PREVIOUS_IFS
 
         # When we create new commits we leave the author information unchanged
@@ -1530,7 +1531,8 @@ assert-subdir-empty() {
 # Find all the current subrepos by looking for all the subdirectories that
 # contain a `.gitrepo` file.
 get-all-subrepos() {
-  local paths=($(git ls-files | sed -n 's!/\.gitrepo$!!p' | sort))
+  local paths
+  mapfile -t paths < <(git ls-files | sed -n 's!/\.gitrepo$!!p' | sort)
   subrepos=()
   local path
   for path in "${paths[@]}"; do

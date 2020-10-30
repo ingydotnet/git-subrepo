@@ -104,7 +104,7 @@ clone-foo-and-bar
 {
   is "$(
       cd "$OWNER/bar"
-      git checkout --quiet $(git rev-parse master)
+      git checkout --quiet "$(git rev-parse master)"
       catch git subrepo status
     )" \
     "git-subrepo: Must be on a branch to run this command." \

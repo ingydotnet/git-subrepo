@@ -83,7 +83,7 @@ test_round 'many////slashes'
 test_round '_under_scores_'
 
 test_round '.str%a\nge...'
-test_round '~////......s:a^t?r a*n[g@{e.lock'
+test_round ~'////......s:a^t?r a*n[g@{e.lock'
 
 
 done_testing
