@@ -107,7 +107,8 @@ main() {
   local subref=                 # Valid git ref format of subdir
   local gitrepo=                # Path to .gitrepo file
   local worktree=               # Worktree created by 'git worktree'
-  local start_pwd=$(pwd)        # Store the original directory
+  local start_pwd
+        start_pwd=$(pwd)        # Store the original directory
 
   local original_head_commit=   # HEAD commit id at start of command
   local original_head_branch=   # HEAD ref at start of command
@@ -734,7 +735,11 @@ subrepo:branch() {
       # Only include the commit if it's a child of the previous commit
       # This way we create a single path between $subrepo_parent..HEAD
       if [[ $ancestor ]]; then
-        local is_direct_child=$(git show -s --pretty=format:"%P" "$commit" | grep "$ancestor")
+        local is_direct_child
+        is_direct_child=$(
+          git show -s --pretty=format:"%P" "$commit" |
+            grep "$ancestor"
+        ) || true
         o "is child: $is_direct_child"
         if [[ -z $is_direct_child ]]; then
           o "Ignore $commit, it's not in the selected path"
@@ -936,17 +941,21 @@ subrepo:status() {
       echo "  Upstream Ref:    $upstream_head_commit"
     echo "  Tracking Branch: $subrepo_branch"
     [[ -z $subrepo_commit ]] ||
-      echo "  Pulled Commit:   $(git rev-parse --short $subrepo_commit)"
+      echo "  Pulled Commit:   $(git rev-parse --short "$subrepo_commit")"
     if [[ $subrepo_parent ]]; then
-      echo "  Pull Parent:     $(git rev-parse --short $subrepo_parent)"
+      echo "  Pull Parent:     $(git rev-parse --short "$subrepo_parent")"
     # TODO Remove this eventually:
     elif [[ $subrepo_former ]]; then
-      printf "  Former Commit:   %s" "$(git rev-parse --short $subrepo_former)"
+      printf "  Former Commit:   %s" "$(git rev-parse --short "$subrepo_former")"
       echo " *** DEPRECATED ***"
     fi
 
     # Grep for directory, branch can be in detached state due to conflicts
-    local _worktree=$(git worktree list | grep "$GIT_TMP/subrepo/$subdir")
+    local _worktree
+    _worktree=$(
+      git worktree list |
+        grep "$GIT_TMP/subrepo/$subdir"
+    ) || true
     if [[ $_worktree  ]]; then
       echo "  Worktree: $_worktree"
     fi
@@ -1138,7 +1147,12 @@ command-setup() {
 
   if ! $force_wanted; then
     o "Check for worktree with branch subrepo/$subdir"
-    local _worktree=$(git worktree list | grep "\[subrepo/$subdir\]" | cut -d ' ' -f1)
+    local _worktree
+    _worktree=$(
+      git worktree list |
+        grep "\[subrepo/$subdir\]" |
+        cut -d ' ' -f1
+    )
     if [[ $command =~ ^(commit)$ && -z $_worktree ]]; then
       error "There is no worktree available, use the branch command first"
     elif [[ ! $command =~ ^(branch|clean|commit|push)$ && $_worktree ]]; then
@@ -1270,7 +1284,8 @@ encode-subdir() {
   local i
   for (( i = 1; i < 32; ++i )); do
     # skip substitute NUL char (i=0), as bash will skip NUL in env
-    local x=$(printf "%02x" $i)
+    local x
+    x=$(printf "%02x" "$i")
     subref=${subref//$(printf "%b" "\x$x")/%$x}
   done
   subref=${subref//$'\177'/%7f}
@@ -1484,7 +1499,8 @@ assert-working-copy-is-clean() {
   # Repo is in a clean state:
   if [[ $command =~ ^(clone|init|pull|push|branch|commit)$ ]]; then
     # TODO: Should we check for untracked files?
-    local pwd=$(pwd)
+    local pwd
+    pwd=$(pwd)
     o "Assert that working copy is clean: $pwd"
     git update-index -q --ignore-submodules --refresh
     git diff-files --quiet --ignore-submodules ||
@@ -1626,7 +1642,8 @@ git-subrepo:
 get-command-info() {
   local bin=$0
   if [[ $bin =~ / ]]; then
-    local lib=$(dirname "$bin")
+    local lib
+    lib=$(dirname "$bin")
     # XXX Makefile needs to install these symlinks:
     # If `git-subrepo` was system-installed (`make install`):
     if [[ -e $lib/git-subrepo.d/upstream ]] &&
@@ -1636,7 +1653,8 @@ get-command-info() {
     elif [[ $lib =~ / ]]; then
       lib=$(dirname "$lib")
       if [[ -d $lib/.git ]]; then
-        local remote=$(
+        local remote
+        remote=$(
           GIT_DIR=$lib/.git git remote -v |
             grep '^origin' |
             head -n1 |
@@ -1646,7 +1664,8 @@ get-command-info() {
         if [[ $remote ]]; then
           command_remote=$remote
         else
-          local remote=$(
+          local remote
+          remote=$(
             GIT_DIR=$lib/.git git remote -v |
               head -n1 |
               cut -f2 |
@@ -1656,7 +1675,8 @@ get-command-info() {
             command_remote=$remote
           fi
         fi
-        local commit=$(GIT_DIR=$lib/.git git rev-parse --short HEAD)
+        local commit
+        commit=$(GIT_DIR=$lib/.git git rev-parse --short HEAD)
         if [[ $commit ]]; then
           command_commit=$commit
         fi
@@ -1748,7 +1768,8 @@ git:ref-exists() {
 
 git:get-head-branch-name() {
   output=
-  local name=$(git symbolic-ref --short --quiet HEAD)
+  local name
+  name=$(git symbolic-ref --short --quiet HEAD) || true
   [[ $name == HEAD ]] && return
   output=$name
 }
@@ -1765,7 +1786,8 @@ git:commit-in-rev-list() {
 
 git:make-ref() {
   local ref_name=$1
-  local commit=$(git rev-parse "$2")
+  local commit
+  commit=$(git rev-parse "$2")
   RUN git update-ref "$ref_name" "$commit"
 }
 

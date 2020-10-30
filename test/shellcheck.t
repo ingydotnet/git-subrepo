@@ -21,9 +21,6 @@ skips=(
   # We want to keep these 2 here always:
   SC1090  # Can't follow non-constant source. Use a directive to specify location.
   SC1091  # Not following: bash+ was not specified as input (see shellcheck -x).
-
-  # These are errors/warnings we can fix one at a time:
-  SC2155  # Declare and assign separately to avoid masking return values.
 )
 skip=$(IFS=,; echo "${skips[*]}")
 
