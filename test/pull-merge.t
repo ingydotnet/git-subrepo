@@ -21,13 +21,13 @@ note "Pull - Conflict - Merge ours/theirs - Push"
 gitrepo=$OWNER/foo/bar/.gitrepo
 # Test foo/bar/.gitrepo file contents:
 {
-  foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
-  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD^)"
+  foo_pull_commit=$(cd $OWNER/foo; git rev-parse HEAD^)
+  bar_head_commit=$(cd $OWNER/bar; git rev-parse HEAD^)
   test-gitrepo-field "commit" "$bar_head_commit"
   test-gitrepo-field "parent" "$foo_pull_commit"
 }
 
-foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD)"
+foo_pull_commit=$(cd $OWNER/foo; git rev-parse HEAD)
 
 (
   cd $OWNER/foo
@@ -65,7 +65,7 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
 
 # Check commit messages
 {
-  foo_new_commit_message="$(cd $OWNER/foo; git log --format=%B -n 1)"
+  foo_new_commit_message=$(cd $OWNER/foo; git log --format=%B -n 1)
   like "$foo_new_commit_message" \
       "git subrepo commit \(merge\) bar" \
       "subrepo pull should have merge message"
@@ -73,7 +73,7 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
 
 # Test foo/bar/.gitrepo file contents:
 {
-  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  bar_head_commit=$(cd $OWNER/bar; git rev-parse HEAD)
   test-gitrepo-field "commit" "$bar_head_commit"
   test-gitrepo-field "parent" "$foo_pull_commit"
 }
@@ -85,7 +85,7 @@ is "$(cat $OWNER/foo/bar/Bar2)" \
 
 # Check commit messages
 {
-  foo_new_commit_message="$(cd $OWNER/foo; git log --format=%B -n 1)"
+  foo_new_commit_message=$(cd $OWNER/foo; git log --format=%B -n 1)
   like "$foo_new_commit_message" \
       "git subrepo push bar" \
       "subrepo push should not have merge message"

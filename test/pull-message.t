@@ -29,7 +29,7 @@ subrepo-clone-bar-into-foo
 
 # Check -m commit messages
 {
-  foo_new_commit_message="$(cd $OWNER/foo; git log --format=%B -n 1)"
+  foo_new_commit_message=$(cd $OWNER/foo; git log --format=%B -n 1)
   like "$foo_new_commit_message" \
       "Hello World" \
       "subrepo pull commit message"

@@ -20,10 +20,10 @@ use Test::More
   git init --bare ../upstream || die
 ) &> /dev/null
 
-output="$(
+output=$(
   cd $OWNER/init
   git subrepo push doc --remote=../upstream
-)"
+)
 
 is "$output" "Subrepo 'doc' pushed to '../upstream' (master)." \
   'Command output is correct'

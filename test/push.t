@@ -34,13 +34,13 @@ clone-foo-and-bar
 
 # Do the subrepo push and test the output:
 {
-  message="$(
+  message=$(
     cd $OWNER/foo
     git config user.name 'PushUser'
     git config user.email 'push@push'
     git subrepo pull --quiet bar
     git subrepo push bar
-  )"
+  )
 
   # Test the output:
   is "$message" \
@@ -54,10 +54,10 @@ clone-foo-and-bar
 ) &> /dev/null || die
 
 {
-  pullCommit="$(
+  pullCommit=$(
     cd $OWNER/bar
     git log HEAD -1 --pretty='format:%an %ae %cn %ce'
-  )"
+  )
 
   is "$pullCommit" \
     "PushUser push@push PushUser push@push" \
@@ -65,10 +65,10 @@ clone-foo-and-bar
 }
 
 {
-  subrepoCommit="$(
+  subrepoCommit=$(
     cd $OWNER/bar
     git log HEAD^ -1 --pretty='format:%an %ae %cn %ce'
-  )"
+  )
 
   is "$subrepoCommit" \
     "FooUser foo@foo PushUser push@push" \
@@ -81,8 +81,8 @@ test-commit-count "$OWNER/bar" HEAD 7
 # Test foo/bar/.gitrepo file contents:
 gitrepo=$OWNER/foo/bar/.gitrepo
 {
-  foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
-  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  foo_pull_commit=$(cd $OWNER/foo; git rev-parse HEAD^)
+  bar_head_commit=$(cd $OWNER/bar; git rev-parse HEAD)
   test-gitrepo-field "remote" "$UPSTREAM/bar"
   test-gitrepo-field "branch" "master"
   test-gitrepo-field "commit" "$bar_head_commit"
@@ -98,10 +98,10 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 ) &> /dev/null || die
 
 {
-  message="$(
+  message=$(
     cd $OWNER/foo
     git subrepo push bar
-  )"
+  )
 
   # Test the output:
   is "$message" \
@@ -133,10 +133,10 @@ test-exists \
 ) &> /dev/null || die
 
 {
-  message="$(
+  message=$(
     cd $OWNER/foo
     git subrepo push bar
-  )"
+  )
 
   # Test the output:
   is "$message" \
@@ -160,10 +160,10 @@ test-exists \
 ) &> /dev/null || die
 
 {
-  message="$(
+  message=$(
     cd $OWNER/foo
     git subrepo push bar 2>&1 || true
-  )"
+  )
 
   # Test the output:
   is "$message" \

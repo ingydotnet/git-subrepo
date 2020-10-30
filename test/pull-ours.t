@@ -38,7 +38,7 @@ note "Pull - Conflict - Use ours - Push"
   git push
 ) &> /dev/null || die
 
-before="$(date -r $OWNER/foo/Foo '+%s')"
+before=$(date -r $OWNER/foo/Foo '+%s')
 
 (
   cd $OWNER/foo
@@ -54,7 +54,7 @@ before="$(date -r $OWNER/foo/Foo '+%s')"
 ) &> /dev/null || die
 
 sleep 1
-after="$(date -r $OWNER/foo/Foo '+%s')"
+after=$(date -r $OWNER/foo/Foo '+%s')
 
 is "$before" "$after" \
   "No modification on Foo"

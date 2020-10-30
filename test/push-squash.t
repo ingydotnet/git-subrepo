@@ -26,10 +26,10 @@ clone-foo-and-bar
 
 # Do the subrepo push and test the output:
 {
-  message="$(
+  message=$(
     cd $OWNER/foo
     git subrepo push bar --squash
-  )"
+  )
 
   # Test the output:
   is "$message" \
