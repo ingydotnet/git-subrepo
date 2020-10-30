@@ -11,7 +11,7 @@ set -e
 export FILTER_BRANCH_SQUELCH_WARNING=1
 
 # Import Bash+ helper functions:
-SOURCE=$BASH_SOURCE
+SOURCE=${BASH_SOURCE[0]}
 while [[ -h $SOURCE ]]; do
   DIR=$( cd -P "$( dirname "$SOURCE" )" && pwd )
   SOURCE=$(readlink "$SOURCE")
@@ -317,7 +317,7 @@ command:status() {
 
 status-refs() {
   local output=
-  while read line; do
+  while read -r line; do
     [[ $line =~ ^([0-9a-f]+)\ refs/subrepo/$subref/([a-z]+) ]] || continue
     local sha1=; sha1=$(git rev-parse --short "${BASH_REMATCH[1]}")
     local type=${BASH_REMATCH[2]}
@@ -409,7 +409,7 @@ command:version() {
 git-subrepo Version: $VERSION
 Copyright 2013-2020 Ingy döt Net
 https://github.com/ingydotnet/git-subrepo
-$BASH_SOURCE
+${BASH_SOURCE[0]}
 Git Version: $git_version
 
 ...
@@ -424,8 +424,8 @@ command:upgrade() {
       o "Change directory to '$subrepo_root'."
       cd "${BASH_REMATCH[1]}"
 
-      local branch=$(git rev-parse --abbrev-ref HEAD)
-      if [[ $branch != master ]]; then
+      branch_name=$(git rev-parse --abbrev-ref HEAD)
+      if [[ $branch_name != master ]]; then
         error "git-subrepo repo is not on the 'master' branch"
       fi
 
@@ -720,7 +720,7 @@ subrepo:branch() {
       o "Working on $commit"
 
       FAIL=false OUT=true RUN git config --blob \
-        "$commit":"$subdir/.gitrepo" "subrepo.commit"
+        "$commit:$subdir/.gitrepo" "subrepo.commit"
       if [[ -z $output ]]; then
         o "Ignore commit, no .gitrepo file"
         continue
@@ -978,7 +978,7 @@ subrepo:clean() {
     if ! $all_wanted; then
       suffix=$subref/
     fi
-    git show-ref | while read hash ref; do
+    git show-ref | while read -r hash ref; do
       if [[ $ref == "refs/subrepo/$suffix"* ]]; then
         git update-ref -d "$ref"
       fi
@@ -1025,8 +1025,6 @@ get-command-options() {
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
       -m) wanted_commit_message=$1
-          shift;;
-      -M) join_method=$1
           shift;;
       -M) join_method=$1
           shift;;
@@ -1193,7 +1191,7 @@ get-params() {
         "${arg#*:}"
       fi
     fi
-    let i=$((i+1))
+    : $((i++))
   done
 
   # Check for extra arguments:
@@ -1856,7 +1854,7 @@ CALL() {
 # Print verbose steps for commands with steps:
 o() {
   if $verbose_wanted; then
-    echo "$INDENT* $@"
+    echo "$INDENT* $*"
   fi
 }
 
@@ -1896,7 +1894,7 @@ error() {
 }
 
 # Start at the end:
-[[ $BASH_SOURCE != "$0" ]] || main "$@"
+[[ ${BASH_SOURCE[0]} != "$0" ]] || main "$@"
 
 # Local Variables:
 # tab-width: 2

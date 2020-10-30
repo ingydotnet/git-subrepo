@@ -42,7 +42,7 @@ test-exists "$OWNER"/foo/.git/tmp/subrepo/bar/
 
 is "$(
   cd "$OWNER"/foo/.git/tmp/subrepo/bar
-  git branch | grep \*
+  git branch | grep '\*'
 )" \
   "* subrepo/bar" \
   "Correct branch is checked out"
