@@ -1,4 +1,4 @@
-#!bash
+# shellcheck shell=bash
 
 # Enable git-subrepo completion facilities
 if [[ ${BASH_VERSION-} ]]; then
