@@ -4,9 +4,11 @@ source test/setup
 
 use Test::More
 
-# TODO Should probably check the `shellcheck --version` here too.
 if ! command -v shellcheck >/dev/null; then
   plan skip_all "The 'shellcheck' utility is not installed"
+fi
+if [[ ! $(shellcheck --version) =~ 0\.7\.1 ]]; then
+  plan skip_all "This test wants shellcheck version 0.7.1"
 fi
 
 IFS=$'\n' read -d '' -r -a shell_files <<< "$(
