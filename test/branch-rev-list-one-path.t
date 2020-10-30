@@ -31,12 +31,11 @@ is "$(
   "Created branch 'subrepo/bar' and worktree '.git/tmp/subrepo/bar'." \
   "subrepo branch command output is correct"
 
-is "$(
+got="$(
   cd "$OWNER/foo"
   git rev-list subrepo/bar | wc -l
-)" \
-  "6" \
-  "We have only created commits for one of the paths"
+)"
+is "${got// /}" "6" "We have only created commits for one of the paths"
 
 done_testing
 
