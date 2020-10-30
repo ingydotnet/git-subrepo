@@ -26,11 +26,8 @@ skips=(
   SC2030  # Modification of ____ is local (to subshell caused by (..) group).
   SC2031  # ____ was modified in a subshell. That change might be lost.
   SC2034  # ____ appears unused. Verify use (or export if used externally).
-  SC2046  # Quote this to prevent word splitting.
-  SC2048  # Use "$@" (with quotes) to prevent whitespace problems.
   SC2059  # Don't use variables in the printf format string. Use printf "..%s.." "$foo".
   SC2063  # Grep uses regex, but this looks like a glob.
-  SC2088  # Tilde does not expand in quotes. Use $HOME.
   SC2119  # Use subrepo:clone "$@" if function's $1 should mean script's $1.
   SC2120  # ____ references arguments, but none are ever passed.
   SC2128  # Expanding an array without an index only gives the first element.
@@ -40,7 +37,6 @@ skips=(
   SC2155  # Declare and assign separately to avoid masking return values.
   SC2162  # read without -r will mangle backslashes.
   SC2164  # Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
-  SC2207  # Prefer mapfile or read -a to split command output (or quote to avoid splitting).
   SC2219  # Instead of 'let expr', prefer (( expr )) .
   SC2221  # This pattern always overrides a later one on line 1028.
   SC2222  # This pattern never matches because of a previous pattern on line 1026.
@@ -49,6 +45,7 @@ skips=(
 skip=$(IFS=,; echo "${skips[*]}")
 
 for file in "${shell_files[@]}"; do
+  [[ $file == *swp ]] && continue
   is "$(shellcheck -e "$skip" "$file")" "" \
     "The shell file '$file' passes shellcheck"
 done
