@@ -78,5 +78,5 @@ compgen: force
 	perl pkg/bin/generate-completion.pl zsh $(DOC) $(LIB) > \
 	    $(SHARE)/zsh-completion/_git-subrepo
 
-clean purge:
-	rm -fr tmp
+clean:
+	rm -fr tmp test/tmp
