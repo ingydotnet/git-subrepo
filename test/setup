@@ -124,9 +124,9 @@ test-exists() {
 
 test-exists-in-index() {
   for f in "$@"; do
-    if [[ "$f" =~ ^! ]]; then
+    if [[ $f =~ ^! ]]; then
       f=${f#!}
-      if [[ "$f" =~ /$ ]]; then
+      if [[ $f =~ /$ ]]; then
         ok "$([ ! "$(git ls-tree --full-tree --name-only -r HEAD "$f")" ])" \
           "Directory '$f' does not exist in index"
       else
@@ -134,7 +134,7 @@ test-exists-in-index() {
           "File '$f' does not exist in index"
       fi
     else
-      if [[ "$f" =~ /$ ]]; then
+      if [[ $f =~ /$ ]]; then
         ok "$([ "$(git ls-tree --full-tree --name-only -r HEAD "$f")" ])" \
           "Directory '$f' exists in index"
       else
