@@ -11,7 +11,7 @@ clone-foo-and-bar
 subrepo-clone-bar-into-foo
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   add-new-files Bar2
   git push
 ) &> /dev/null || die
@@ -20,7 +20,7 @@ subrepo-clone-bar-into-foo
 # Do the pull and check output:
 {
   is "$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo pull bar
   )" \
     "Subrepo 'bar' pulled from '$UPSTREAM/bar' (master)." \
@@ -37,8 +37,8 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 # Test foo/bar/.gitrepo file contents:
 {
-  foo_pull_commit=$(cd $OWNER/foo; git rev-parse HEAD^)
-  bar_head_commit=$(cd $OWNER/bar; git rev-parse HEAD)
+  foo_pull_commit=$(cd "$OWNER/foo"; git rev-parse HEAD^)
+  bar_head_commit=$(cd "$OWNER/bar"; git rev-parse HEAD)
   test-gitrepo-comment-block
   test-gitrepo-field "remote" "$UPSTREAM/bar"
   test-gitrepo-field "branch" "master"
@@ -49,20 +49,20 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 # Check commit messages
 {
-  foo_new_commit_message=$(cd $OWNER/foo; git log --format=%B -n 1)
+  foo_new_commit_message=$(cd "$OWNER/foo"; git log --format=%B -n 1)
   like "$foo_new_commit_message" \
       "git subrepo pull bar" \
       "Subrepo pull commit message OK"
-  bar_commit_short=$(git rev-parse --short $bar_head_commit)
+  bar_commit_short=$(git rev-parse --short "$bar_head_commit")
   like "$foo_new_commit_message" \
-      'merged:   \"'$bar_commit_short \
+      "merged:   \"$bar_commit_short" \
       "Pull commit contains merged"
 }
 
 # Check that we detect that we don't need to pull
 {
   is "$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo pull bar
   )" \
     "Subrepo 'bar' is up to date." \
@@ -72,7 +72,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 # Test pull if we have rebased the original subrepo so that our clone
 # commit is no longer present in the history
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git reset --hard master^^
   add-new-files Bar3
   git push --force
@@ -84,7 +84,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 }
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo pull bar || touch pull_failed
 ) &> /dev/null || die
 

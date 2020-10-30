@@ -11,7 +11,7 @@ clone-foo-and-bar
 subrepo-clone-bar-into-foo
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   add-new-files Bar2
   git tag -a CoolTag -m "Should stay in subrepo"
   git push
@@ -21,7 +21,7 @@ subrepo-clone-bar-into-foo
 # Fetch information
 {
   is "$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo fetch bar
   )" \
     "Fetched 'bar' from '$UPSTREAM/bar' (master)." \
@@ -31,7 +31,7 @@ subrepo-clone-bar-into-foo
 # Check that there is no tags fetched
 {
   is "$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git tag -l 'CoolTag'
   )" \
     "" \

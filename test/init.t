@@ -6,7 +6,7 @@ source test/setup
 
 use Test::More
 
-git clone $UPSTREAM/init $OWNER/init &>/dev/null
+git clone "$UPSTREAM/init" "$OWNER/init" &>/dev/null
 
 gitrepo=$OWNER/init/doc/.gitrepo
 
@@ -35,7 +35,7 @@ is "$output" "Subrepo created from 'doc' (with no remote)." \
 
 # Test init/doc/.gitrepo file contents:
 {
-  init_clone_commit=$(cd $OWNER/init; git rev-parse HEAD^)
+  init_clone_commit=$(cd "$OWNER/init"; git rev-parse HEAD^)
   test-gitrepo-comment-block
   test-gitrepo-field "remote" "none"
   test-gitrepo-field "branch" "master"
@@ -46,7 +46,7 @@ is "$output" "Subrepo created from 'doc' (with no remote)." \
 }
 
 rm -fr "$OWNER/init"
-git clone $UPSTREAM/init $OWNER/init &>/dev/null
+git clone "$UPSTREAM/init" "$OWNER/init" &>/dev/null
 (
   cd "$OWNER/init"
   git subrepo init doc -r git@github.com:user/repo -b foo -M rebase
