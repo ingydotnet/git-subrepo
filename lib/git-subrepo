@@ -302,7 +302,7 @@ command:commit() {
     error "Can't find ref '$refs_subrepo_fetch'. Try using -F."
   upstream_head_commit=$(git rev-parse "$refs_subrepo_fetch")
 
-  [[ -n $subrepo_commit_ref ]] ||
+  [[ $subrepo_commit_ref ]] ||
     subrepo_commit_ref=subrepo/$subref
   subrepo:commit
 
@@ -334,7 +334,7 @@ status-refs() {
       output+="    Push Ref:      $sha1 ($ref)"$'\n'
     fi
   done < <(git show-ref)
-  if [[ -n $output ]]; then
+  if [[ $output ]]; then
     printf "  Refs:\n$output"
   fi
 }
@@ -386,7 +386,7 @@ command:config() {
 command:help() {
   source "${SOURCE_DIR}/git-subrepo.d/help-functions.bash"
   local cmd=${command_arguments[0]}
-  if [[ -n $cmd ]]; then
+  if [[ $cmd ]]; then
     if can "help:$cmd"; then
       "help:$cmd"
       echo
@@ -709,7 +709,7 @@ subrepo:branch() {
   local first_gitrepo_commit=
 
   o "Subrepo parent: $subrepo_parent"
-  if [[ -n "$subrepo_parent" ]]; then
+  if [[ "$subrepo_parent" ]]; then
     local prev_commit=
     local ancestor=
     o "Create new commits with parents into the subrepo fetch"
@@ -731,7 +731,7 @@ subrepo:branch() {
 
       # Only include the commit if it's a child of the previous commit
       # This way we create a single path between $subrepo_parent..HEAD
-      if [[ -n "$ancestor" ]]; then
+      if [[ "$ancestor" ]]; then
         local is_direct_child=$(git show -s --pretty=format:"%P" $commit | grep "$ancestor")
         o "is child: $is_direct_child"
         if [[ -z "$is_direct_child" ]]; then
@@ -752,7 +752,7 @@ subrepo:branch() {
 
       o "Find parents"
       local first_parent=
-      [[ -n $prev_commit ]] && first_parent="-p $prev_commit"
+      [[ $prev_commit ]] && first_parent="-p $prev_commit"
       local second_parent=
       if [[ -z "$first_gitrepo_commit" ]]; then
         first_gitrepo_commit=$gitrepo_commit
@@ -804,7 +804,7 @@ subrepo:branch() {
 
   o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
   local filter=$branch
-  [[ -n "$first_gitrepo_commit" ]] && filter=$first_gitrepo_commit..$branch
+  [[ "$first_gitrepo_commit" ]] && filter=$first_gitrepo_commit..$branch
   FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
     "rm -f .gitrepo" "$filter"
 
@@ -842,7 +842,7 @@ subrepo:commit() {
   RUN git add -f -- "$gitrepo"
 
   local commit_message
-  if [[ -n "$wanted_commit_message" ]]; then
+  if [[ "$wanted_commit_message" ]]; then
     commit_message=$wanted_commit_message
   else
     commit_message=$(get-commit-message)
@@ -851,7 +851,7 @@ subrepo:commit() {
   local edit_flag=
   $edit_wanted && edit_flag=--edit
 
-  [[ -n $commit_message ]] || commit_message=$(get-commit-message)
+  [[ $commit_message ]] || commit_message=$(get-commit-message)
 
   local edit_flag=
   $edit_wanted && edit_flag=--edit
@@ -925,25 +925,25 @@ subrepo:status() {
       echo "  Subrepo Branch:  subrepo/$subref"
     local remote=subrepo/$subref
     FAIL=false OUT=true RUN git config "remote.$remote.url"
-    [[ -n $output ]] &&
+    [[ $output ]] &&
       echo "  Remote Name:     subrepo/$subref"
     echo "  Remote URL:      $subrepo_remote"
-    [[ -n $upstream_head_commit ]] &&
+    [[ $upstream_head_commit ]] &&
       echo "  Upstream Ref:    $upstream_head_commit"
     echo "  Tracking Branch: $subrepo_branch"
     [[ -z $subrepo_commit ]] ||
       echo "  Pulled Commit:   $(git rev-parse --short $subrepo_commit)"
-    if [[ -n $subrepo_parent ]]; then
+    if [[ $subrepo_parent ]]; then
       echo "  Pull Parent:     $(git rev-parse --short $subrepo_parent)"
     # TODO Remove this eventually:
-    elif [[ -n $subrepo_former ]]; then
+    elif [[ $subrepo_former ]]; then
       printf "  Former Commit:   $(git rev-parse --short $subrepo_former)"
       echo " *** DEPRECATED ***"
     fi
 
     # Grep for directory, branch can be in detached state due to conflicts
     local _worktree=$(git worktree list | grep "$GIT_TMP/subrepo/$subdir")
-    if [[ -n $_worktree  ]]; then
+    if [[ $_worktree  ]]; then
       echo "  Worktree: $_worktree"
     fi
 
@@ -996,9 +996,9 @@ subrepo:clean() {
 get-command-options() {
   [[ $# -eq 0 ]] && set -- --help
 
-  [[ -n $GIT_SUBREPO_QUIET ]] && quiet_wanted=true
-  [[ -n $GIT_SUBREPO_VERBOSE ]] && verbose_wanted=true
-  [[ -n $GIT_SUBREPO_DEBUG ]] && debug_wanted=true
+  [[ $GIT_SUBREPO_QUIET ]] && quiet_wanted=true
+  [[ $GIT_SUBREPO_VERBOSE ]] && verbose_wanted=true
+  [[ $GIT_SUBREPO_DEBUG ]] && debug_wanted=true
 
   eval "$(
     echo "$GETOPT_SPEC" |
@@ -1067,13 +1067,13 @@ get-command-options() {
     fi
   done
 
-  if [[ -n $override_branch ]]; then
+  if [[ $override_branch ]]; then
     check_option branch
   fi
-  if [[ -n $override_remote ]]; then
+  if [[ $override_remote ]]; then
     check_option remote
   fi
-  if [[ -n $wanted_commit_message ]]; then
+  if [[ $wanted_commit_message ]]; then
     check_option message
   fi
   if $update_wanted; then
@@ -1139,7 +1139,7 @@ command-setup() {
     local _worktree=$(git worktree list | grep "\[subrepo/$subdir\]" | cut -d ' ' -f1)
     if [[ $command =~ ^(commit)$ && -z $_worktree ]]; then
       error "There is no worktree available, use the branch command first"
-    elif [[ ! $command =~ ^(branch|clean|commit|push)$ && -n $_worktree ]]; then
+    elif [[ ! $command =~ ^(branch|clean|commit|push)$ && $_worktree ]]; then
       if [[ -e $gitrepo ]]; then
         error "There is already a worktree with branch subrepo/$subdir.
 Use the --force flag to override this check or perform a subrepo clean
@@ -1203,7 +1203,7 @@ get-params() {
 
 check-and-normalize-subdir() {
   # Sanity check subdir:
-  [[ -n $subdir ]] ||
+  [[ $subdir ]] ||
     die "subdir not set"
   [[ $subdir =~ ^/ || $subdir =~ ^[A-Z]: ]] &&
     usage-error "The subdir '$subdir' should not be absolute path."
@@ -1378,17 +1378,17 @@ update-gitrepo-file() {
 
 
   # TODO: only update remote and branch if supplied and $update_wanted
-  if $newfile || [[ $update_wanted && -n $override_remote ]]; then
+  if $newfile || [[ $update_wanted && $override_remote ]]; then
     RUN git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
   fi
 
-  if $newfile || [[ $update_wanted && -n $override_branch ]]; then
+  if $newfile || [[ $update_wanted && $override_branch ]]; then
     RUN git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
   fi
 
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
   # Only write new parent when we are at the head of upstream
-  if [[ -n $upstream_head_commit && -n $subrepo_commit_ref ]]; then
+  if [[ $upstream_head_commit && $subrepo_commit_ref ]]; then
     OUT=true RUN git rev-parse "$subrepo_commit_ref"
     o "$upstream_head_commit == $output"
     if [[ $upstream_head_commit == $output ]]; then
@@ -1472,7 +1472,7 @@ assert-repo-is-ready() {
   assert-working-copy-is-clean
 
   # For now, only support actions from top of repo:
-  if [[ -n "$(git rev-parse --show-prefix)" ]]; then
+  if [[ "$(git rev-parse --show-prefix)" ]]; then
     error "Need to run subrepo command from top level directory of the repo."
   fi
 }
@@ -1516,7 +1516,7 @@ assert-subdir-ready-for-init() {
 
 # If subdir exists, make sure it is empty:
 assert-subdir-empty() {
-  if [[ -e $subdir ]] && [[ -n $(ls -A $subdir) ]]; then
+  if [[ -e $subdir ]] && [[ $(ls -A $subdir) ]]; then
     error "The subdir '$subdir' exists and is not empty."
   fi
 }
@@ -1550,7 +1550,7 @@ get-upstream-head-branch() {
   local remotes branch
   OUT=true RUN git ls-remote --symref "$subrepo_remote"
   remotes=$output
-  [[ -n $remotes ]] ||
+  [[ $remotes ]] ||
     error "Failed to 'git ls-remote --symref $subrepo_remote'."
 
   # 'ref: refs/heads/master  HEAD'
@@ -1639,7 +1639,7 @@ get-command-info() {
             cut -f2 |
             cut -d ' ' -f1
         )
-        if [[ -n $remote ]]; then
+        if [[ $remote ]]; then
           command_remote=$remote
         else
           local remote=$(
@@ -1648,12 +1648,12 @@ get-command-info() {
               cut -f2 |
               cut -d ' ' -f1
           )
-          if [[ -n $remote ]]; then
+          if [[ $remote ]]; then
             command_remote=$remote
           fi
         fi
         local commit=$(GIT_DIR=$lib/.git git rev-parse --short HEAD)
-        if [[ -n $commit ]]; then
+        if [[ $commit ]]; then
           command_commit=$commit
         fi
       fi
@@ -1739,7 +1739,7 @@ git:rev-exists() {
 }
 
 git:ref-exists() {
-  test -n "$(git for-each-ref "$1")"
+  [[ $(git for-each-ref "$1") ]]
 }
 
 git:get-head-branch-name() {

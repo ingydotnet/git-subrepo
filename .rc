@@ -13,7 +13,7 @@
 #
 #------------------------------------------------------------------------------
 
-if [[ -n ${BASH_VERSION-} ]]; then
+if [[ ${BASH_VERSION-} ]]; then
   if [[ ${BASH_VERSINFO[0]} -lt 4 ]] ; then
     echo "The git-subrepo command requires that 'Bash 4+' is installed."
     echo "It doesn't need to be your shell, but it must be in your PATH."
@@ -26,7 +26,7 @@ if [[ -n ${BASH_VERSION-} ]]; then
   fi
 fi
 
-[[ -n ${ZSH_VERSION-} ]] &&
+[[ ${ZSH_VERSION-} ]] &&
   GIT_SUBREPO_ROOT=$0 ||
   GIT_SUBREPO_ROOT=$BASH_SOURCE
 [[ $GIT_SUBREPO_ROOT =~ ^/ ]] ||
