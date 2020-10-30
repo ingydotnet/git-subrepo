@@ -11,10 +11,10 @@ clone-foo-and-bar
 # Make various changes to the repos for testing subrepo push:
 (
   # In the main repo:
-  cd $OWNER/foo
+  cd "$OWNER/foo"
 
   # Clone the subrepo into a subdir
-  git subrepo clone $UPSTREAM/bar
+  git subrepo clone "$UPSTREAM/bar"
 
   # Make a series of commits:
   add-new-files bar/FooBar1
@@ -27,7 +27,7 @@ clone-foo-and-bar
 # Do the subrepo push and test the output:
 {
   message=$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo push bar --squash
   )
 
@@ -38,7 +38,7 @@ clone-foo-and-bar
 }
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git pull
 ) &> /dev/null || die
 

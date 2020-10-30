@@ -22,7 +22,7 @@ source bash+ :std
 source 'lib/git-subrepo'
 
 export TMP=$SCRIPT_DIR/tmp
-rm -fr $TMP
+rm -fr "$TMP"
 
 #export GIT_EXEC_PATH=$PWD/lib:$(git --exec-path)
 export UPSTREAM=$TMP/upstream
@@ -39,17 +39,17 @@ cp -r test/repo/{foo,bar,init} "$UPSTREAM/"
 clone-foo-and-bar() {
   (
     # foo will act as the main repo
-    git clone $UPSTREAM/foo $OWNER/foo
+    git clone "$UPSTREAM/foo" "$OWNER/foo"
     (
-        cd $OWNER/foo
+        cd "$OWNER/foo"
         git config core.autocrlf input
         git config user.name "FooUser"
         git config user.email "foo@foo"
     )
     # bar will act as the subrepo
-    git clone $UPSTREAM/bar $OWNER/bar
+    git clone "$UPSTREAM/bar" "$OWNER/bar"
     (
-        cd $OWNER/bar
+        cd "$OWNER/bar"
         git config core.autocrlf input
         git config user.name "BarUser"
         git config user.email "bar@bar"
@@ -59,8 +59,8 @@ clone-foo-and-bar() {
 
 subrepo-clone-bar-into-foo() {
   (
-    cd $OWNER/foo
-    git subrepo clone $UPSTREAM/bar
+    cd "$OWNER/foo"
+    git subrepo clone "$UPSTREAM/bar"
   ) &> /dev/null || die
 }
 
@@ -203,5 +203,5 @@ catch() {
 }
 
 teardown() {
-  rm -fr $TMP
+  rm -fr "$TMP"
 }

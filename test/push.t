@@ -13,10 +13,10 @@ clone-foo-and-bar
 # Make various changes to the repos for testing subrepo push:
 (
   # In the main repo:
-  cd $OWNER/foo
+  cd "$OWNER/foo"
 
   # Clone the subrepo into a subdir
-  git subrepo clone $UPSTREAM/bar
+  git subrepo clone "$UPSTREAM/bar"
 
   # Make a series of commits:
   add-new-files bar/FooBar
@@ -27,7 +27,7 @@ clone-foo-and-bar
 ) &> /dev/null || die
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   add-new-files bargy
   git push
 ) &> /dev/null || die
@@ -35,7 +35,7 @@ clone-foo-and-bar
 # Do the subrepo push and test the output:
 {
   message=$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git config user.name 'PushUser'
     git config user.email 'push@push'
     git subrepo pull --quiet bar
@@ -49,13 +49,13 @@ clone-foo-and-bar
 }
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git pull
 ) &> /dev/null || die
 
 {
   pullCommit=$(
-    cd $OWNER/bar
+    cd "$OWNER/bar"
     git log HEAD -1 --pretty='format:%an %ae %cn %ce'
   )
 
@@ -66,7 +66,7 @@ clone-foo-and-bar
 
 {
   subrepoCommit=$(
-    cd $OWNER/bar
+    cd "$OWNER/bar"
     git log HEAD^ -1 --pretty='format:%an %ae %cn %ce'
   )
 
@@ -81,8 +81,8 @@ test-commit-count "$OWNER/bar" HEAD 7
 # Test foo/bar/.gitrepo file contents:
 gitrepo=$OWNER/foo/bar/.gitrepo
 {
-  foo_pull_commit=$(cd $OWNER/foo; git rev-parse HEAD^)
-  bar_head_commit=$(cd $OWNER/bar; git rev-parse HEAD)
+  foo_pull_commit=$(cd "$OWNER/foo"; git rev-parse HEAD^)
+  bar_head_commit=$(cd "$OWNER/bar"; git rev-parse HEAD)
   test-gitrepo-field "remote" "$UPSTREAM/bar"
   test-gitrepo-field "branch" "master"
   test-gitrepo-field "commit" "$bar_head_commit"
@@ -92,14 +92,14 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 (
   # In the main repo:
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   add-new-files bar/FooBar2
   modify-files bar/FooBar
 ) &> /dev/null || die
 
 {
   message=$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo push bar
   )
 
@@ -111,7 +111,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 # Pull the changes from UPSTREAM/bar in OWNER/bar
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git pull
 ) &> /dev/null || die
 
@@ -124,7 +124,7 @@ test-exists \
 
 (
   # In the main repo:
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   add-new-files bar/FooBar3
   modify-files bar/FooBar
   git subrepo push bar
@@ -134,7 +134,7 @@ test-exists \
 
 {
   message=$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo push bar
   )
 
@@ -146,7 +146,7 @@ test-exists \
 
 (
   # In the subrepo
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git pull
   add-new-files barBar2
   git push
@@ -154,14 +154,14 @@ test-exists \
 
 (
   # In the main repo:
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   add-new-files bar/FooBar5
   modify-files bar/FooBar3
 ) &> /dev/null || die
 
 {
   message=$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo push bar 2>&1 || true
   )
 

@@ -11,19 +11,19 @@ clone-foo-and-bar
 subrepo-clone-bar-into-foo
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   add-new-files Bar2
   git push
 ) &> /dev/null || die
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   add-new-files bar/Foo1
   git subrepo push bar --force
 ) &> /dev/null || die
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo pull bar
 ) &> /dev/null || die
 
@@ -34,7 +34,7 @@ test-exists \
 # Pull here will actually merge the old master with the new one
 (
   set +x
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git pull
 ) &> /dev/null || die
 
@@ -44,7 +44,7 @@ test-exists \
 
 # Test that a fresh repo is not contaminated
 (
-  git clone $UPSTREAM/bar $OWNER/newbar
+  git clone "$UPSTREAM/bar" "$OWNER/newbar"
 ) &> /dev/null || die
 
 test-exists \

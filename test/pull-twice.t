@@ -11,26 +11,26 @@ clone-foo-and-bar
 subrepo-clone-bar-into-foo
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   add-new-files Bar2
   git push
 ) &> /dev/null || die
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   add-new-files bar/Foo2
   git push
   git subrepo pull bar
 ) &> /dev/null || die
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   add-new-files Bar3
   git push
 ) &> /dev/null || die
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo pull bar
 ) &> /dev/null || die
 

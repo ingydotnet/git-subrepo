@@ -9,7 +9,7 @@ use Test::More
 clone-foo-and-bar
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git tag -a annotated_tag -m "My annotated tag"
   git tag lightweight_tag
 ) # >& /dev/null || die
@@ -17,7 +17,7 @@ clone-foo-and-bar
 # Do the subrepo clone with tag and test the output:
 {
   clone_output=$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo clone ../bar/.git -b lightweight_tag light
   )
 
@@ -30,7 +30,7 @@ clone-foo-and-bar
 # Do the subrepo clone with tag and test the output:
 {
   clone_output=$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo clone ../bar/.git -b annotated_tag ann 2>&1 || true
   )
 

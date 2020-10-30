@@ -19,13 +19,13 @@ note "Pull - Conflict - Use ours - Push"
 #
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   add-new-files Bar2
   git push
 ) &> /dev/null || die
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo pull bar
   modify-files-ex bar/Bar2
   cat bar/Bar2
@@ -33,15 +33,15 @@ note "Pull - Conflict - Use ours - Push"
 ) &> /dev/null || die
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   modify-files-ex Bar2
   git push
 ) &> /dev/null || die
 
-before=$(date -r $OWNER/foo/Foo '+%s')
+before=$(date -r "$OWNER/foo/Foo" '+%s')
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo pull bar || {
       cd .git/tmp/subrepo/bar
       git checkout --ours Bar2
@@ -54,7 +54,7 @@ before=$(date -r $OWNER/foo/Foo '+%s')
 ) &> /dev/null || die
 
 sleep 1
-after=$(date -r $OWNER/foo/Foo '+%s')
+after=$(date -r "$OWNER/foo/Foo" '+%s')
 
 is "$before" "$after" \
   "No modification on Foo"
@@ -63,17 +63,17 @@ test-exists \
   "$OWNER/foo/bar/Bar2" \
   "$OWNER/bar/Bar2" \
 
-is "$(cat $OWNER/foo/bar/Bar2)" \
+is "$(cat "$OWNER/foo/bar/Bar2")" \
   "new file Bar2"$'\n'"bar/Bar2" \
   "The readme file in the mainrepo is ours"
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo push bar
 ) &> /dev/null || die
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git pull
 ) &> /dev/null || die
 
@@ -81,7 +81,7 @@ test-exists \
   "$OWNER/foo/bar/Bar2" \
   "$OWNER/bar/Bar2" \
 
-is "$(cat $OWNER/bar/Bar2)" \
+is "$(cat "$OWNER/bar/Bar2")" \
   "new file Bar2"$'\n'"bar/Bar2" \
   "The readme file in the subrepo is ours"
 

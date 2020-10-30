@@ -11,7 +11,7 @@ clone-foo-and-bar
 subrepo-clone-bar-into-foo
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   add-new-files bar/file
   git subrepo --quiet branch bar
 )
@@ -21,7 +21,7 @@ test-exists \
   "$OWNER/foo/.git/refs/subrepo/bar/fetch"
 
 is "$(
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo clean bar
 )" \
   "Removed branch 'subrepo/bar'." \
@@ -31,7 +31,7 @@ test-exists \
   "!$OWNER/foo/.git/refs/heads/subrepo/bar"
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo clean --force bar
 )
 

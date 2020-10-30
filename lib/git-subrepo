@@ -601,7 +601,7 @@ subrepo:push() {
       # Check that we are up to date:
       o "Check upstream head against .gitrepo commit."
       if ! $force_wanted; then
-        if [[ $upstream_head_commit != $subrepo_commit ]]; then
+        if [[ $upstream_head_commit != "$subrepo_commit" ]]; then
           error "There are new changes upstream, you need to pull first."
         fi
       fi
@@ -664,6 +664,7 @@ subrepo:push() {
   "$force_wanted" && force=' --force'
 
   o "Push$force branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
+  # shellcheck disable=2086
   RUN git push$force "$subrepo_remote" "$branch_name":"$subrepo_branch"
 
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
@@ -732,7 +733,7 @@ subrepo:branch() {
       # Only include the commit if it's a child of the previous commit
       # This way we create a single path between $subrepo_parent..HEAD
       if [[ $ancestor ]]; then
-        local is_direct_child=$(git show -s --pretty=format:"%P" $commit | grep "$ancestor")
+        local is_direct_child=$(git show -s --pretty=format:"%P" "$commit" | grep "$ancestor")
         o "is child: $is_direct_child"
         if [[ -z $is_direct_child ]]; then
           o "Ignore $commit, it's not in the selected path"
@@ -751,23 +752,24 @@ subrepo:branch() {
       fi
 
       o "Find parents"
-      local first_parent=
-      [[ $prev_commit ]] && first_parent="-p $prev_commit"
-      local second_parent=
+      local first_parent second_parent
+      first_parent=()
+      [[ $prev_commit ]] && first_parent=(-p "$prev_commit")
+      second_parent=()
       if [[ -z $first_gitrepo_commit ]]; then
         first_gitrepo_commit=$gitrepo_commit
-        second_parent="-p $gitrepo_commit"
+        second_parent=(-p "$gitrepo_commit")
       fi
 
       if [[ $join_method != rebase ]]; then
         # In the rebase case we don't create merge commits
         if [[ $gitrepo_commit != "$last_gitrepo_commit" ]]; then
-          second_parent="-p $gitrepo_commit"
+          second_parent=(-p "$gitrepo_commit")
           last_gitrepo_commit=$gitrepo_commit
         fi
       fi
 
-      o "Create a new commit $first_parent $second_parent"
+      o "Create a new commit ${first_parent[*]} ${second_parent[*]}"
       FAIL=false RUN git cat-file -e "$commit":"$subdir"
       if OK; then
         o "Create with content"
@@ -785,11 +787,11 @@ subrepo:branch() {
           GIT_AUTHOR_DATE=${author_info[0]} \
           GIT_AUTHOR_EMAIL=${author_info[1]} \
           GIT_AUTHOR_NAME=${author_info[2]} \
-          git commit-tree -F - $first_parent $second_parent "$commit":"$subdir")
+          git commit-tree -F - "${first_parent[@]}" "${second_parent[@]}" "$commit":"$subdir")
       else
         o "Create empty placeholder"
         prev_commit=$(git commit-tree -m "EMPTY" \
-          $first_parent $second_parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+          "${first_parent[*]}" "${second_parent[*]}" "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
       fi
     done
 
@@ -1172,7 +1174,7 @@ Use the --force flag to override this check or remove the worktree with
 get-params() {
   local i=0
   local num=${#command_arguments[@]}
-  for arg in $@; do
+  for arg in "$@"; do
     local value=${command_arguments[i]}
     value=${value//%/%%}
     value=${value//\\/\\\\}
@@ -1195,7 +1197,7 @@ get-params() {
 
   # Check for extra arguments:
   if [[ $num -gt $i ]]; then
-    set -- ${command_arguments[@]}
+    set -- "${command_arguments[@]}"
     for ((j = 1; j <= i; j++)); do shift; done
     error "Unknown argument(s) '$*' for '$command' command."
   fi
@@ -1509,14 +1511,14 @@ assert-subdir-ready-for-init() {
     error "The subdir '$subdir' is already a subrepo."
   fi
   # Check that subdir is part of the repo
-  if [[ -z $(git log -1 --date=default -- $subdir) ]]; then
+  if [[ -z $(git log -1 --date=default -- "$subdir") ]]; then
     error "The subdir '$subdir' is not part of this repo."
   fi
 }
 
 # If subdir exists, make sure it is empty:
 assert-subdir-empty() {
-  if [[ -e $subdir ]] && [[ $(ls -A $subdir) ]]; then
+  if [[ -e $subdir ]] && [[ $(ls -A "$subdir") ]]; then
     error "The subdir '$subdir' exists and is not empty."
   fi
 }
@@ -1577,7 +1579,7 @@ get-commit-message() {
   if $all_wanted; then
     args+=("$subdir")
   fi
-  args+=(${commit_msg_args[@]})
+  args+=("${commit_msg_args[@]}")
 
   # Find the specific git-subrepo code used:
   local command_remote='???'
@@ -1600,7 +1602,7 @@ get-commit-message() {
 
   # Format subrepo commit message:
   cat <<...
-git subrepo $command$is_merge ${args[@]}
+git subrepo $command$is_merge ${args[*]}
 
 subrepo:
   subdir:   "$subdir"
@@ -1805,7 +1807,7 @@ git:delete-branch() {
 
 # Smart command runner:
 RUN() {
-  $debug_wanted && $SAY && say '>>>' $*
+  $debug_wanted && $SAY && say ">>> $*"
   if $EXEC; then
     "$@"
     return $?

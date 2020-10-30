@@ -13,8 +13,8 @@ clone-foo-and-bar
 
 {
   is "$(
-      cd $OWNER/bar
-      git subrepo --quiet clone $UPSTREAM/foo
+      cd "$OWNER/bar"
+      git subrepo --quiet clone "$UPSTREAM/foo"
       add-new-files foo/file
       git subrepo --quiet branch foo
       catch git subrepo branch foo
@@ -23,7 +23,7 @@ clone-foo-and-bar
     "Error OK: can't create a branch that exists"
 
   (
-    cd $OWNER/bar
+    cd "$OWNER/bar"
     git subrepo --quiet clean foo
     git reset --quiet --hard HEAD^
   )
@@ -55,7 +55,7 @@ clone-foo-and-bar
 
 {
   like "$(
-      cd $OWNER/bar
+      cd "$OWNER/bar"
       catch git subrepo pull /home/user/bar/foo
     )" \
     "git-subrepo: The subdir '.*/home/user/bar/foo' should not be absolute path." \
@@ -66,8 +66,8 @@ clone-foo-and-bar
   # XXX add 'commit' to cmds here when implemented:
   for cmd in pull push fetch branch commit clean; do
     is "$(
-        cd $OWNER/bar
-        catch git subrepo $cmd
+        cd "$OWNER/bar"
+        catch git subrepo "$cmd"
       )" \
       "git-subrepo: Command '$cmd' requires arg 'subdir'." \
       "Error OK: check that '$cmd' requires subdir"
@@ -76,7 +76,7 @@ clone-foo-and-bar
 
 {
   is "$(
-      cd $OWNER/bar
+      cd "$OWNER/bar"
       catch git subrepo clone foo bar baz quux
     )" \
     "git-subrepo: Unknown argument(s) 'baz quux' for 'clone' command." \
@@ -85,7 +85,7 @@ clone-foo-and-bar
 
 {
   is "$(
-      cd $OWNER/bar
+      cd "$OWNER/bar"
       catch git subrepo clone .git
     )" \
     "git-subrepo: Can't determine subdir from '.git'." \
@@ -94,7 +94,7 @@ clone-foo-and-bar
 
 {
   is "$(
-      cd $OWNER/bar
+      cd "$OWNER/bar"
       catch git subrepo pull lala
     )" \
     "git-subrepo: No 'lala/.gitrepo' file." \
@@ -103,14 +103,14 @@ clone-foo-and-bar
 
 {
   is "$(
-      cd $OWNER/bar
+      cd "$OWNER/bar"
       git checkout --quiet $(git rev-parse master)
       catch git subrepo status
     )" \
     "git-subrepo: Must be on a branch to run this command." \
     "Error OK: check repo is on a branch"
   (
-    cd $OWNER/bar
+    cd "$OWNER/bar"
     git checkout --quiet master
   )
 }
@@ -126,15 +126,15 @@ clone-foo-and-bar
 
 {
   like "$(
-      cd $OWNER/bar
+      cd "$OWNER/bar"
       touch me
       git add me
-      catch git subrepo clone $UPSTREAM/foo
+      catch git subrepo clone "$UPSTREAM/foo"
     )" \
     "git-subrepo: Can't clone subrepo. Working tree has changes." \
     "Error OK: check no working tree changes"
   (
-    cd $OWNER/bar
+    cd "$OWNER/bar"
     git reset --quiet --hard
   )
 }
@@ -150,7 +150,7 @@ clone-foo-and-bar
 
 {
   is "$(
-      cd $OWNER/bar
+      cd "$OWNER/bar"
       catch git subrepo clone dummy bard
     )" \
     "git-subrepo: The subdir 'bard' exists and is not empty." \
@@ -159,7 +159,7 @@ clone-foo-and-bar
 
 {
   is "$(
-      cd $OWNER/bar
+      cd "$OWNER/bar"
       catch git subrepo clone dummy-repo
     )" \
     "git-subrepo: Command failed: 'git ls-remote --symref dummy-repo'." \

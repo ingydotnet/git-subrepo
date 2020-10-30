@@ -17,8 +17,8 @@ test_round() {
   while [[ $normalize_dir =~ (//+) ]]; do normalize_dir=${normalize_dir//${BASH_REMATCH[1]}/\/}; done
 
   clone_output=$(
-    cd $OWNER/foo
-    git subrepo clone $UPSTREAM/bar -- "$normalize_dir"
+    cd "$OWNER/foo"
+    git subrepo clone "$UPSTREAM/bar" -- "$normalize_dir"
   )
 
   # Check output is correct:
@@ -29,7 +29,7 @@ test_round() {
   test-exists "$OWNER/foo/$normalize_dir/"
 
   (
-    cd $OWNER/bar
+    cd "$OWNER/bar"
     git pull
     add-new-files Bar2-$round
     git push
@@ -38,7 +38,7 @@ test_round() {
   # Do the pull and check output:
   {
     is "$(
-       cd $OWNER/foo
+       cd "$OWNER/foo"
        git subrepo pull -- "$normalize_dir"
        )" \
        "Subrepo '$normalize_dir' pulled from '$UPSTREAM/bar' (master)." \
@@ -57,7 +57,7 @@ test_round() {
   # Do the push and check output:
   {
     is "$(
-       cd $OWNER/foo
+       cd "$OWNER/foo"
        git subrepo push -- "$normalize_dir"
        )" \
        "Subrepo '$normalize_dir' pushed to '$UPSTREAM/bar' (master)." \
@@ -70,7 +70,7 @@ test_round .dot
 test_round ......dots
 test_round 'spa ce'
 test_round 'per%cent'
-test_round 'back-sl\ash'
+test_round 'back-sl\as/h'
 test_round 'end-with.lock'
 # test_round '@'  # TODO Fix. This broke on recent git version...
 test_round '@{'

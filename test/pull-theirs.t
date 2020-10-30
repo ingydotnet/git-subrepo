@@ -19,26 +19,26 @@ note "Pull - Conflict - Use theirs - Push"
 #
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   add-new-files Bar2
   git push
 ) &> /dev/null || die
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo pull bar
   modify-files-ex bar/Bar2
   git push
 ) &> /dev/null || die
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   modify-files-ex Bar2
   git push
 ) &> /dev/null || die
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo pull bar || {
       cd .git/tmp/subrepo/bar
       git checkout --theirs Bar2
@@ -54,18 +54,18 @@ test-exists \
   "$OWNER/foo/bar/Bar2" \
   "$OWNER/bar/Bar2" \
 
-is "$(cat $OWNER/foo/bar/Bar2)" \
+is "$(cat "$OWNER/foo/bar/Bar2")" \
   "new file Bar2"$'\n'"Bar2" \
   "The readme file in the mainrepo is theirs"
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   cat bar/Bar2
   git subrepo push bar
 ) &> /dev/null || die
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git pull
 ) &> /dev/null || die
 
@@ -73,7 +73,7 @@ test-exists \
   "$OWNER/foo/bar/Bar2" \
   "$OWNER/bar/Bar2" \
 
-is "$(cat $OWNER/bar/Bar2)" \
+is "$(cat "$OWNER/bar/Bar2")" \
   "new file Bar2"$'\n'"Bar2" \
   "The readme file in the subrepo is theirs"
 

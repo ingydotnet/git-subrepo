@@ -14,7 +14,7 @@ clone-foo-and-bar
 
 # Add submodule reference along with a new file to the bar repo:
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   git clone ../foo submodule
   add-new-files file
   git add submodule file
@@ -22,18 +22,18 @@ clone-foo-and-bar
 ) &> /dev/null || die
 
 (
-  cd $OWNER/foo
+  cd "$OWNER/foo"
   git subrepo clone ../bar
 ) &> /dev/null || die
 
 (
-  cd $OWNER/bar
+  cd "$OWNER/bar"
   modify-files file
 ) &> /dev/null || die
 
 {
   is "$(
-   cd $OWNER/foo
+   cd "$OWNER/foo"
     git subrepo pull bar
   )" \
     "Subrepo 'bar' pulled from '../bar' (master)." \

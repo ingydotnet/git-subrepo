@@ -46,7 +46,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 {
   is "$(
-    cd $OWNER/foo
+    cd "$OWNER/foo"
     git subrepo pull bar
   )" \
     "Subrepo 'bar' is up to date." \
