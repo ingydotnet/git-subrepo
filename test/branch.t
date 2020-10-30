@@ -10,7 +10,7 @@ clone-foo-and-bar
 
 subrepo-clone-bar-into-foo
 
-before="$(date -r "$OWNER"/foo/Foo '+%s')"
+before=$(date -r "$OWNER"/foo/Foo '+%s')
 
 (
   cd "$OWNER"/foo
@@ -31,7 +31,7 @@ is "$(
   "subrepo branch command output is correct"
 
 
-after="$(date -r "$OWNER"/foo/Foo '+%s')"
+after=$(date -r "$OWNER"/foo/Foo '+%s')
 assert-original-state "$OWNER"/foo bar
 
 # Check that we haven't checked out any temporary files

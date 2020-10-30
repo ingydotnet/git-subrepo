@@ -11,15 +11,15 @@ test_round() {
   clone-foo-and-bar
 
   round=$(( round + 1 ))
-  normalize_dir="$1"
-  normalize_dir="${normalize_dir#./}"
-  normalize_dir="${normalize_dir%/}"
+  normalize_dir=$1
+  normalize_dir=${normalize_dir#./}
+  normalize_dir=${normalize_dir%/}
   while [[ $normalize_dir =~ (//+) ]]; do normalize_dir=${normalize_dir//${BASH_REMATCH[1]}/\/}; done
 
-  clone_output="$(
+  clone_output=$(
     cd $OWNER/foo
     git subrepo clone $UPSTREAM/bar -- "$normalize_dir"
-  )"
+  )
 
   # Check output is correct:
   is "$clone_output" \

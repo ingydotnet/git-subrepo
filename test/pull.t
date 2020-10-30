@@ -37,8 +37,8 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 # Test foo/bar/.gitrepo file contents:
 {
-  foo_pull_commit="$(cd $OWNER/foo; git rev-parse HEAD^)"
-  bar_head_commit="$(cd $OWNER/bar; git rev-parse HEAD)"
+  foo_pull_commit=$(cd $OWNER/foo; git rev-parse HEAD^)
+  bar_head_commit=$(cd $OWNER/bar; git rev-parse HEAD)
   test-gitrepo-comment-block
   test-gitrepo-field "remote" "$UPSTREAM/bar"
   test-gitrepo-field "branch" "master"
@@ -49,11 +49,11 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 # Check commit messages
 {
-  foo_new_commit_message="$(cd $OWNER/foo; git log --format=%B -n 1)"
+  foo_new_commit_message=$(cd $OWNER/foo; git log --format=%B -n 1)
   like "$foo_new_commit_message" \
       "git subrepo pull bar" \
       "Subrepo pull commit message OK"
-  bar_commit_short="$(git rev-parse --short $bar_head_commit)"
+  bar_commit_short=$(git rev-parse --short $bar_head_commit)
   like "$foo_new_commit_message" \
       'merged:   \"'$bar_commit_short \
       "Pull commit contains merged"

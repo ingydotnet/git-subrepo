@@ -22,10 +22,10 @@ clone-foo-and-bar
 
 # Do the subrepo push to another branch:
 {
-  message="$(
+  message=$(
     cd $OWNER/foo
     git subrepo push bar --branch newbar
-  )"
+  )
 
   # Test the output:
   is "$message" \
@@ -35,10 +35,10 @@ clone-foo-and-bar
 
 # Do the subrepo push to another branch again:
 {
-  message="$(
+  message=$(
     cd $OWNER/foo
     git subrepo push bar --branch newbar
-  )"
+  )
 
   # Test the output:
   is "$message" \

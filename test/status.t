@@ -7,7 +7,7 @@ source test/setup
 use Test::More
 
 {
-  output="$(git subrepo status)"
+  output=$(git subrepo status)
 
   like "$output" "2 subrepos:" \
     "'status' intro ok"
@@ -26,7 +26,7 @@ use Test::More
 }
 
 {
-  output="$(git subrepo status --ALL)"
+  output=$(git subrepo status --ALL)
 
   like "$output" "4 subrepos:" \
     "'status --ALL' intro ok"
@@ -45,7 +45,7 @@ use Test::More
 }
 
 {
-  output="$(git subrepo status --all)"
+  output=$(git subrepo status --all)
 
   like "$output" "2 subrepos:" \
     "'status --all' intro ok"

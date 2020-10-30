@@ -9,25 +9,25 @@ set -e
 source "$PWD"/.rc
 
 # Get the location of this script
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-BASHLIB="$(
+BASHLIB=$(
   find "$PWD"/ -type d -name bin -o -type d -name lib | tr '\n' ':'
-)"
+)
 export BASHLIB
 
-export PATH="$BASHLIB:$PATH"
+export PATH=$BASHLIB:$PATH
 source bash+ :std
 
 source 'lib/git-subrepo'
 
-export TMP="$SCRIPT_DIR/tmp"
+export TMP=$SCRIPT_DIR/tmp
 rm -fr $TMP
 
-#export GIT_EXEC_PATH="$PWD/lib:$(git --exec-path)"
-export UPSTREAM="$TMP/upstream"
-export OWNER="$TMP/owner"
-export COLLAB="$TMP/collab"
+#export GIT_EXEC_PATH=$PWD/lib:$(git --exec-path)
+export UPSTREAM=$TMP/upstream
+export OWNER=$TMP/owner
+export COLLAB=$TMP/collab
 
 mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 
@@ -102,7 +102,7 @@ modify-files-ex() {
 test-exists() {
   for f in "$@"; do
     if [[ $f =~ ^! ]]; then
-      f="${f#!}"
+      f=${f#!}
       if [[ $f =~ /$ ]]; then
         ok "$([ ! -d "$f" ])" \
           "Directory '$f' does not exist"
@@ -125,7 +125,7 @@ test-exists() {
 test-exists-in-index() {
   for f in "$@"; do
     if [[ "$f" =~ ^! ]]; then
-      f="${f#!}"
+      f=${f#!}
       if [[ "$f" =~ /$ ]]; then
         ok "$([ ! "$(git ls-tree --full-tree --name-only -r HEAD "$f")" ])" \
           "Directory '$f' does not exist in index"
@@ -168,17 +168,17 @@ test-commit-count() {
 }
 
 save-original-state() {
-  original_head_ref="$(cd "$1"; cat .git/HEAD)"
-  original_branch="${original_head_ref#ref: refs/heads/}"
-  original_head_commit="$(cd "$1"; git rev-parse HEAD)"
-  original_gitrepo="$(cd "$1"; cat "$2"/.gitrepo)"
+  original_head_ref=$(cd "$1"; cat .git/HEAD)
+  original_branch=${original_head_ref#ref: refs/heads/}
+  original_head_commit=$(cd "$1"; git rev-parse HEAD)
+  original_gitrepo=$(cd "$1"; cat "$2"/.gitrepo)
 }
 
 assert-original-state() {
-  current_head_ref="$(cd "$1"; cat .git/HEAD)"
-  current_branch="${current_head_ref#ref: refs/heads/}"
-  current_head_commit="$(cd "$1"; git rev-parse HEAD)"
-  current_gitrepo="$(cd "$1"; cat "$2"/.gitrepo)"
+  current_head_ref=$(cd "$1"; cat .git/HEAD)
+  current_branch=${current_head_ref#ref: refs/heads/}
+  current_head_commit=$(cd "$1"; git rev-parse HEAD)
+  current_gitrepo=$(cd "$1"; cat "$2"/.gitrepo)
 
   is "$current_head_ref" \
     "$original_head_ref" \
@@ -198,7 +198,7 @@ assert-original-state() {
 }
 
 catch() {
-  local error=; error="$("$@" 2>&1 || true)"
+  local error=; error=$("$@" 2>&1 || true)
   echo "$error"
 }
 
