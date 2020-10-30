@@ -19,8 +19,8 @@ subrepo-clone-bar-into-foo
 gitrepo=$OWNER/foo/bar/.gitrepo
 
 {
-  foo_pull_commit=$(cd "$OWNER/foo"; git rev-parse HEAD^)
-  bar_head_commit=$(cd "$OWNER/bar"; git rev-parse HEAD)
+  foo_pull_commit=$(cd "$OWNER/foo" || exit; git rev-parse HEAD^)
+  bar_head_commit=$(cd "$OWNER/bar" || exit; git rev-parse HEAD)
   test-gitrepo-comment-block
   test-gitrepo-field remote "$UPSTREAM/bar"
   test-gitrepo-field branch master
@@ -35,8 +35,8 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 ) &> /dev/null || die
 
 {
-  foo_pull_commit=$(cd "$OWNER/foo"; git rev-parse HEAD^)
-  bar_head_commit=$(cd "$OWNER/bar"; git rev-parse HEAD)
+  foo_pull_commit=$(cd "$OWNER/foo" || exit; git rev-parse HEAD^)
+  bar_head_commit=$(cd "$OWNER/bar" || exit; git rev-parse HEAD)
   test-gitrepo-comment-block
   test-gitrepo-field remote "$UPSTREAM/bar"
   test-gitrepo-field branch branch1
@@ -47,7 +47,7 @@ gitrepo=$OWNER/foo/bar/.gitrepo
 
 {
   is "$(
-    cd "$OWNER/foo"
+    cd "$OWNER/foo" || exit
     git subrepo pull bar
   )" \
     "Subrepo 'bar' is up to date." \

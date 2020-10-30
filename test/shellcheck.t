@@ -24,7 +24,6 @@ skips=(
 
   # These are errors/warnings we can fix one at a time:
   SC2155  # Declare and assign separately to avoid masking return values.
-  SC2164  # Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
 )
 skip=$(IFS=,; echo "${skips[*]}")
 
