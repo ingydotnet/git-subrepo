@@ -31,7 +31,10 @@ fi
   GIT_SUBREPO_ROOT=$BASH_SOURCE
 [[ $GIT_SUBREPO_ROOT =~ ^/ ]] ||
   GIT_SUBREPO_ROOT=$PWD/$GIT_SUBREPO_ROOT
-export GIT_SUBREPO_ROOT=$(cd "$(dirname "$GIT_SUBREPO_ROOT")"; pwd)
+export GIT_SUBREPO_ROOT=$(
+  cd "$(dirname "$GIT_SUBREPO_ROOT")" || return
+  pwd
+) || return
 
 export PATH=$GIT_SUBREPO_ROOT/lib:$PATH
 export MANPATH=$GIT_SUBREPO_ROOT/man:$MANPATH
