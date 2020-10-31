@@ -11,14 +11,15 @@ matrix:
     dist: trusty
     language: shell
 
-  - name: Git on Mac
+  - name: Git on Mac xcode11.3.1
     os: osx
-    osx_image: xcode8.3
-    addons:
-      homebrew:
-        packages:
-        - bash
-        update: true
+    osx_image: xcode11.3.1
+    before_script: brew install bash
+#     addons:
+#       homebrew:
+#         packages:
+#         - bash
+#           # update: true   # XXX Takes too long. Test times out.
 
 script:
 # NOTE: we have to make sure we're on a branch (rather than on a detached HEAD)
