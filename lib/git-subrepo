@@ -27,9 +27,11 @@ else
   # If `source .rc` method used:
   source "${SOURCE_DIR}/../ext/bashplus/lib/bash+.bash"
 fi
-bash+:import :std can
+bash+:import :std can version-check
+
 
 VERSION=0.4.1
+REQUIRED_BASH_VERSION=4.1
 REQUIRED_GIT_VERSION=2.7.0
 GIT_TMP=$(git rev-parse --git-common-dir 2> /dev/null || echo .git)/tmp
 
@@ -304,7 +306,7 @@ command:commit() {
     error "Can't find ref '$refs_subrepo_fetch'. Try using -F."
   upstream_head_commit=$(git rev-parse "$refs_subrepo_fetch")
 
-  [[ $subrepo_commit_ref ]] ||
+  [[ ${subrepo_commit_ref-} ]] ||
     subrepo_commit_ref=subrepo/$subref
   subrepo:commit
 
@@ -355,13 +357,13 @@ command:clean() {
 command:config() {
   command-setup +subdir +config_option config_value
   # shellcheck disable=2154
-  o "Update '$subdir' configuration with $config_option=$config_value"
+  o "Update '$subdir' configuration with $config_option=${config_value-}"
 
   if [[ ! $config_option =~ ^(branch|cmdver|commit|method|remote|version)$ ]]; then
     error "Option $config_option not recognized"
   fi
 
-  if [[ -z $config_value ]]; then
+  if [[ -z ${config_value-} ]]; then
     OUT=true RUN git config --file="$gitrepo" "subrepo.$config_option"
     say "Subrepo '$subdir' option '$config_option' has value '$output'."
     return
@@ -1009,9 +1011,9 @@ subrepo:clean() {
 get-command-options() {
   [[ $# -eq 0 ]] && set -- --help
 
-  [[ $GIT_SUBREPO_QUIET ]] && quiet_wanted=true
-  [[ $GIT_SUBREPO_VERBOSE ]] && verbose_wanted=true
-  [[ $GIT_SUBREPO_DEBUG ]] && debug_wanted=true
+  [[ ${GIT_SUBREPO_QUIET-} ]] && quiet_wanted=true
+  [[ ${GIT_SUBREPO_VERBOSE-} ]] && verbose_wanted=true
+  [[ ${GIT_SUBREPO_DEBUG-} ]] && debug_wanted=true
 
   eval "$(
     echo "$GETOPT_SPEC" |
@@ -1064,7 +1066,7 @@ get-command-options() {
     usage-error "'$command' is not a command. See 'git subrepo help'."
 
   command_arguments=("$@")
-  if [[ ${#command_arguments} -gt 0 ]]; then
+  if [[ ${command_arguments[*]-} && ${#command_arguments[@]} -gt 0 ]]; then
     local first=${command_arguments[0]}
     first=${first%/}
     command_arguments[0]=$first
@@ -1152,7 +1154,7 @@ command-setup() {
       git worktree list |
         grep "\[subrepo/$subdir\]" |
         cut -d ' ' -f1
-    )
+    ) || true
     if [[ $command =~ ^(commit)$ && -z $_worktree ]]; then
       error "There is no worktree available, use the branch command first"
     elif [[ ! $command =~ ^(branch|clean|commit|push)$ && $_worktree ]]; then
@@ -1190,7 +1192,7 @@ get-params() {
   local i=0
   local num=${#command_arguments[@]}
   for arg in "$@"; do
-    local value=${command_arguments[i]}
+    local value=${command_arguments[i]-}
     value=${value//%/%%}
     value=${value//\\/\\\\}
     # If arg starts with '+' then it is required
@@ -1433,16 +1435,20 @@ assert-environment-ok() {
 
   git_version=$(git --version | cut -d ' ' -f3)
 
-  if [[ $(
-          printf "%s\n%s" "$REQUIRED_GIT_VERSION" "$git_version" |
-          sort -t. -k 1,1n -k 2,2n -k 3,3n |
-          head -n1
-        ) == "$git_version" &&
-       $git_version != "$REQUIRED_GIT_VERSION"
-  ]]; then
+  version-check bash "$REQUIRED_BASH_VERSION" || {
+    echo "The 'bashplus' library requires that 'Bash ${REQUIRED_BASH_VERSION}+' is installed." >&2
+    echo "It doesn't need to be your shell, but it must be in your PATH." >&2
+    if [[ ${OSTYPE-} == darwin* ]]; then
+      echo "You appear to be on macOS." >&2
+      echo "Try: 'brew install bash'." >&2
+      echo "This will not change your user shell, it just installs 'Bash 5.x'." >&2
+    fi
+    exit 1
+  }
+
+  version-check git "$REQUIRED_GIT_VERSION" ||
     error "Requires git version $REQUIRED_GIT_VERSION or higher; "`
          `"you have '$git_version'."
-  fi
 
   if [[ ${BASH_VERSINFO[0]} -lt 4 ]] ; then
     echo "The git-subrepo command requires that 'Bash 4+' is installed."
@@ -1781,7 +1787,9 @@ git:get-head-branch-commit() {
 git:commit-in-rev-list() {
   local commit=$1
   local list_head=$2
+  set +o pipefail
   git rev-list "$list_head" | grep -q "^$commit"
+  set -o pipefail
 }
 
 git:make-ref() {

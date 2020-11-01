@@ -10,6 +10,7 @@ RUN apt-get install -y \
         wget \
  && true
 
+# Install shellcheck-0.7.1
 RUN cd /root \
  && wget https://github.com/koalaman/shellcheck/releases/download/v0.7.1/shellcheck-v0.7.1.linux.x86_64.tar.xz \
  && tar xf shellcheck-v0.7.1.linux.x86_64.tar.xz \
@@ -22,7 +23,7 @@ RUN cd /root \
  && wget https://ftp.gnu.org/gnu/bash/bash-3.2.57.tar.gz \
  && tar -xzf bash-3.2.57.tar.gz \
  && cd bash-3.2.57 \
- && ./configure --prefix=/bash-3.2.57 \
+ && ./configure --prefix=/bash-3.2 \
  && make \
  && make install \
  && rm -fr bash* \
@@ -99,7 +100,7 @@ RUN cd /root \
  && wget https://ftp.gnu.org/gnu/bash/bash-5.1-rc1.tar.gz \
  && tar -xzf bash-5.1-rc1.tar.gz \
  && cd bash-5.1-rc1 \
- && ./configure --prefix=/bash-5.1-rc1 \
+ && ./configure --prefix=/bash-5.1 \
  && make \
  && make install \
  && rm -fr bash* \
