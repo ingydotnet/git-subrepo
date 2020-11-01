@@ -20,7 +20,9 @@ INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
 INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
 
 # Docker variables:
-DOCKER_IMAGE := bash-testing
+DOCKER_IMAGE := ingy/bash-testing:0.0.1
+DOCKER_TESTS := 5.1 5.0 4.4 4.3 4.2 4.1
+DOCKER_TESTS := $(DOCKER_TESTS:%=docker-test-%)
 
 # Basic targets:
 default: help
@@ -39,21 +41,10 @@ test:
 
 test-all: test docker-test
 
-docker-test: docker-test-build
-	-$(call docker-make-test,3.2.57)
-	-$(call docker-make-test,4.0)
-	-$(call docker-make-test,4.1)
-	-$(call docker-make-test,4.2)
-	-$(call docker-make-test,4.3)
-	-$(call docker-make-test,4.4)
-	-$(call docker-make-test,5.0)
-	-$(call docker-make-test,5.1-rc1)
+docker-test: $(DOCKER_TESTS)
 
-docker-test-build:
-	docker build --tag=$(DOCKER_IMAGE) test
-
-dokcer-test-shell:
-
+$(DOCKER_TESTS):
+	$(call docker-make-test,$(@:docker-test-%=%))
 
 # Install support:
 install:
@@ -109,7 +100,7 @@ define docker-make-test
 	    $(DOCKER_IMAGE) \
 		/bin/bash -c ' \
 		    set -x && \
-		    pwd && \
+		    [[ -d /bash-$(1) ]] && \
 		    export PATH=/bash-$(1)/bin:$$PATH && \
 		    bash --version && \
 		    make test \
