@@ -19,6 +19,9 @@ INSTALL_LIB  ?= $(DESTDIR)$(shell git --exec-path)
 INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
 INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
 
+# Docker variables:
+DOCKER_IMAGE := bash-testing
+
 # Basic targets:
 default: help
 
@@ -33,6 +36,24 @@ help:
 .PHONY: test
 test:
 	prove $(PROVEOPT:%=% )test/
+
+test-all: test docker-test
+
+docker-test: docker-test-build
+	-$(call docker-make-test,3.2.57)
+	-$(call docker-make-test,4.0)
+	-$(call docker-make-test,4.1)
+	-$(call docker-make-test,4.2)
+	-$(call docker-make-test,4.3)
+	-$(call docker-make-test,4.4)
+	-$(call docker-make-test,5.0)
+	-$(call docker-make-test,5.1-rc1)
+
+docker-test-build:
+	docker build --tag=$(DOCKER_IMAGE) test
+
+dokcer-test-shell:
+
 
 # Install support:
 install:
@@ -80,3 +101,17 @@ compgen: force
 
 clean:
 	rm -fr tmp test/tmp
+
+define docker-make-test
+	docker run -i -t --rm \
+	    -v $(PWD):/git-subrepo \
+	    -w /git-subrepo \
+	    $(DOCKER_IMAGE) \
+		/bin/bash -c ' \
+		    set -x && \
+		    pwd && \
+		    export PATH=/bash-$(1)/bin:$$PATH && \
+		    bash --version && \
+		    make test \
+		'
+endef
