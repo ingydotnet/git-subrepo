@@ -28,7 +28,7 @@ else
 fi
 bash+:import :std can
 
-VERSION=0.4.1
+VERSION=0.4.2-LFS
 REQUIRED_GIT_VERSION=2.7.0
 GIT_TMP="$(git rev-parse --git-common-dir 2> /dev/null || echo .git)/tmp"
 
@@ -572,9 +572,13 @@ subrepo:pull() {
 
   o "Create ref '$refs_subrepo_branch' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_branch" "$branch_name"
-
+  
   o "Commit the new '$subrepo_commit_ref' content."
   CALL subrepo:commit
+  
+  o "git lfs pull $subrepo_remote then commit"
+  RUN git lfs pull "$subrepo_remote"
+  RUN git commit -a --amend --allow-empty --no-edit
 }
 
 # Push a properly merged subrepo branch upstream:
@@ -653,10 +657,9 @@ subrepo:push() {
   fi
 
   if ! $force_wanted; then
-    o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD."
+    o "Make sure '$branch_name' contains the '$refs_subrepo_fetch' HEAD, i.e. '$upstream_head_commit'."
     if ! git:commit-in-rev-list "$upstream_head_commit" "$branch_name"; then
-      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: " \
-        "$upstream_head_commit"
+      error "Can't commit: '$branch_name' doesn't contain upstream HEAD: '$upstream_head_commit'"
     fi
   fi
 
@@ -664,7 +667,7 @@ subrepo:push() {
   "$force_wanted" && force=' --force'
 
   o "Push$force branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
-  RUN git push$force "$subrepo_remote" "$branch_name":"$subrepo_branch"
+  RUN git push$force --no-verify "$subrepo_remote" "$branch_name":"$subrepo_branch"
 
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
@@ -805,7 +808,7 @@ subrepo:branch() {
   o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
   local filter="$branch"
   [[ -n "$first_gitrepo_commit" ]] && filter="$first_gitrepo_commit..$branch"
-  FAIL=false RUN git filter-branch -f --prune-empty --tree-filter \
+  FAIL=false RUN git filter-branch -f --tree-filter \
     "rm -f .gitrepo" "$filter"
 
   git:create-worktree "$branch"
@@ -1772,8 +1775,16 @@ git:is_merge_commit() {
 
 git:create-worktree() {
   local branch="$1"
+  local pwd=$(pwd)
   worktree="$GIT_TMP/$branch"
+  o "git worktree add '$worktree' '$branch'"
   RUN git worktree add "$worktree" "$branch"
+  
+  cd "$worktree"
+  o "git lfs pull from folder '$(pwd)' then commit"
+  RUN git lfs pull
+  RUN git commit -a --amend --allow-empty --no-edit
+  cd "$pwd" 
 }
 
 git:remove-worktree() {
