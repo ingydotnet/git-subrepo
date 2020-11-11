@@ -1,7 +1,7 @@
 =meta: 0.0.2
 
 name: bashplus
-version: 0.0.8
+version: 0.0.9
 abstract: Modern Bash Programming
 homepage: http://bpan.org/package/bashplus/
 
@@ -16,7 +16,7 @@ author:
   homepage: http://ingy.net
 
 requires:
-  bash: 3.2.0
+  bash: 4.4.0
 test:
   cmd: make test
 install:

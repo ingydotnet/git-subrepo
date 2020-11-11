@@ -1,4 +1,10 @@
 ---
+version: 0.0.9
+date:    Wed 11 Nov 2020 02:19:32 PM EST
+changes:
+- Apply shellcheck fixes
+- Modernize bash code
+---
 version: 0.0.8
 date:    Fri Aug 21 08:00:45 PDT 2020
 changes:
