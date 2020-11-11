@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:ingydotnet/bashplus.git
 	branch = master
-	commit = ab418ed01941b5a6d97b20fa51497babafcb841f
-	parent = 7868da5cb5e69493dc0dddc92fa48639211ae9fc
+	commit = e49f45a1457fed3cceb15bd4a82b0f7515efd8e5
+	parent = c978e2afd6861203138f28d0021e03fa1ffbba0c
 	cmdver = 0.4.1
 	method = merge

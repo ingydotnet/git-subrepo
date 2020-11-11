@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:ingydotnet/test-more-bash.git
 	branch = master
-	commit = 5c6764651bdad1379a08bfbdcec406cac5cc7dca
-	parent = 7ea6eb9179e479ba4ddeb842ad6565164acb7043
+	commit = c7df24fcb0814fbb62a33d92dc3c8d526ff710f0
+	parent = 914c2ae8e3b881f62ca987c1c3343df6a034d865
 	cmdver = 0.4.1
 	method = merge

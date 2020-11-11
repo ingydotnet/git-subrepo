@@ -5,7 +5,7 @@ source lib/test/tap.bash
 
 Test::Tap:init tests 1
 
-output=$(prove -v test/test/{b,f}ail.t 2>&1)
+output=$(prove -v test/test/{b,f}ail.t 2>&1) || true
 
 test-helper:like \
   "$output" \

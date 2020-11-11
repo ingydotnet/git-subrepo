@@ -5,7 +5,7 @@ source lib/test/tap.bash
 
 Test::Tap:init tests 1
 
-output="$(prove -v test/test/fail_fast.t 2>&1)"
+output=$(prove -v test/test/fail_fast.t 2>&1) || true
 
 # echo ">>>$output<<<" >&2
 
