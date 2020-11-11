@@ -1,6 +1,11 @@
 ---
+version: 0.0.5
+date:    Wed 11 Nov 2020 02:33:42 PM EST
+changes:
+- Refactor to modern bash
+---
 version: 0.0.4
-date:    Fri Sep  4 12:21:30 PDT 2020
+date:    Fri Sep 4 12:26:58 2020 -0700
 changes:
 - Make up to date
 - Apply a few PRs

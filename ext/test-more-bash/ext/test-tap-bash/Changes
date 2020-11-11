@@ -1,4 +1,15 @@
 ---
+version: 0.0.6
+date:    Tue 03 Nov 2020 05:20:54 PM EST
+changes:
+- Workaround for bash 4.0 bug
+- Docker testing for all bash versions
+---
+version: 0.0.5
+date:    Tue 03 Nov 2020 01:15:41 PM EST
+changes:
+- Use more modern Bash idioms
+---
 version: 0.0.4
 date:    Sat Jan 23 16:32:22 PST 2016
 changes:

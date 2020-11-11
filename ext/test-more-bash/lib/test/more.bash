@@ -2,11 +2,16 @@
 #
 # Copyright (c) 2013-2020. Ingy döt Net.
 
-set -e
+set -e -u -o pipefail
 
-Test__More_VERSION=0.0.4
+# shellcheck disable=2034
+Test__More_VERSION=0.0.5
 
-source bash+ :std
+source bash+ :std version-check
+
+version-check bash 3.2 ||
+  die "test-more-bash requires bash 3.2+"
+
 use Test::Tap
 
 Test::More:import() { Test::Tap:init "$@"; }
@@ -21,7 +26,7 @@ BAIL_OUT() { Test::Tap:BAIL_OUT "$@"; }
 BAIL_ON_FAIL() { Test::Tap:BAIL_ON_FAIL "$@"; }
 
 is() {
-  local got="$1" want="$2" label="$3"
+  local got=$1 want=$2 label=${3-}
   if [[ $got == "$want" ]]; then
     Test::Tap:pass "$label"
   else
@@ -48,7 +53,7 @@ Test::More:is-fail() {
 isnt() {
   local Test__Tap_CALL_STACK_LEVEL=
   Test__Tap_CALL_STACK_LEVEL=$(( Test__Tap_CALL_STACK_LEVEL + 1 ))
-  local got="$1" dontwant="$2" label="$3"
+  local got=$1 dontwant=$2 label=${3-}
   if [[ $got != "$dontwant" ]]; then
     Test::Tap:pass "$label"
   else
@@ -63,14 +68,16 @@ Test::More:isnt-fail() {
 }
 
 ok() {
-  (exit ${1:-$?}) &&
-    Test::Tap:pass "$2" ||
-    Test::Tap:fail "$2"
+  if (exit "${1:-$?}"); then
+    Test::Tap:pass "${2-}"
+  else
+    Test::Tap:fail "${2-}"
+  fi
 }
 
 like() {
-  local got=$1 regex=$2 label=$3
-  if [[ $got =~ "$regex" ]]; then
+  local got=$1 regex=$2 label=${3-}
+  if [[ $got =~ $regex ]]; then
     Test::Tap:pass "$label"
   else
     Test::Tap:fail "$label" Test::More:like-fail
@@ -82,8 +89,8 @@ Test::More:like-fail() {
 }
 
 unlike() {
-  local got=$1 regex=$2 label=$3
-  if [[ ! $got =~ "$regex" ]]; then
+  local got=$1 regex=$2 label=${3-}
+  if [[ ! $got =~ $regex ]]; then
     Test::Tap:pass "$label"
   else
     Test::Tap:fail "$label" Test::More:unlike-fail
@@ -97,10 +104,12 @@ Test::More:unlike-fail() {
 cmp-array() {
     local arrayname="$1[@]"
     local expname="$2[@]"
-    local label="$3"
+    local label=${3-}
 
-    local array=(${!arrayname})
-    local expected=(${!expname})
+    local array=("${!arrayname}")
+    local expected=("${!expname}")
 
-    is "$(printf "%s\n" "${array[@]}")" "$(printf "%s\n" "${expected[@]}")" "$label"
+    is "$(printf "%s\n" "${array[@]}")" \
+      "$(printf "%s\n" "${expected[@]}")" \
+      "$label"
 }

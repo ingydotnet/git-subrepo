@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set -e
+set -e -u -o pipefail
 
-BASHLIB="`find $PWD -type d | grep -E '/(bin|lib)$' | xargs -n1 printf "%s:"`"
-PATH="$BASHLIB:$PATH"
+BASHLIB=$(find "$PWD" -type d | grep -E '/(bin|lib)$' | xargs -n1 printf "%s:")
+PATH=$BASHLIB:$PATH
 
 source bash+ :std

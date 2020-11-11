@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=2034
+
 source test/setup
 use Test::More
 
