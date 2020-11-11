@@ -21,7 +21,7 @@ INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
 
 # Docker variables:
 DOCKER_IMAGE := ingy/bash-testing:0.0.1
-DOCKER_TESTS := 5.1 5.0 4.4 4.3 4.2 4.1
+DOCKER_TESTS := 5.1 5.0 4.4 4.3 4.2 4.1 4.0
 DOCKER_TESTS := $(DOCKER_TESTS:%=docker-test-%)
 
 # Basic targets:
