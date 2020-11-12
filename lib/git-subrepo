@@ -1787,9 +1787,7 @@ git:get-head-branch-commit() {
 git:commit-in-rev-list() {
   local commit=$1
   local list_head=$2
-  set +o pipefail
   git rev-list "$list_head" | grep -q "^$commit"
-  set -o pipefail
 }
 
 git:make-ref() {
