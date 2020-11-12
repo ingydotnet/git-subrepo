@@ -88,12 +88,11 @@ gitrepo=$OWNER/foo/bar/.gitrepo
   git subrepo pull bar || touch pull_failed
 ) &> /dev/null || die
 
-# XXX
-# # We check that the control file was created
-# {
-#   test-exists \
-#     "$OWNER/foo/pull_failed"
-# }
+# We check that the control file was created
+{
+  test-exists \
+    "$OWNER/foo/pull_failed"
+}
 
 done_testing # 9
 
