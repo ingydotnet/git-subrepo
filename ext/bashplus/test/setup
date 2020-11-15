@@ -7,8 +7,9 @@
 # how nice Bash can be.
 #------------------------------------------------------------------------------
 
-set -e -u -o pipefail
-[[ $BASH_VERSION == 4.0* ]] && set +u
+set -e -o pipefail
+
+PATH=$PWD/bin:$PATH
 
 run=0
 
