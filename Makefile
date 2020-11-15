@@ -1,4 +1,6 @@
-# Make sure we have 'git' and it works OK:
+SHELL := bash
+
+# Make sure we have git:
 ifeq ($(shell which git),)
   $(error 'git' is not installed on this system)
 endif
@@ -20,9 +22,16 @@ INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
 INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
 
 # Docker variables:
-DOCKER_IMAGE := ingy/bash-testing:0.0.1
-DOCKER_TESTS := 5.1 5.0 4.4 4.3 4.2 4.1 4.0
-DOCKER_TESTS := $(DOCKER_TESTS:%=docker-test-%)
+DOCKER_TAG ?= 0.0.4
+DOCKER_IMAGE := ingy/bash-testing:$(DOCKER_TAG)
+BASH_VERSIONS ?= 5.1 5.0 4.4 4.3 4.2 4.1 4.0
+DOCKER_TESTS := $(BASH_VERSIONS:%=docker-test-%)
+GIT_VERSIONS := 2.29 2.25 2.17 2.7
+
+prove ?=
+test ?= test/
+bash ?= 5.0
+git ?= 2.29
 
 # Basic targets:
 default: help
@@ -37,14 +46,17 @@ help:
 
 .PHONY: test
 test:
-	prove $(PROVEOPT:%=% )test/
+	prove $(prove) $(test)
 
-test-all: test docker-test
+test-all: test docker-tests
 
-docker-test: $(DOCKER_TESTS)
+docker-test:
+	$(call docker-make-test,$(bash),$(git))
+
+docker-tests: $(DOCKER_TESTS)
 
 $(DOCKER_TESTS):
-	$(call docker-make-test,$(@:docker-test-%=%))
+	$(call docker-make-test,$(@:docker-test-%=%),$(git))
 
 # Install support:
 install:
@@ -101,8 +113,10 @@ define docker-make-test
 		/bin/bash -c ' \
 		    set -x && \
 		    [[ -d /bash-$(1) ]] && \
-		    export PATH=/bash-$(1)/bin:$$PATH && \
+		    [[ -d /git-$(2) ]] && \
+		    export PATH=/bash-$(1)/bin:/git-$(2)/bin:$$PATH && \
 		    bash --version && \
-		    make test \
+		    git --version && \
+		    make test prove=$(prove) test=$(test) \
 		'
 endef
