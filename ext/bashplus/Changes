@@ -1,4 +1,12 @@
 ---
+version: 0.1.0
+date:    Sat 14 Nov 2020 10:14:14 AM EST
+changes:
+- Add tests for version-check
+- Improve version-check
+- Move PATH assignment into test/setup
+- Meta bashplus supports Bash 3.2
+---
 version: 0.0.9
 date:    Wed 11 Nov 2020 02:19:32 PM EST
 changes:

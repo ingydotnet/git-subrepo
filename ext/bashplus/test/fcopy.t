@@ -2,7 +2,6 @@
 
 source test/setup
 
-PATH=$PWD/bin:$PATH
 source bash+
 
 foo() {
