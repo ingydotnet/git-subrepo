@@ -1,0 +1,24 @@
+name: Test
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - if: startsWith(matrix.os, 'macos')
+      run: brew install bash
+    - run:
+        git checkout -B git-actions-ci-dummy-branch;
+        git config --global user.email "you@example.com";
+        git config --global user.name "Your Name";
+    - run: make test

@@ -10,9 +10,6 @@ See http://github.com/ingydotnet/swim-pm#readme
 
 git-subrepo - Git Submodule Alternative
 
-=for html
-<a href="https://travis-ci.org/ingydotnet/git-subrepo"><img src="https://travis-ci.org/ingydotnet/git-subrepo.png" alt="git-subrepo"></a>
-
 =head1 Synopsis
 
     git subrepo -h    # Help Overview
@@ -181,7 +178,7 @@ performed. The default option is merge.
 
 The C<init> command accepts the C<--branch=> and C<--remote=> options.
 
-=item C<< git subrepo pull <subdir>|--all [-M|-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u] >>
+=item C<< git subrepo pull <subdir>|--all [-M|-R|-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u] >>
 
 Update the subrepo subdir with the latest upstream changes.
 
@@ -215,7 +212,7 @@ used for a subrepo C<push> command. See 'push' below for more information. If
 you want to change the method you can use the C<config> command for this.
 
 When you pull you can assume a fast-forward strategy (default) or you can
-specify a C<--method rebase>, C<--method merge> or C<--force> strategy. The latter is the
+specify a C<--rebase>, C<--merge> or C<--force> strategy. The latter is the
 same as a C<clone --force> operation, using the current remote and branch.
 
 Like the C<clone> command, C<pull> will squash all the changes (since the last
@@ -229,7 +226,7 @@ The set of commands used above are described in detail below.
 The C<pull> command accepts the C<--all>, C<--branch=>, C<--edit>, C<--force>,
 C<--message=>, C<--remote=> and C<--update> options.
 
-=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M] [-u] [-f] [-s] [-N] >>
+=item C<< git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N] >>
 
 Push a properly merged subrepo branch back upstream.
 
@@ -254,7 +251,7 @@ discouraged. Only use this option if you fully understand it. (The C<--force>
 option will NOT check for a proper merge. ANY branch will be force pushed!)
 
 The C<push> command accepts the C<--all>, C<--branch=>, C<--dry-run>, C<--
-force>, C<--method>, C<--remote=>, C<--squash> and C<--
+force>, C<--merge>, C<--rebase>, C<--remote=>, C<--squash> and C<--
 update> options.
 
 =item C<< git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>] >>
@@ -426,17 +423,19 @@ Use this option to force certain commands that fail in the general case.
 NOTE: The C<--force> option means different things for different commands.
       Read the command specific doc for the exact meaning.
 
-=item C<--method=<rebase|merge>> (C<-M>)
+=item C<--merge> (C<-M>)
 
-C<merge>: Use a C<merge> strategy to include upstream subrepo commits on a pull
-(or setup for push).
-
-C<rebase>: Use a C<rebase> strategy to include upstream subrepo commits on a
-pull (or setup for push).
+Use a C<merge> strategy to include upstream subrepo commits on a pull (or
+setup for push).
 
 =item C<< --message=<message> >> (C<< -m <message> >>)
 
 Specify your own commit message on the command line.
+
+=item C<--rebase> (C<-R>)
+
+Use a C<rebase> strategy to include upstream subrepo commits on a pull (or
+setup for push).
 
 =item C<< --remote=<remote-url> >> (C<< -r <remote-url> >>)
 
