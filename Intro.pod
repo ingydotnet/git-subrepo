@@ -307,12 +307,9 @@ Good:
 
 =item * Bash code is very simple and easy to follow.
 
-=item * Comprehensive test suite. Currently passing on travis:
+=item * Comprehensive test suite.
 
 =back
-
-=for html
-<a href="https://travis-ci.org/ingydotnet/git-subrepo"><img src="https://travis-ci.org/ingydotnet/git-subrepo.png" alt="git-subrepo"></a>
 
 Bad:
 
