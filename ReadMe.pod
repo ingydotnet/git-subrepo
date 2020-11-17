@@ -684,6 +684,8 @@ C<irc.freenode.net>.
 
 =item * Magnus Carlsson <grimmymail@gmail.com>
 
+=item * Austin Morgan <admorgan@morgancomputers.net>
+
 =back
 
 =head1 License and Copyright
