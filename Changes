@@ -1,4 +1,24 @@
 ---
+version: 0.4.2
+date:    Tue Nov 17 14:10:10 CST 2020
+- Covert to GitHub Actions for testing
+- Add docker support to test multiple git/bash versions together
+- Require Bash 4.0+
+- Use shellcheck as linter and address issues discovered
+- Discovered bug in git where @ is not a valid workspace name
+- Add --force command to subrepo pull
+- Now works with paths that contain spaces
+- Numerous documentation fixes
+- When two branches pointed to the same commit, we would
+  sometimes pick the wrong branch.
+- ZSH completion fixes
+- Allow tests to run outside a git repo
+- Would not work if a different date format was set in git config
+- Address delay in filter-branch on newer versions of git
+- Display the git merge message on merge failure
+- Allow FISH integration on MacOS.
+- Add manpage support for FISH shell
+---
 version: 0.4.1
 date:    Thu Jan  9 17:11:21 CST 2020
 - Fix Bash version error messages and add to .rc
