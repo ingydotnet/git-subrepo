@@ -46,5 +46,5 @@ elif [[ ${ZSH_VERSION-} ]]; then
   # Prepend to `fpath` the path of the directory containing our zsh
   # completion script, so that our completion script will be hooked into the
   # zsh completion system.
-  fpath=("$GIT_SUBREPO_ROOT/share/zsh-completion" "$fpath")
+  fpath=("$GIT_SUBREPO_ROOT/share/zsh-completion" "${fpath[@]}")
 fi
