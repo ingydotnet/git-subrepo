@@ -1,4 +1,8 @@
 ---
+version: 0.4.3
+date:    Sat 21 Nov 2020 03:28:43 PM EST
+- Apply PR#511 to fix a 0.4.2 regression in zsh
+---
 version: 0.4.2
 date:    Tue Nov 17 14:10:10 CST 2020
 - Covert to GitHub Actions for testing
