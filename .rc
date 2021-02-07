@@ -13,7 +13,7 @@
 #
 #------------------------------------------------------------------------------
 
-[[ ${ZSH_VERSION-} ]] &&
+[[ -n ${ZSH_VERSION-} ]] &&
   GIT_SUBREPO_ROOT=$0 ||
   GIT_SUBREPO_ROOT=$BASH_SOURCE
 
