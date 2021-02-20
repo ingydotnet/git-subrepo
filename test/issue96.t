@@ -81,15 +81,15 @@ use Test::More
             cd host
             git subrepo pull sub
     )" \
-        "Subrepo 'sub' pulled from '../sub' (master)."
+        "Subrepo 'sub' pulled from '../sub' ($DEFAULTBRANCH)."
 
     # Push subrepo changes
     # expected: successful push without conflicts
     is "$(
             cd host
-            git subrepo push sub -b master -u
+            git subrepo push sub -b "$DEFAULTBRANCH" -u
     )" \
-       "Subrepo 'sub' pushed to '../sub' (master)."
+       "Subrepo 'sub' pushed to '../sub' ($DEFAULTBRANCH)."
 
 done_testing 2
 

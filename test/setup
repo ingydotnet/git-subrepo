@@ -33,6 +33,10 @@ mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 
 cp -r test/repo/{foo,bar,init} "$UPSTREAM/"
 
+DEFAULTBRANCH=$( git config --global --get init.defaultbranch || true )
+[[ -z $DEFAULTBRANCH ]] && DEFAULTBRANCH="master"
+export DEFAULTBRANCH
+
 ###
 # Test helper functions:
 ###
