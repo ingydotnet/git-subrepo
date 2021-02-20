@@ -40,7 +40,7 @@ cd "$TMP"
   touch main1
   git add main1
   git commit -m "Initial main1"
-  git subrepo clone ../share share -b master
+  git subrepo clone ../share share -b "$DEFAULTBRANCH"
 ) > /dev/null
 
 # `subrepo clone` the share repo into main2:
@@ -49,7 +49,7 @@ cd "$TMP"
   touch main2
   git add main2
   git commit -m "Initial main2"
-  git subrepo clone ../share share -b master
+  git subrepo clone ../share share -b "$DEFAULTBRANCH"
 ) > /dev/null
 
 

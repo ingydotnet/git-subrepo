@@ -46,7 +46,7 @@ use Test::More
         touch feature
         git add feature
         git commit -m "feature added"
-        git checkout master
+        git checkout "$DEFAULTBRANCH"
     ) &> /dev/null
 
     # Commit directly to subrepo
@@ -89,7 +89,7 @@ use Test::More
             cd host
             git subrepo pull sub
     )" \
-        "Subrepo 'sub' pulled from '../sub' (master)."
+        "Subrepo 'sub' pulled from '../sub' ($DEFAULTBRANCH)."
 
 }
 
