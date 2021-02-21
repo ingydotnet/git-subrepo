@@ -68,7 +68,7 @@ add-new-files() {
   local file
   for file in "$@"; do
     echo "new file $file" > "$file"
-    git add "$file"
+    git add --force "$file"
   done
   git commit --quiet -m "add new file: $file" &> /dev/null
 }
