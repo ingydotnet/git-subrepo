@@ -959,7 +959,7 @@ subrepo:status() {
     local _worktree
     _worktree=$(
       git worktree list |
-        grep "$GIT_TMP/subrepo/$subdir"
+        grep "$GIT_TMP/subrepo/$subdir "
     ) || true
     if [[ $_worktree  ]]; then
       echo "  Worktree: $_worktree"
@@ -1568,7 +1568,7 @@ get-all-subrepos() {
 add-subrepo() {
   if ! $ALL_wanted; then
     for path in "${subrepos[@]}"; do
-      [[ $1 =~ ^$path ]] && return
+      [[ $1 =~ ^$path/ ]] && return
     done
   fi
   subrepos+=("$1")
