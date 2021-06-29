@@ -155,7 +155,7 @@ test-gitrepo-comment-block() {
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git \"subrepo\", and this file is maintained by the
-; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
 ;" \
     'Comment header block is correct'
 }
