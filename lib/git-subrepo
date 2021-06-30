@@ -157,6 +157,10 @@ main() {
   command-init
 
   if $all_wanted && [[ ! $command =~ ^(help|status)$ ]]; then
+    if [[ -n $subrepo_branch ]]; then
+      error "options --branch and --all are not compatible"
+    fi
+
     # Run the command on all subrepos
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
