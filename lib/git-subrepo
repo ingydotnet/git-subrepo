@@ -191,7 +191,7 @@ command:clone() {
   local reclone_up_to_date=false
   subrepo:clone
   if "$reclone_up_to_date"; then
-    say "Subrepo '$subdir' is up to date."
+    say "Subrepo '$subdir' ($subrepo_branch)  is up to date."
     return
   fi
 
@@ -249,7 +249,7 @@ command:push() {
   if OK; then
     say "Subrepo '$subdir' pushed to '$subrepo_remote' ($subrepo_branch)."
   elif [[ $CODE -eq -2 ]]; then
-    say "Subrepo '$subdir' has no new commits to push."
+    say "Subrepo '$subdir' ($subrepo_branch) has no new commits to push."
   elif [[ $CODE -eq 1 ]]; then
     error-join
     return "$CODE"
