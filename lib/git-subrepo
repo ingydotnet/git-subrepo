@@ -157,17 +157,13 @@ main() {
   command-init
 
   if $all_wanted && [[ ! $command =~ ^(help|status)$ ]]; then
-    if [[ -n $subrepo_branch ]]; then
-      error "options --branch and --all are not compatible"
-    fi
-
     # Run the command on all subrepos
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
     for subdir in ${subrepos[*]}; do
       command-prepare
       subrepo_remote=
-      subrepo_branch=
+      subrepo_branch=$override_branch
       command_arguments=( "$subdir" "${args[@]}" )
       "command:$command"
     done
@@ -692,6 +688,16 @@ subrepo:push() {
 subrepo:fetch() {
   if [[ $subrepo_remote == none ]]; then
     error "Can't fetch subrepo. Remote is 'none' in '$subdir/.gitrepo'."
+  fi
+
+  if $all_wanted && [[ -n $subrepo_branch ]]; then
+    o "Check if the remote branch ($subrepo_branch) exists."
+    OUT=true RUN git ls-remote --heads "$subrepo_remote" "$subrepo_branch"
+    if [[ -z $output ]]; then
+      SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.branch
+      o "Remote branch ($subrepo_branch) in '$subrepo_remote' not exists, using branch ($output) from subrepo config."
+      subrepo_branch="$output"
+    fi
   fi
 
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
