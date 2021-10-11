@@ -64,7 +64,7 @@ Options:
 h           Show the command summary
 help        Help overview
 version     Print the git-subrepo version number
- 
+
 a,all       Perform command on all current subrepos
 A,ALL       Perform command on all subrepos and subsubrepos
 b,branch=   Specify the upstream branch to push/pull/fetch
@@ -76,7 +76,7 @@ m,message=  Specify a commit message
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
- 
+
 q,quiet     Show minimal output
 v,verbose   Show verbose output
 d,debug     Show the actual commands used
@@ -1399,14 +1399,16 @@ update-gitrepo-file() {
     fi
   fi
 
-
-  # TODO: only update remote and branch if supplied and $update_wanted
-  if $newfile || [[ $update_wanted && $override_remote ]]; then
-    RUN git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
-  fi
-
-  if $newfile || [[ $update_wanted && $override_branch ]]; then
-    RUN git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
+  # only update remote and branch if supplied and $update_wanted
+  if $newfile || $update_wanted; then
+    if [[ $override_remote ]]; then
+      o "Update remote to $subrepo_remote"
+      RUN git config --file="$gitrepo" subrepo.remote "$subrepo_remote"
+    fi
+    if [[ $override_branch ]]; then
+      o "Update branch to $subrepo_branch"
+      RUN git config --file="$gitrepo" subrepo.branch "$subrepo_branch"
+    fi
   fi
 
   RUN git config --file="$gitrepo" subrepo.commit "$upstream_head_commit"
