@@ -22,7 +22,7 @@ use Test::More
 
 output=$(
   cd "$OWNER/init"
-  git subrepo push doc --remote=../upstream
+  git subrepo push doc --update --remote=../upstream
 )
 
 is "$output" "Subrepo 'doc' pushed to '../upstream' (master)." \
