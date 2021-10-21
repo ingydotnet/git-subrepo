@@ -78,6 +78,7 @@ clone-foo-and-bar
 # Check that all commits arrived in subrepo
 test-commit-count "$OWNER/bar" HEAD 7
 
+exit
 # Test foo/bar/.gitrepo file contents:
 # shellcheck disable=2034
 gitrepo=$OWNER/foo/bar/.gitrepo

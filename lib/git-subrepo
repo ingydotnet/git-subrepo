@@ -1349,10 +1349,32 @@ read-gitrepo-file() {
 
   SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.commit
   subrepo_commit=$output
+  
+  # In case of pull using rebase, the field subrepo.parent SHA-1 could be wrong.
+  #FAIL=false \
+  #SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
+  #subrepo_parent=$output
 
-  FAIL=false \
-  SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.parent
-  subrepo_parent=$output
+  # Finding the right parent SHA-1
+  SAY=false OUT=true RUN git log --oneline --pretty=format:"%h"  -- "$gitrepo" 
+  gitrepo_commit_list=$output
+  found_comm="Empty"
+  for comm in $gitrepo_commit_list; do
+    parent_change_commit=$(
+      git diff -U0 $comm^! "$gitrepo" |
+        grep "parent = "
+    ) || true
+    if [ ! -z "$parent_change_commit" ]; then
+      found_comm=$comm
+      break
+    fi
+  done
+  if [ "$found_comm" != "Empty" ]; then
+    SAY=false OUT=true RUN git rev-parse "$comm^"
+    subrepo_parent=$output
+  else
+    subrepo_parent=
+  fi
 
   FAIL=false \
   SAY=false OUT=true RUN git config --file="$gitrepo" subrepo.method
