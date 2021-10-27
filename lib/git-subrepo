@@ -61,26 +61,27 @@ See 'git help subrepo' for complete documentation and usage of each command.
 
 Options:
 --
-h           Show the command summary
-help        Help overview
-version     Print the git-subrepo version number
+h               Show the command summary
+help            Help overview
+version         Print the git-subrepo version number
  
-a,all       Perform command on all current subrepos
-A,ALL       Perform command on all subrepos and subsubrepos
-b,branch=   Specify the upstream branch to push/pull/fetch
-e,edit      Edit commit message
-f,force     Force certain operations
-F,fetch     Fetch the upstream content first
-M,method=   Join method: 'merge' (default) or 'rebase'
-m,message=  Specify a commit message
-r,remote=   Specify the upstream remote to push/pull/fetch
-s,squash    Squash commits on push
-u,update    Add the --branch and/or --remote overrides to .gitrepo
+a,all           Perform command on all current subrepos
+A,ALL           Perform command on all subrepos and subsubrepos
+b,branch=       Specify the upstream branch to push/pull/fetch
+e,edit          Edit commit message
+f,force         Force certain operations
+F,fetch         Fetch the upstream content first
+M,method=       Join method: 'merge' (default) or 'rebase'
+m,message=      Specify a commit message
+o,push-option=  Specify a push option
+r,remote=       Specify the upstream remote to push/pull/fetch
+s,squash        Squash commits on push
+u,update        Add the --branch and/or --remote overrides to .gitrepo
  
-q,quiet     Show minimal output
-v,verbose   Show verbose output
-d,debug     Show the actual commands used
-x,DEBUG     Turn on -x Bash debugging
+q,quiet         Show minimal output
+v,verbose       Show verbose output
+d,debug         Show the actual commands used
+x,DEBUG         Turn on -x Bash debugging
 "
 
 #------------------------------------------------------------------------------
@@ -128,6 +129,8 @@ main() {
 
   local override_remote=        # Remote specified with -r
   local override_branch=        # Remote specified with -b
+  
+  local push_options=()         # Push options specified with -o
 
   local edit_wanted=false       # Edit commit message using -e
   local wanted_commit_message=  # Custom commit message using -m
@@ -665,9 +668,14 @@ subrepo:push() {
   local force=''
   "$force_wanted" && force=' --force'
 
+  local push_options_cmd=''
+  for p in $push_options; do
+    push_options_cmd+=" --push-option=$p"
+  done
+
   o "Push$force branch '$branch_name' to '$subrepo_remote' ($subrepo_branch)."
   # shellcheck disable=2086
-  RUN git push$force "$subrepo_remote" "$branch_name":"$subrepo_branch"
+  RUN git push$force$push_options_cmd "$subrepo_remote" "$branch_name":"$subrepo_branch"
 
   o "Create ref '$refs_subrepo_push' for branch '$branch_name'."
   git:make-ref "$refs_subrepo_push" "$branch_name"
@@ -1039,6 +1047,8 @@ get-command-options() {
           shift;;
       -M) join_method=$1
           shift;;
+      -o) push_options+=("$1")
+          shift;;
       -r) subrepo_remote=$1
           override_remote=$1
           commit_msg_args+=("--remote=$1")
@@ -1105,7 +1115,7 @@ options_commit='edit fetch force message'
 options_fetch='all branch remote'
 options_init='branch remote method'
 options_pull='all branch edit force message remote update'
-options_push='all branch force remote squash update'
+options_push='all branch force remote squash update push-option'
 options_status='ALL all fetch'
 check_option() {
   local var=options_${command//-/_}
