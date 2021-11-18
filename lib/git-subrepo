@@ -230,7 +230,7 @@ command:pull() {
   if OK; then
     say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)."
   elif [[ $CODE -eq -1 ]]; then
-    say "Subrepo '$subdir' is up to date."
+    say "Subrepo '$subdir' ($subrepo_branch) is up to date."
   elif [[ $CODE -eq 1 ]]; then
     error-join
     return "$CODE"
