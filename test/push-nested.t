@@ -4,7 +4,7 @@ set -e
 
 source test/setup
 
-nested_fix=0
+nested_fix=1
 
 use Test::More
 
