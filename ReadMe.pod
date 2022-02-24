@@ -150,8 +150,8 @@ The C<--force> option will "reclone" (completely replace) an existing subdir.
 The C<--method> option will decide how the join process between branches are
 performed. The default option is merge.
 
-The C<clone> command accepts the C<--branch=> C<--edit>, C<--force> and C<--
-message=> options.
+The C<clone> command accepts the C<--branch=> C<--edit>, C<--force> and C<--message=> 
+options.
 
 =item C<< git subrepo init <subdir> [-r <remote>] [-b <branch>] [--method <merge|rebase>] >>
 
@@ -250,8 +250,8 @@ The C<--force> option will do a force push. Force pushes are typically
 discouraged. Only use this option if you fully understand it. (The C<--force>
 option will NOT check for a proper merge. ANY branch will be force pushed!)
 
-The C<push> command accepts the C<--all>, C<--branch=>, C<--dry-run>, C<--
-force>, C<--merge>, C<--rebase>, C<--remote=>, C<--squash> and C<--update> options.
+The C<push> command accepts the C<--all>, C<--branch=>, C<--dry-run>, 
+C<--force>, C<--merge>, C<--rebase>, C<--remote=>, C<--squash> and C<--update> options.
 
 =item C<< git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>] >>
 
@@ -291,13 +291,13 @@ This command requires that the upstream HEAD be in the C<< subrepo/<subdir> >>
 branch history. That way the same branch can push upstream. Use the C<--force>
 option to commit anyway.
 
-The C<commit> command accepts the C<--edit>, C<--fetch>, C<--force> and C<--
-message=> options.
+The C<commit> command accepts the C<--edit>, C<--fetch>, C<--force> and C<--message=> 
+options.
 
 =item C<< git subrepo status [<subdir>|--all|--ALL] [-F] [-q|-v] >>
 
-Get the status of a subrepo. Uses the C<--all> option by default. If the C<--
-quiet> flag is used, just print the subrepo names, one per line.
+Get the status of a subrepo. Uses the C<--all> option by default. If the C<--quiet> 
+flag is used, just print the subrepo names, one per line.
 
 The C<--verbose> option will show all the recent local and upstream commits.
 
