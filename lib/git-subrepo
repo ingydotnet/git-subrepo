@@ -1564,7 +1564,7 @@ get-all-subrepos() {
 add-subrepo() {
   if ! $ALL_wanted; then
     for path in "${subrepos[@]}"; do
-      [[ $1 =~ ^$path ]] && return
+      [[ $1 == ^$path ]] && return
     done
   fi
   subrepos+=("$1")
