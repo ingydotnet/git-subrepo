@@ -8,14 +8,14 @@ help:all() {
     cat <<'...'
 branch               branch <subdir>|--all [-f] [-F]
 clean                clean <subdir>|--all|--ALL [-f]
-clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [-e] [--method <merge|rebase>]
-commit               commit <subdir> [<subrepo-ref>] [-m <msg>] [-e] [-f] [-F]
+clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [--file=<msg file>] [-e] [--method <merge|rebase>]
+commit               commit <subdir> [<subrepo-ref>] [-m <msg>] [--file=<msg file>] [-e] [-f] [-F]
 config               config <subdir> <option> [<value>] [-f]
 fetch                fetch <subdir>|--all [-r <remote>] [-b <branch>]
 help                 help [<command>|--all]
 init                 init <subdir> [-r <remote>] [-b <branch>] [--method <merge|rebase>]
-pull                 pull <subdir>|--all [-M|-R|-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u]
-push                 push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
+pull                 pull <subdir>|--all [-M|-R|-f] [-m <msg>] [--file=<msg file>] [-e] [-b <branch>] [-r <remote>] [-u]
+push                 push <subdir>|--all [<branch>] [-m msg] [--file=<msg file>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
 status               status [<subdir>|--all|--ALL] [-F] [-q|-v]
 upgrade              upgrade
 version              version [-q|-v]
@@ -71,7 +71,7 @@ help:clean() {
 help:clone() {
     cat <<'...'
 
-  Usage: git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [-e] [--method <merge|rebase>]
+  Usage: git subrepo clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [--file=<msg file>] [-e] [--method <merge|rebase>]
 
 
   Add a repository as a subrepo in a subdir of your repository.
@@ -94,15 +94,15 @@ help:clone() {
   The `--method` option will decide how the join process between branches are
    performed. The default option is merge.
 
-  The `clone` command accepts the `--branch=` `--edit`, `--force` and
-  `--message=` options.
+  The `clone` command accepts the `--branch=` `--edit`, `--file`, `--force`
+  and `--message=` options.
 ...
 }
 
 help:commit() {
     cat <<'...'
 
-  Usage: git subrepo commit <subdir> [<subrepo-ref>] [-m <msg>] [-e] [-f] [-F]
+  Usage: git subrepo commit <subdir> [<subrepo-ref>] [-m <msg>] [--file=<msg file>] [-e] [-f] [-F]
 
 
   Add subrepo branch to current history as a single commit.
@@ -116,8 +116,8 @@ help:commit() {
   branch history. That way the same branch can push upstream. Use the
   `--force` option to commit anyway.
 
-  The `commit` command accepts the `--edit`, `--fetch`, `--force` and
-  `--message=` options.
+  The `commit` command accepts the `--edit`, `--fetch`, `--file`, `--force`
+  and `--message=` options.
 ...
 }
 
@@ -189,7 +189,7 @@ help:init() {
   If you specify the `--remote` (and optionally the `--branch`) option, the
   values will be added to the `<subdir>/.gitrepo` file. The `--remote` option
   is the upstream URL, and the `--branch` option is the upstream branch to push
-  to. These values will be needed to do a `git subrepo push` command, but they
+  to. These values will be needed to do a `git subrepo push` command, but they
   can be provided later on the `push` command (and saved to `<subdir>/.gitrepo`
   if you also specify the `--update` option).
 
@@ -206,7 +206,7 @@ help:init() {
 help:pull() {
     cat <<'...'
 
-  Usage: git subrepo pull <subdir>|--all [-M|-R|-f] [-m <msg>] [-e] [-b <branch>] [-r <remote>] [-u]
+  Usage: git subrepo pull <subdir>|--all [-M|-R|-f] [-m <msg>] [--file=<msg file>] [-e] [-b <branch>] [-r <remote>] [-u]
 
 
   Update the subrepo subdir with the latest upstream changes.
@@ -252,15 +252,15 @@ help:pull() {
 
   The set of commands used above are described in detail below.
 
-  The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--force`,
-  `--message=`, `--remote=` and `--update` options.
+  The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--file`,
+  `--force`, `--message=`, `--remote=` and `--update` options.
 ...
 }
 
 help:push() {
     cat <<'...'
 
-  Usage: git subrepo push <subdir>|--all [<branch>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
+  Usage: git subrepo push <subdir>|--all [<branch>] [-m msg] [--file=<msg file>] [-r <remote>] [-b <branch>] [-M|-R] [-u] [-f] [-s] [-N]
 
 
   Push a properly merged subrepo branch back upstream.
@@ -285,8 +285,9 @@ help:push() {
   discouraged. Only use this option if you fully understand it. (The `--force`
   option will NOT check for a proper merge. ANY branch will be force pushed!)
 
-  The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--force`,
-  `--merge`, `--rebase`, `--remote=`, `--squash` and `--update` options.
+  The `push` command accepts the `--all`, `--branch=`, `--dry-run`, `--file`,
+  `--force`, `--merge`, `--message`, `--rebase`, `--remote=`, `--squash` and
+  `--update` options.
 ...
 }
 
