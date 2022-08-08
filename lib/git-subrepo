@@ -73,6 +73,7 @@ f,force     Force certain operations
 F,fetch     Fetch the upstream content first
 M,method=   Join method: 'merge' (default) or 'rebase'
 m,message=  Specify a commit message
+file=       Specify a commit message file
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
@@ -131,6 +132,7 @@ main() {
 
   local edit_wanted=false       # Edit commit message using -e
   local wanted_commit_message=  # Custom commit message using -m
+  local commit_msg_file=        # Custom commit message using --file
 
   local join_method=            # Current join method (rebase/merge)
 
@@ -685,7 +687,19 @@ subrepo:push() {
   upstream_head_commit=$new_upstream_head_commit
   subrepo_commit_ref=$upstream_head_commit
   update-gitrepo-file
-  RUN git commit -m "$(get-commit-message)"
+
+  local commit_message
+  if [[ $wanted_commit_message ]]; then
+    commit_message=$wanted_commit_message
+  else
+    commit_message=$(get-commit-message)
+  fi
+
+  if [[ $commit_msg_file ]]; then
+    RUN git command --file "$commit_msg_file"
+  else
+    RUN git commit -m "$commit_message"
+  fi
 }
 
 # Fetch the subrepo's remote branch content:
@@ -872,13 +886,21 @@ subrepo:commit() {
 
   o "Commit to the '$original_head_branch' branch."
   if [[ $original_head_commit != none ]]; then
-    RUN git commit $edit_flag -m "$commit_message"
+    if [[ $commit_msg_file ]]; then
+      RUN git commit $edit_flag --file "$commit_msg_file"
+    else
+      RUN git commit $edit_flag -m "$commit_message"
+    fi
   else
     # We had cloned into an empty repo, side effect of prior git reset --mixed
     # command is that subrepo's history is now part of the index. Commit
     # without that history.
     OUT=true RUN git write-tree
-    OUT=true RUN git commit-tree $edit_flag -m "$commit_message" "$output"
+    if [[ $commit_msg_file ]]; then
+      OUT=true RUN git commit-tree $edit_flag --file "$commit_msg_file" "$output"
+    else
+      OUT=true RUN git commit-tree $edit_flag -m "$commit_message" "$output"
+    fi
     RUN git reset --hard "$output"
   fi
 
@@ -1039,7 +1061,11 @@ get-command-options() {
       -f) force_wanted=true
           commit_msg_args+=("--force") ;;
       -F) fetch_wanted=true ;;
-      -m) wanted_commit_message=$1
+      -m)
+          if [[ $commit_msg_file ]]; then
+            error "fatal: options '-m' and '--file' cannot be used together"
+          fi
+          wanted_commit_message=$1
           shift;;
       -M) join_method=$1
           shift;;
@@ -1054,6 +1080,16 @@ get-command-options() {
       -v) verbose_wanted=true ;;
       -d) debug_wanted=true ;;
       -x) set -x ;;
+      --file)
+        if [[ $wanted_commit_message ]]; then
+          error "fatal: options '-m' and '--file' cannot be used together"
+        fi
+        if [ -f "$1" ]; then
+          commit_msg_file="$1"
+        else
+          error "Commit msg file at $1 not found"
+        fi
+        shift ;;
       --version)
         echo "$VERSION"
         exit ;;
@@ -1089,7 +1125,7 @@ get-command-options() {
   if [[ $override_remote ]]; then
     check_option remote
   fi
-  if [[ $wanted_commit_message ]]; then
+  if [[ $wanted_commit_message || $commit_msg_file ]]; then
     check_option message
   fi
   if $update_wanted; then
@@ -1109,7 +1145,7 @@ options_commit='edit fetch force message'
 options_fetch='all branch remote'
 options_init='branch remote method'
 options_pull='all branch edit force message remote update'
-options_push='all branch force remote squash update'
+options_push='all branch force message remote squash update'
 options_status='ALL all fetch'
 check_option() {
   local var=options_${command//-/_}
