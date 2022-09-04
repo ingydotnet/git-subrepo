@@ -20,6 +20,9 @@ clone-foo-and-bar
   add-new-files bar/FooBar
 ) &> /dev/null || die
 
+# shellcheck disable=2034
+gitrepo=$OWNER/foo/bar/.gitrepo
+
 # Do the subrepo push to another branch:
 {
   message=$(
@@ -31,19 +34,25 @@ clone-foo-and-bar
   is "$message" \
     "Subrepo 'bar' pushed to '$UPSTREAM/bar' (newbar)." \
     'First push message is correct '
+
+  test-gitrepo-field "branch" "master"
+  test-gitrepo-field "remote" "$UPSTREAM/bar"
 }
 
-# Do the subrepo push to another branch again:
+# Do the subrepo push to another branch again, with update:
 {
   message=$(
     cd "$OWNER/foo"
-    git subrepo push bar --branch newbar
+    git subrepo push bar --update --branch newbar --remote "$UPSTREAM/bar/."
   )
 
   # Test the output:
   is "$message" \
     "Subrepo 'bar' has no new commits to push." \
     'Second push message is correct'
+
+  test-gitrepo-field "branch" "newbar"
+  test-gitrepo-field "remote" "$UPSTREAM/bar/."
 }
 
 # Pull the changes from UPSTREAM/bar in OWNER/bar
