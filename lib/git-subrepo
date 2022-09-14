@@ -1616,7 +1616,7 @@ get-upstream-head-branch() {
   OUT=true RUN git ls-remote --symref "$subrepo_remote"
   remotes=$output
   [[ $remotes ]] ||
-    error "Failed to 'git ls-remote --symref $subrepo_remote'."
+    error "Failed to 'git ls-remote --symref $subrepo_remote'.\nPlease make sure the repository exists, is not empty, and that you have access rights to it."
 
   # 'ref: refs/heads/master  HEAD'
   branch=$(
