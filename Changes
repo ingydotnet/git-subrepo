@@ -1,4 +1,16 @@
 ---
+version: 0.4.5
+date:    Thu 22 Sep 2022 23:03:24 PM EST
+- Add --file option
+- Fix git subrepo status command for subrepos that share a common prefix. Closes #534.
+- Don't allow -b and --all
+- Fix documentation links
+- fix tests to support use of a default branch git config that is not "master"
+- pass --force to git add so a user's global .gitignore does not affect tests
+- Fix .rc and enable-completion.sh for zsh before 5.1
+- Better format for options
+- The `fpath` variable is an array; expand correctly
+---
 version: 0.4.3
 date:    Sat 21 Nov 2020 03:28:43 PM EST
 - Apply PR#511 to fix a 0.4.2 regression in zsh
