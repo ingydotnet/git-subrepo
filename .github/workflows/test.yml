@@ -18,7 +18,6 @@ jobs:
     - if: startsWith(matrix.os, 'macos')
       run: brew install bash
     - run:
-        git checkout -B git-actions-ci-dummy-branch;
         git config --global user.email "you@example.com";
         git config --global user.name "Your Name";
     - run: make test
