@@ -1,4 +1,8 @@
 ---
+version: 0.4.6
+date:    Fri 21 Apr 2023 10:18:34 AM EST
+- Remove stale worktrees in the push command
+---
 version: 0.4.5
 date:    Thu 22 Sep 2022 23:03:24 PM EST
 - Add --file option
