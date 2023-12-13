@@ -61,7 +61,7 @@ article is about.
 Submodules tend to receive a lot of bad press. Here's some of it:
 
 * http://ayende.com/blog/4746/the-problem-with-git-submodules
-* http://somethingsinistral.net/blog/git-submodules-are-probably-not-the-answer/
+* https://web.archive.org/web/20171101202911/http://somethingsinistral.net/blog/git-submodules-are-probably-not-the-answer/
 * http://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/
 
 A quick recap of some of the good and bad things about submodules:

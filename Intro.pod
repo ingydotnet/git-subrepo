@@ -78,7 +78,7 @@ Submodules tend to receive a lot of bad press. Here's some of it:
 
 =item * L<http://ayende.com/blog/4746/the-problem-with-git-submodules>
 
-=item * L<http://somethingsinistral.net/blog/git-submodules-are-probably-not-the-answer/>
+=item * L<https://web.archive.org/web/20171101202911/http://somethingsinistral.net/blog/git-submodules-are-probably-not-the-answer/>
 
 =item * L<http://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/>
 
