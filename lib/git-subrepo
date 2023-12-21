@@ -166,7 +166,7 @@ main() {
     # Run the command on all subrepos
     local args=( "${command_arguments[@]}" )
     get-all-subrepos
-    for subdir in ${subrepos[*]}; do
+    for subdir in "${subrepos[@]}"; do
       command-prepare
       subrepo_remote=
       subrepo_branch=
@@ -1245,11 +1245,11 @@ get-params() {
       if [[ $i -ge $num ]]; then
         usage-error "Command '$command' requires arg '${arg#+}'."
       fi
-      printf -v ${arg#+} -- "$value"
+      printf -v "${arg#+}" -- "$value"
     # Look for function name after ':' to provide a default value
     else
       if [[ $i -lt $num ]]; then
-        printf -v ${arg%:*} -- "$value"
+        printf -v "${arg%:*}" -- "$value"
       elif [[ $arg =~ : ]]; then
         "${arg#*:}"
       fi
