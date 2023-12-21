@@ -42,6 +42,7 @@ test-exists \
   "$OWNER/bar/Bar2" \
   "$OWNER/bar/Foo1" \
 
+
 # Test that a fresh repo is not contaminated
 (
   git clone "$UPSTREAM/bar" "$OWNER/newbar"

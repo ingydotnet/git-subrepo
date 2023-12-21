@@ -19,7 +19,7 @@ if [[ -n ${BASH_VERSION-} ]]; then
         # If a file is found at the location being checked…
         if [[ -f $f ]]; then
           # …source it.
-          source $f
+          source "$f"
           [[ $(type -t __gitcomp) != function ]] &&
             echo "WARNING: Git completion script '$f' does not provide a '__gitcomp' function"
           # Proceed to loading our Bash completion facilities.
