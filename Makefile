@@ -106,7 +106,7 @@ clean:
 	rm -fr tmp test/tmp
 
 define docker-make-test
-	docker run -i -t --rm \
+	docker run --rm \
 	    -v $(PWD):/git-subrepo \
 	    -w /git-subrepo \
 	    $(DOCKER_IMAGE) \
