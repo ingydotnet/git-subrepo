@@ -1026,6 +1026,11 @@ subrepo:clean() {
         git update-ref -d "$ref"
       fi
     done
+    git show-ref | while read -r hash ref; do
+      if [[ $ref == "refs/original/refs/heads/subrepo/$suffix"* ]]; then
+        git update-ref -d "$ref"
+      fi
+    done
   fi
 }
 
