@@ -718,14 +718,26 @@ subrepo:fetch() {
 
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
   if [[ -n $subrepo_commit_specified ]]; then
-    RUN git fetch --no-tags --quiet --depth=1 "$subrepo_remote" "$subrepo_commit_specified"
-    OUT=true RUN git rev-parse FETCH_HEAD^0
-    upstream_head_commit=$output
+    o "Fetching specific commit $subrepo_commit_specified"
+    RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_commit_specified"
   else
+    o "Fetching branch $subrepo_branch"
     RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch"
-    OUT=true RUN git rev-parse FETCH_HEAD^0
-    upstream_head_commit=$output
   fi
+
+  if ! OK; then
+    error "Failed to fetch the upstream."
+  fi
+
+  o "Get the upstream subrepo HEAD commit."
+  OUT=true RUN git rev-parse FETCH_HEAD^0
+  upstream_head_commit=$output
+
+  if [[ -z $upstream_head_commit ]]; then
+    error "Failed to resolve the fetched commit."
+  fi
+
+  o "Fetched commit: $upstream_head_commit"
 
   o "Create ref '$refs_subrepo_fetch'."
   git:make-ref "$refs_subrepo_fetch" "$upstream_head_commit"
