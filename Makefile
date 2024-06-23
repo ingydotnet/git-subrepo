@@ -47,6 +47,18 @@ help:
 	@echo 'uninstall  Uninstall $(NAME)'
 	@echo 'env        Show environment variables to set'
 
+.PHONY: genfoo
+genfoo:
+	test/genfoo test/repo
+
+.PHONY: genbar
+genbar:
+	test/genbar test/repo
+
+.PHONY: geninit
+geninit:
+	test/geninit test/repo
+
 .git:
 	git init -b main .
 	git config user.email "you@you"
@@ -57,6 +69,9 @@ help:
 
 .PHONY: test
 test: .git
+	make genfoo
+	make genbar
+	make geninit
 	prove $(prove) $(test)
 
 test-all: test docker-tests
