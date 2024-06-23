@@ -47,8 +47,16 @@ help:
 	@echo 'uninstall  Uninstall $(NAME)'
 	@echo 'env        Show environment variables to set'
 
+.git:
+	git init -b main .
+	git config user.email "you@you"
+	git config user.name "YouUser"
+	git add .
+	git commit -a -m"Initial commit"
+	git config --list
+
 .PHONY: test
-test:
+test: .git
 	prove $(prove) $(test)
 
 test-all: test docker-tests

@@ -35,7 +35,7 @@ test-exists \
 (
   set +x
   cd "$OWNER/bar"
-  git pull
+  git pull --ff
 ) &> /dev/null || die
 
 test-exists \

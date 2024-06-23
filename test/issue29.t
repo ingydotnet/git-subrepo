@@ -18,14 +18,16 @@ cd "$TMP"
 # Make 3 new repos:
 (
   mkdir share main1 main2
-  git init share
-  git init main1
-  git init main2
+  git init --initial-branch=$DEFAULTBRANCH share
+  git init --initial-branch=$DEFAULTBRANCH main1
+  git init --initial-branch=$DEFAULTBRANCH main2
 ) > /dev/null
 
 # Add an empty 'readme' to the share repo:
 (
   cd share
+  git config user.name "ShrUser"
+  git config user.email "shr@ma1"
   echo '* text eol=lf' > .gitattributes
   touch readme
   git add readme .gitattributes
@@ -37,6 +39,8 @@ cd "$TMP"
 # `subrepo clone` the share repo into main1:
 (
   cd main1
+  git config user.name "Ma1User"
+  git config user.email "ma1@ma1"
   touch main1
   git add main1
   git commit -m "Initial main1"
@@ -46,6 +50,8 @@ cd "$TMP"
 # `subrepo clone` the share repo into main2:
 (
   cd main2
+  git config user.name "Ma2User"
+  git config user.email "ma2@ma2"
   touch main2
   git add main2
   git commit -m "Initial main2"
