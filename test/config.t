@@ -13,6 +13,9 @@ gitrepo=$OWNER/init/doc/.gitrepo
 
 (
   cd "$OWNER/init"
+  git config user.email "ini@ini"
+  git config user.name "IniUser"
+  git config init.defaultBranch $DEFAULTBRANCH
   git subrepo init doc
 ) > /dev/null
 
