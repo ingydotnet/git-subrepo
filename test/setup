@@ -18,6 +18,17 @@ if [ ! -d "${SCRIPT_DIR}/../.git" ]; then
 	git config --list
 fi
 
+# Generate additional testing git repos, if not already present.
+if [ ! -d "${SCRIPT_DIR}/repo/tmp/bar" ]; then
+	test/genbar test/repo
+fi
+if [ ! -d "${SCRIPT_DIR}/repo/tmp/foo" ]; then
+	test/genfoo test/repo
+fi
+if [ ! -d "${SCRIPT_DIR}/repo/tmp/init" ]; then
+	test/geninit test/repo
+fi
+
 BASHLIB=$(
   find "$PWD"/ -type d -name bin -o -type d -name lib | grep -v "\/\.pc\/" | tr '\n' ':'
 )

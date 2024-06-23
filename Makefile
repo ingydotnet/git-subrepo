@@ -111,6 +111,19 @@ compgen: force
 
 clean:
 	rm -fr tmp test/tmp
+	if [ -d "test/repo/tmp/bar_orig" ]; then \
+		rm -fr test/repo/bar; \
+		mv -f test/repo/tmp/bar_orig test/repo/bar; \
+	fi
+	if [ -d "test/repo/tmp/foo_orig" ]; then \
+		rm -fr test/repo/foo; \
+		mv -f test/repo/tmp/foo_orig test/repo/foo; \
+	fi
+	if [ -d "test/repo/tmp/init_orig" ]; then \
+		rm -fr test/repo/init; \
+		mv -f test/repo/tmp/init_orig test/repo/init; \
+	fi
+	rm -fr test/repo/tmp
 
 define docker-make-test
 	docker run -i -t --rm \
