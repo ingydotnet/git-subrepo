@@ -642,8 +642,8 @@ function is called:
 
 =head1 Status
 
-The git-subrepo command has been used in production and seems to get
-the job done. Development is still ongoing but mostly just for fixing bugs.
+The git-subrepo command has been used in production and seems to get the job
+done. Development is still ongoing but mostly just for fixing bugs.
 
 Trying subrepo out is simple and painless (this is not C<git submodule>).
 Nothing is permanent (if you do not push to shared remotes). ie You can always

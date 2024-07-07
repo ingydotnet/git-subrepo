@@ -577,7 +577,7 @@ is called:
 
 = Status
 
-The git-subrepo command has been in use for well over a year and seems to get
+The git-subrepo command has been used in production and seems to get
 the job done. Development is still ongoing but mostly just for fixing bugs.
 
 Trying subrepo out is simple and painless (this is not `git submodule`).
