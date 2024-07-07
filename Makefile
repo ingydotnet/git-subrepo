@@ -22,16 +22,16 @@ INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
 INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
 
 # Docker variables:
-DOCKER_TAG ?= 0.0.4
+DOCKER_TAG ?= 0.0.6
 DOCKER_IMAGE := ingy/bash-testing:$(DOCKER_TAG)
 BASH_VERSIONS ?= 5.1 5.0 4.4 4.3 4.2 4.1 4.0
 DOCKER_TESTS := $(BASH_VERSIONS:%=docker-test-%)
-GIT_VERSIONS := 2.29 2.25 2.17 2.7
+GIT_VERSIONS := 2.45 2.40 2.30 2.29 2.25 2.17 2.7
 
 prove ?=
 test ?= test/
-bash ?= 5.0
-git ?= 2.29
+bash ?= 5.1
+git ?= 2.45
 
 # Basic targets:
 default: help
