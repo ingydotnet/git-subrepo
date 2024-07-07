@@ -1,3 +1,13 @@
+version: 0.4.7
+date:    Sun 7 Jul 2024 11:04:00 AM EST
+- Convert testing to use docker with updated git versions
+- Fix numerous places where quoting was incorrect causing path name collisions
+- Fix pull-force test to deal with git not defaulting to merges on pulls after 2.33
+- Fix issue where docker tests didn't work with git 2.30 or higher because of
+  increased permission scrutiny.
+- Update readme to say this tools is in production environments
+- Update readme to use internet archive for old articles about subrepo no longer
+  available on their original source
 ---
 version: 0.4.6
 date:    Fri 21 Apr 2023 10:18:34 AM EST

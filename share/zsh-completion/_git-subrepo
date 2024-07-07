@@ -19,9 +19,9 @@ _git-subrepo() {
         '(-e --edit)'{-e,--edit}'[Edit commit message]' \
         '(-f --force)'{-f,--force}'[Force certain operations]' \
         '(-F --fetch)'{-F,--fetch}'[Fetch the upstream content first]' \
-        '(-M --method)'{-M,--method}'[Method when you join, valid options are '"'"'merge'"'"' or '"'"'rebase'"'"']:M' \
-        '--Default[is '"'"'merge'"'"']' \
+        '(-M --method)'{-M,--method}'[Join method: '"'"'merge'"'"' (default) or '"'"'rebase'"'"']:M' \
         '(-m --message)'{-m,--message}'[Specify a commit message]:m' \
+        '--file[Specify a commit message file]:file' \
         '(-r --remote)'{-r,--remote}'[Specify the upstream remote to push/pull/fetch]:r' \
         '(-s --squash)'{-s,--squash}'[Squash commits on push]' \
         '(-u --update)'{-u,--update}'[Add the --branch and/or --remote overrides to .gitrepo]' \
