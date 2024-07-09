@@ -1968,7 +1968,7 @@ usage-error() {
 
 # Nicely report common error messages:
 error() {
-  echo -e "git-subrepo:" $@ >&2
+  echo -e "git-subrepo:" "$@" >&2
   exit 1
 }
 
