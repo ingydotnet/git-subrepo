@@ -64,7 +64,7 @@ Options:
 h           Show the command summary
 help        Help overview
 version     Print the git-subrepo version number
- 
+
 a,all       Perform command on all current subrepos
 A,ALL       Perform command on all subrepos and subsubrepos
 b,branch=   Specify the upstream branch to push/pull/fetch
@@ -76,8 +76,9 @@ m,message=  Specify a commit message
 file=       Specify a commit message file
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
+c,commit=   Specify a commit to pull
 u,update    Add the --branch and/or --remote overrides to .gitrepo
- 
+
 q,quiet     Show minimal output
 v,verbose   Show verbose output
 d,debug     Show the actual commands used
@@ -89,63 +90,64 @@ x,DEBUG     Turn on -x Bash debugging
 #------------------------------------------------------------------------------
 main() {
   # Define global variables:
-  local command=                # Subrepo subcommand to run
-  local command_arguments=()    # Command args after getopt parsing
-  local commit_msg_args=()      # Arguments to show in the commit msg
-  local subrepos=()             # List of multiple subrepos
+  local command=                   # Subrepo subcommand to run
+  local command_arguments=()       # Command args after getopt parsing
+  local commit_msg_args=()         # Arguments to show in the commit msg
+  local subrepos=()                # List of multiple subrepos
 
-  local all_wanted=false        # Apply command to all subrepos
-  local ALL_wanted=false        # Apply command to all subrepos and subsubrepos
-  local force_wanted=false      # Force certain operations
-  local fetch_wanted=false      # Fetch requested before a command
-  local squash_wanted=false     # Squash commits on push
-  local update_wanted=false     # Update .gitrepo with --branch and/or --remote
+  local all_wanted=false           # Apply command to all subrepos
+  local ALL_wanted=false           # Apply command to all subrepos and subsubrepos
+  local force_wanted=false         # Force certain operations
+  local fetch_wanted=false         # Fetch requested before a command
+  local squash_wanted=false        # Squash commits on push
+  local update_wanted=false        # Update .gitrepo with --branch and/or --remote
 
-  local quiet_wanted=false      # Output should be quiet
-  local verbose_wanted=false    # Output should be verbose
-  local debug_wanted=false      # Show debug messages
+  local quiet_wanted=false         # Output should be quiet
+  local verbose_wanted=false       # Output should be verbose
+  local debug_wanted=false         # Show debug messages
 
-  local subdir=                 # Subdirectory of the subrepo being used
-  local subref=                 # Valid git ref format of subdir
-  local gitrepo=                # Path to .gitrepo file
-  local worktree=               # Worktree created by 'git worktree'
+  local subdir=                    # Subdirectory of the subrepo being used
+  local subref=                    # Valid git ref format of subdir
+  local gitrepo=                   # Path to .gitrepo file
+  local worktree=                  # Worktree created by 'git worktree'
   local start_pwd
-        start_pwd=$(pwd)        # Store the original directory
+        start_pwd=$(pwd)           # Store the original directory
 
-  local original_head_commit=   # HEAD commit id at start of command
-  local original_head_branch=   # HEAD ref at start of command
-  local upstream_head_commit=   # HEAD commit id from a subrepo fetch
+  local original_head_commit=      # HEAD commit id at start of command
+  local original_head_branch=      # HEAD ref at start of command
+  local upstream_head_commit=      # HEAD commit id from a subrepo fetch
 
-  local subrepo_remote=         # Remote url for subrepo's upstream repo
-  local subrepo_branch=         # Upstream branch to clone/push/pull
-  local subrepo_commit=         # Upstream HEAD from previous clone/pull
-  local subrepo_parent=         # Local commit from before previous clone/pull
-  local subrepo_former=         # A retired gitrepo key that might still exist
+  local subrepo_remote=            # Remote url for subrepo's upstream repo
+  local subrepo_branch=            # Upstream branch to clone/push/pull
+  local subrepo_commit=            # Upstream HEAD from previous clone/pull
+  local subrepo_commit_specified=  # Commit specified by --commit
+  local subrepo_parent=            # Local commit from before previous clone/pull
+  local subrepo_former=            # A retired gitrepo key that might still exist
 
-  local refs_subrepo_branch=    # A subrepo ref -> commit of branch/pull command
-  local refs_subrepo_commit=    # A subrepo ref -> commit last merged
-  local refs_subrepo_fetch=     # A subrepo ref -> FETCH_HEAD after fetch
-  local refs_subrepo_push=      # A subrepo ref -> branch after push
+  local refs_subrepo_branch=       # A subrepo ref -> commit of branch/pull command
+  local refs_subrepo_commit=       # A subrepo ref -> commit last merged
+  local refs_subrepo_fetch=        # A subrepo ref -> FETCH_HEAD after fetch
+  local refs_subrepo_push=         # A subrepo ref -> branch after push
 
-  local override_remote=        # Remote specified with -r
-  local override_branch=        # Remote specified with -b
+  local override_remote=           # Remote specified with -r
+  local override_branch=           # Remote specified with -b
 
-  local edit_wanted=false       # Edit commit message using -e
-  local wanted_commit_message=  # Custom commit message using -m
-  local commit_msg_file=        # Custom commit message using --file
+  local edit_wanted=false          # Edit commit message using -e
+  local wanted_commit_message=     # Custom commit message using -m
+  local commit_msg_file=           # Custom commit message using --file
 
-  local join_method=            # Current join method (rebase/merge)
+  local join_method=               # Current join method (rebase/merge)
 
-  local FAIL=true               # Flag for RUN: fail on error
-  local OUT=false               # Flag for RUN: put output in $output
-  local TTY=false               # Flag for RUN: print output directly
-  local SAY=true                # Flag for RUN: print command for verbose
-  local EXEC=false              # Flag for RUN: run subprocess
-  local OK=true                 # Flag that commands have succeeded
-  local CODE=0                  # Failure reason code
-  local INDENT=                 # Verbose indentation
+  local FAIL=true                  # Flag for RUN: fail on error
+  local OUT=false                  # Flag for RUN: put output in $output
+  local TTY=false                  # Flag for RUN: print output directly
+  local SAY=true                   # Flag for RUN: print command for verbose
+  local EXEC=false                 # Flag for RUN: run subprocess
+  local OK=true                    # Flag that commands have succeeded
+  local CODE=0                     # Failure reason code
+  local INDENT=                    # Verbose indentation
 
-  local git_version=            # Git version in use
+  local git_version=               # Git version in use
 
   # Check environment and parse CLI options:
   assert-environment-ok
@@ -715,15 +717,30 @@ subrepo:fetch() {
   fi
 
   o "Fetch the upstream: $subrepo_remote ($subrepo_branch)."
-  RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch"
-  OK || return
+  if [[ -n $subrepo_commit_specified ]]; then
+    o "Fetching specific commit $subrepo_commit_specified"
+    RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_commit_specified"
+  else
+    o "Fetching branch $subrepo_branch"
+    RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch"
+  fi
+
+  if ! OK; then
+    error "Failed to fetch the upstream."
+  fi
 
   o "Get the upstream subrepo HEAD commit."
   OUT=true RUN git rev-parse FETCH_HEAD^0
   upstream_head_commit=$output
 
+  if [[ -z $upstream_head_commit ]]; then
+    error "Failed to resolve the fetched commit."
+  fi
+
+  o "Fetched commit: $upstream_head_commit"
+
   o "Create ref '$refs_subrepo_fetch'."
-  git:make-ref "$refs_subrepo_fetch" FETCH_HEAD^0
+  git:make-ref "$refs_subrepo_fetch" "$upstream_head_commit"
 }
 
 # Create a subrepo branch containing all changes
@@ -1068,6 +1085,9 @@ get-command-options() {
           override_branch=$1
           commit_msg_args+=("--branch=$1")
           shift ;;
+      -c) subrepo_commit_specified=$1
+          commit_msg_args+=("--commit=$1")
+          shift ;;
       -e) edit_wanted=true ;;
       -f) force_wanted=true
           commit_msg_args+=("--force") ;;
@@ -1191,6 +1211,8 @@ command-prepare() {
 
 # Do the setup steps needed by most of the subrepo subcommands:
 command-setup() {
+  subrepo_commit_specified=${subrepo_commit_specified-}
+  
   get-params "$@"
 
   check-and-normalize-subdir

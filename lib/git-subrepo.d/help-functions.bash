@@ -142,7 +142,7 @@ help:config() {
 help:fetch() {
     cat <<'...'
 
-  Usage: git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>]
+  Usage: git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>] [--commit=<commit-hash>]
 
 
   Fetch the remote/upstream content for a subrepo.
@@ -152,7 +152,7 @@ help:fetch() {
   `subrepo/<subdir>`. These are temporary and you can easily remove them with
   the subrepo `clean` command.
 
-  The `fetch` command accepts the `--all`, `--branch=` and `--remote=` options.
+  The `fetch` command accepts the `--all`, `--branch=`, `--commit=`, and `--remote=` options.
 ...
 }
 
@@ -205,8 +205,7 @@ help:init() {
 
 help:pull() {
     cat <<'...'
-
-  Usage: git subrepo pull <subdir>|--all [-M|-R|-f] [-m <msg>] [--file=<msg file>] [-e] [-b <branch>] [-r <remote>] [-u]
+  Usage: git subrepo pull <subdir>|--all [-M|-R|-f] [-m <msg>] [--file=<msg file>] [-e] [-b <branch>] [-r <remote>] [-u] [--commit=<commit-hash>]
 
 
   Update the subrepo subdir with the latest upstream changes.
@@ -252,7 +251,7 @@ help:pull() {
 
   The set of commands used above are described in detail below.
 
-  The `pull` command accepts the `--all`, `--branch=`, `--edit`, `--file`,
+  The `pull` command accepts the `--all`, `--branch=`, `--commit=`, `--edit`, `--file`,
   `--force`, `--message=`, `--remote=` and `--update` options.
 ...
 }
