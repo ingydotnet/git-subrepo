@@ -753,9 +753,16 @@ subrepo:branch() {
     local parent_is_ancestor=
     git merge-base --is-ancestor "$subrepo_parent" HEAD && parent_is_ancestor="true"
     if [[ -z "$parent_is_ancestor" ]]; then
-      error "The previous commit where the subrepo was updated, '$subrepo_parent' is not an ancestor of HEAD. \n \
-        Did you rebase that commit?\n \
-        Try manually setting subrepo.parent in .gitrepo to the hash of the correct commit."
+      local prev_merge_point
+      prev_merge_point=$(git log -1 -G "commit =" --format="%H" "$gitrepo")
+        # We want the SHA of the patch before the sync point just in case someone made a modifcation in the
+        # actual sync commit
+        prev_merge_point=$(git log -1 --format="%H" "$prev_merge_point"^)
+        error "The last sync point (where upstream and the subrepo were equal) is not an ancestor. \n \
+            This is usually caused by a rebase affecting that commit. \n \
+            To recover set the subrepo parent in '$gitrepo'\n \
+            to '$prev_merge_point' \n \
+            and validate the subrepo by comparing with 'git subrepo branch $subdir'"
     fi
 
     local prev_commit=
