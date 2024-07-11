@@ -211,8 +211,11 @@ command:clone() {
 # `git subrepo init <subdir>` command:
 command:init() {
   command-setup +subdir
+  local default_branch=
+  default_branch=$(git config init.defaultbranch)
+  default_branch=${default_branch:=master}
   local remote=${subrepo_remote:=none}
-  local branch=${subrepo_branch:=master}
+  local branch=${subrepo_branch:=$default_branch}
 
   # Init new subrepo from the subdir:
   subrepo:init
