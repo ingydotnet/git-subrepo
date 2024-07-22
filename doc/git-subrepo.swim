@@ -214,7 +214,7 @@ the same arguments. Keep reading…
   `--force`, `--merge`, `--message`, `--rebase`, `--remote=`, `--squash` and
   `--update` options.
 
-- `git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>]`
+- `git subrepo fetch <subdir>|--force --all [-r <remote>] [-b <branch>]`
 
   Fetch the remote/upstream content for a subrepo.
 
@@ -223,7 +223,7 @@ the same arguments. Keep reading…
   `subrepo/<subdir>`. These are temporary and you can easily remove them with
   the subrepo `clean` command.
 
-  The `fetch` command accepts the `--all`, `--branch=` and `--remote=` options.
+  The `fetch` command accepts the `--force`, `--all`, `--branch=` and `--remote=` options.
 
 - `git subrepo branch <subdir>|--all [-f] [-F]`
 

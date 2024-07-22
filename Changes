@@ -1,3 +1,15 @@
+version: 0.4.8
+date:    Mon 22 Jul 2024 07:40:00 AM CST
+- Remove all subrepo refs with clean --force
+- Allow the error() function to accept multiple arguments
+- Bug fixed where clone --force could change the tracked branch
+- Give a detailed error message if the parent SHA could not be found
+- Use the git configuration to determine the default branch name for the init command
+- Add --force to fetch command
+- Fix executable settings on installed files
+- Remove shebangs from library only files
+- Fix bash-completion for instances that used make install
+---
 version: 0.4.7
 date:    Sun 7 Jul 2024 11:04:00 AM EST
 - Convert testing to use docker with updated git versions
