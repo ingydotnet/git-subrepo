@@ -250,7 +250,7 @@ option will NOT check for a proper merge. ANY branch will be force pushed!)
 
 The C<push> command accepts the C<--all>, C<--branch=>, C<--dry-run>, C<--file>, C<--force>, C<--merge>, C<--message>, C<--rebase>, C<--remote=>, C<--squash> and C<--update> options.
 
-=item C<< git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>] >>
+=item C<< git subrepo fetch <subdir>|--force --all [-r <remote>] [-b <branch>] >>
 
 Fetch the remote/upstream content for a subrepo.
 
@@ -259,7 +259,7 @@ points at the same commit as C<FETCH_HEAD>. It will also create a remote
 called C<< subrepo/<subdir> >>. These are temporary and you can easily remove
 them with the subrepo C<clean> command.
 
-The C<fetch> command accepts the C<--all>, C<--branch=> and C<--remote=> options.
+The C<fetch> command accepts the C<--force>, C<--all>, C<--branch=> and C<--remote=> options.
 
 =item C<< git subrepo branch <subdir>|--all [-f] [-F] >>
 

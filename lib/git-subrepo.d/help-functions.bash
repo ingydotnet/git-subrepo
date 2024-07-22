@@ -9,7 +9,7 @@ clean                clean <subdir>|--all|--ALL [-f]
 clone                clone <repository> [<subdir>] [-b <branch>] [-f] [-m <msg>] [--file=<msg file>] [-e] [--method <merge|rebase>]
 commit               commit <subdir> [<subrepo-ref>] [-m <msg>] [--file=<msg file>] [-e] [-f] [-F]
 config               config <subdir> <option> [<value>] [-f]
-fetch                fetch <subdir>|--all [-r <remote>] [-b <branch>]
+fetch                fetch <subdir>|--force --all [-r <remote>] [-b <branch>]
 help                 help [<command>|--all]
 init                 init <subdir> [-r <remote>] [-b <branch>] [--method <merge|rebase>]
 pull                 pull <subdir>|--all [-M|-R|-f] [-m <msg>] [--file=<msg file>] [-e] [-b <branch>] [-r <remote>] [-u]
@@ -140,7 +140,7 @@ help:config() {
 help:fetch() {
     cat <<'...'
 
-  Usage: git subrepo fetch <subdir>|--all [-r <remote>] [-b <branch>]
+  Usage: git subrepo fetch <subdir>|--force --all [-r <remote>] [-b <branch>]
 
 
   Fetch the remote/upstream content for a subrepo.
@@ -150,7 +150,7 @@ help:fetch() {
   `subrepo/<subdir>`. These are temporary and you can easily remove them with
   the subrepo `clean` command.
 
-  The `fetch` command accepts the `--all`, `--branch=` and `--remote=` options.
+  The `fetch` command accepts the `--force`, `--all`, `--branch=` and `--remote=` options.
 ...
 }
 

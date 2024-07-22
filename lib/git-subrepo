@@ -17,7 +17,7 @@ source "${SUBREPO_EXT_DIR}/bash+.bash"
 bash+:import :std can version-check
 
 
-VERSION=0.4.7
+VERSION=0.4.8
 REQUIRED_BASH_VERSION=4.0
 REQUIRED_GIT_VERSION=2.7.0
 GIT_TMP=$(git rev-parse --git-common-dir 2> /dev/null || echo .git)/tmp
