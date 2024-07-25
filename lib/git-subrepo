@@ -30,7 +30,7 @@ fi
 bash+:import :std can version-check
 
 
-VERSION=0.4.8
+VERSION=0.4.9
 REQUIRED_BASH_VERSION=4.0
 REQUIRED_GIT_VERSION=2.7.0
 GIT_TMP=$(git rev-parse --git-common-dir 2> /dev/null || echo .git)/tmp

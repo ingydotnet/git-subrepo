@@ -1,3 +1,7 @@
+version: 0.4.9
+date:    Mon 25 Jul 2024 11:23:34 AM CST
+- Revert Fix bash-completion due to not being compatible with Windows
+---
 version: 0.4.8
 date:    Mon 22 Jul 2024 07:40:00 AM CST
 - Remove all subrepo refs with clean --force
