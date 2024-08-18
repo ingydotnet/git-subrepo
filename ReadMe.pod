@@ -672,6 +672,75 @@ C<irc.freenode.net>.
 
 =back
 
+=head1 Working with nested subrepos
+
+C<git-subrepo> supports adding subrepos which themselves make use of subrepos.
+In fact, subrepo itself is built this way. Take a look in the C<ext/> folder,
+it houses 2 dependencies as subrepos, C<test-more-bash> and C<bashplus>.
+
+C<test-more-bash> itself depends on 2 more subrepos: C<bashplus> again, and
+C<test-tap-bash>.
+
+The structure is therefore as follows:
+
+    git-subrepo
+      |- bashplus
+      |- test-more-bash
+        |- bashplus
+        |- test-tap-bash
+
+However, it's important to understand how this works. Here's the key idea:
+There is B<no> special handling for nested subrepos.
+
+When you clone a subrepo, B<all> C<git-subrepo> does is download the code and
+set up the subrepo file. This means that all the subrepo commands simply act
+on the subrepo as a whole, treating nested subrepos like any other part of the
+source code.
+
+Let's look at what this means in practice. Say you have a structure as
+follows:
+
+    app-foo
+      |- barlib
+         |- bazlib
+
+You're working on app-foo, and make some changes to bazlib. How should you
+upstream these changes?
+
+From the perspective of app-foo, you've simply made some changes to barlib.
+Whether or not those changes were themselves in a subrepo is irrelevant. So,
+just like any other changes, you run
+
+C<git subrepo push barlib>
+
+Now, if C<barlib> is a library you don't maintain, your responsibility would
+end here. C<barlib>'s maintainer would see your changes and decide what to do
+with them.
+
+If you do maintain C<barlib>, you might now want to upstream the changes all
+the way into C<bazlib>. You could be tempted to try running something like:
+
+C<git subrepo push barlib/bazlib>
+
+but you'll soon find out that doesn't work. C<app-foo> doesn't know anything
+about the link between C<barlib> and C<bazlib>.
+
+What you should do is treat the changes to C<barlib> as if they would come
+from another contributor, aka:
+
+=over
+
+=item * go to a local copy of C<barlib>
+
+=item * pull down the changes with C<git pull>
+
+=item * you notice the changes include some work on your subrepo, time to upstream them: C<git subrepo push bazlib>
+
+=back
+
+And you're done! One final step you'll likely want to do is to go back to C<app-foo> and run C<git subrepo pull barlib>, because the push you just did added a
+new commit.
+
 =head1 Authors
 
 =over
