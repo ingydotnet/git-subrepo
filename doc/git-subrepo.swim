@@ -599,6 +599,74 @@ If you want to chat about the `git-subrepo` command, join `#gitcommands` on
 * Written in (very modern) Bash, with full test suite. Take a look.
 * A `.gitrepo` file never is in the top level dir (next to a `.git/` dir).
 
+= Working with nested subrepos
+
+`git-subrepo` supports adding subrepos which themselves make use of
+subrepos. In fact, subrepo itself is built this way. Take a look in the
+`ext/` folder, it houses 2 dependencies as subrepos, `test-more-bash` and
+`bashplus`. 
+
+`test-more-bash` itself depends on 2 more subrepos: `bashplus` again, and
+`test-tap-bash`.
+
+The structure is therefore as follows:
+
+  git-subrepo
+    |- bashplus
+    |- test-more-bash
+      |- bashplus
+      |- test-tap-bash
+
+However, it's important to understand how this works. Here's the key idea:
+*`git-subrepo` is 100% agnostic about your dependencies!*
+
+There is *no* special handling for nested subrepos. When you clone a
+subrepo, *all* `git-subrepo` does is download the code and set up the subrepo
+file. It couldn't care less about the actual contents of your code.
+This means that all the subrepo commands simply act on the subrepo as a whole,
+treating nested subrepos like it treats any other part of the source code. 
+
+Let's look at what this means in practice. Say you have a structure as follows:
+
+  app-foo
+    |- barlib
+       |- bazlib
+
+You're working on app-foo, and make some changes to bazlib. How should you
+upstream these changes?
+
+Well, first you must realize that from the perspective of app-foo, you've simply
+made some changes to barlib. Whether or not those changes were themselves in a
+subrepo is irrelevant. So, just like any other changes, you run
+
+`git subrepo push barlib`
+
+Now, if `barlib` is a library you don't maintain, your responsibility would end
+here. `barlib`'s maintainer would see your changes and decide what to do with
+them. 
+
+If you do maintain `barlib`, you might now want to upstream the changes all the
+way into `bazlib`. You could be tempted to try running something like:
+
+`git subrepo push barlib/bazlib`
+
+but you'll soon find out that doesn't work. Why not? Simple: `app-foo` doesn't
+know anything about the link between `barlib` and `bazlib`.
+
+What you should do is treat the changes to `barlib` as if they would come from
+another contributor, aka:
+
+* go to your local copy of `barlib`
+* pull down the changes with a simple `git pull`
+* you notice the changes include some work on your subrepo, time to upstream
+  them:
+  `git subrepo push bazlib`
+
+And you're done! One final step you'll likely want to do is to go back to
+`app-foo` and run `git subrepo pull barlib`, because the push you just did added
+a new commit.
+
+
 = Authors
 
 * Ingy döt Net <ingy@ingy.net>
