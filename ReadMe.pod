@@ -731,7 +731,7 @@ from another contributor, aka:
 
 =over
 
-=item * go to your local copy of C<barlib>
+=item * go to a local copy of C<barlib>
 
 =item * pull down the changes with a C<git pull>
 
