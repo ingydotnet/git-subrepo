@@ -733,7 +733,7 @@ from another contributor, aka:
 
 =item * go to your local copy of C<barlib>
 
-=item * pull down the changes with a simple C<git pull>
+=item * pull down the changes with a C<git pull>
 
 =item * you notice the changes include some work on your subrepo, time to upstream them: C<git subrepo push bazlib>
 

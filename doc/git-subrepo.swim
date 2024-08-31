@@ -656,7 +656,7 @@ What you should do is treat the changes to `barlib` as if they would come from
 another contributor, aka:
 
 * go to your local copy of `barlib`
-* pull down the changes with a simple `git pull`
+* pull down the changes with a `git pull`
 * you notice the changes include some work on your subrepo, time to upstream
   them:
   `git subrepo push bazlib`
