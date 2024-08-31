@@ -731,12 +731,13 @@ The structure is therefore as follows:
 \&        |\- test\-tap\-bash
 .Ve
 .PP
-However, it's important to understand how this works. Here's the key idea: \fR\f(CB\*(C`git\-subrepo\*(C'\fR\fB is 100% agnostic about your dependencies!\fR
+However, it's important to understand how this works. Here's the key idea:
+there is \fBno\fR special handling for nested subrepos.
 .PP
-There is \fBno\fR special handling for nested subrepos. When you clone a subrepo,
-\&\fBall\fR \f(CW\*(C`git\-subrepo\*(C'\fR does is download the code and set up the subrepo file.
-This means that all the subrepo commands simply act on the subrepo as a whole,
-treating nested subrepos like any other part of the source code.
+When you clone a subrepo, \fBall\fR \f(CW\*(C`git\-subrepo\*(C'\fR does is download the code and
+set up the subrepo file. This means that all the subrepo commands simply act
+on the subrepo as a whole, treating nested subrepos like any other part of the
+source code.
 .PP
 Let's look at what this means in practice. Say you have a structure as
 follows:

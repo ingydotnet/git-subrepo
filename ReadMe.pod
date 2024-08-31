@@ -689,13 +689,13 @@ The structure is therefore as follows:
         |- bashplus
         |- test-tap-bash
 
-However, it's important to understand how this works. Here's the key idea: B<<
-C<git-subrepo> is 100% agnostic about your dependencies! >>
+However, it's important to understand how this works. Here's the key idea:
+there is B<no> special handling for nested subrepos.
 
-There is B<no> special handling for nested subrepos. When you clone a subrepo,
-B<all> C<git-subrepo> does is download the code and set up the subrepo file.
-This means that all the subrepo commands simply act on the subrepo as a whole,
-treating nested subrepos like any other part of the source code.
+When you clone a subrepo, B<all> C<git-subrepo> does is download the code and
+set up the subrepo file. This means that all the subrepo commands simply act
+on the subrepo as a whole, treating nested subrepos like any other part of the
+source code.
 
 Let's look at what this means in practice. Say you have a structure as
 follows:

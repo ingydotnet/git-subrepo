@@ -618,11 +618,11 @@ The structure is therefore as follows:
       |- test-tap-bash
 
 However, it's important to understand how this works. Here's the key idea:
-*`git-subrepo` is 100% agnostic about your dependencies!*
+there is *no* special handling for nested subrepos. 
 
-There is *no* special handling for nested subrepos. When you clone a
-subrepo, *all* `git-subrepo` does is download the code and set up the subrepo
-file. This means that all the subrepo commands simply act on the subrepo as a whole,
+When you clone a subrepo, *all* `git-subrepo` does is download the code 
+and set up the subrepo file. 
+This means that all the subrepo commands simply act on the subrepo as a whole,
 treating nested subrepos like any other part of the source code. 
 
 Let's look at what this means in practice. Say you have a structure as follows:
