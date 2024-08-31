@@ -694,9 +694,8 @@ C<git-subrepo> is 100% agnostic about your dependencies! >>
 
 There is B<no> special handling for nested subrepos. When you clone a subrepo,
 B<all> C<git-subrepo> does is download the code and set up the subrepo file.
-It couldn't care less about the actual contents of your code. This means that
-all the subrepo commands simply act on the subrepo as a whole, treating nested
-subrepos like it treats any other part of the source code.
+This means that all the subrepo commands simply act on the subrepo as a whole,
+treating nested subrepos like any other part of the source code.
 
 Let's look at what this means in practice. Say you have a structure as
 follows:
