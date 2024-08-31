@@ -649,8 +649,8 @@ way into `bazlib`. You could be tempted to try running something like:
 
 `git subrepo push barlib/bazlib`
 
-but you'll soon find out that doesn't work. Why not? Simple: `app-foo` doesn't
-know anything about the link between `barlib` and `bazlib`.
+but you'll soon find out that doesn't work. 
+`app-foo` doesn't know anything about the link between `barlib` and `bazlib`.
 
 What you should do is treat the changes to `barlib` as if they would come from
 another contributor, aka:
