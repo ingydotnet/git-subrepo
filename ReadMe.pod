@@ -688,6 +688,6 @@ C<irc.freenode.net>.
 
 The MIT License (MIT)
 
-Copyright (c) 2013-2020 Ingy döt Net
+Copyright (c) 2013-2024 Ingy döt Net
 
 =cut
