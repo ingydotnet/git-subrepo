@@ -12,21 +12,8 @@ set -e
 export FILTER_BRANCH_SQUELCH_WARNING=1
 
 # Import Bash+ helper functions:
-SOURCE=${BASH_SOURCE[0]}
-while [[ -h $SOURCE ]]; do
-  DIR=$( cd -P "$( dirname "$SOURCE" )" && pwd )
-  SOURCE=$(readlink "$SOURCE")
-  [[ $SOURCE != /* ]] && SOURCE=$DIR/$SOURCE
-done
-SOURCE_DIR=$(dirname "$SOURCE")
-
-if [[ -z $GIT_SUBREPO_ROOT ]]; then
-  # If `make install` installation used:
-  source "${SOURCE_DIR}/git-subrepo.d/bash+.bash"
-else
-  # If `source .rc` method used:
-  source "${SOURCE_DIR}/../ext/bashplus/lib/bash+.bash"
-fi
+SUBREPO_EXT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/git-subrepo.d" # replaced by `make install`
+source "${SUBREPO_EXT_DIR}/bash+.bash"
 bash+:import :std can version-check
 
 
@@ -396,7 +383,7 @@ command:config() {
 
 # Launch the manpage viewer:
 command:help() {
-  source "${SOURCE_DIR}/git-subrepo.d/help-functions.bash"
+  source "${SUBREPO_EXT_DIR}/help-functions.bash"
   local cmd=${command_arguments[0]}
   if [[ $cmd ]]; then
     if can "help:$cmd"; then
@@ -1992,7 +1979,7 @@ OK() {
 usage-error() {
   local msg="git-subrepo: $1" usage=
   if [[ $GIT_SUBREPO_TEST_ERRORS != true ]]; then
-    source "${SOURCE_DIR}/git-subrepo.d/help-functions.bash"
+    source "${SUBREPO_EXT_DIR}/help-functions.bash"
     if can "help:$command"; then
       msg=$'\n'"$msg"$'\n'"$("help:$command")"$'\n'
     fi
