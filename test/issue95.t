@@ -12,13 +12,15 @@ use Test::More
     # Make two new repos
     (
         mkdir host sub
-        git init host
-        git init sub
+        git init --initial-branch=$DEFAULTBRANCH host
+        git init --initial-branch=$DEFAULTBRANCH sub
     ) > /dev/null
 
     # Initialize host repo
     (
         cd host
+        git config user.name "HstUser"
+        git config user.email "hst@hst"
         touch host
         git add host
         git commit -m "host initial commit"
@@ -27,7 +29,8 @@ use Test::More
     # Initialize sub repo
     (
         cd sub
-        git init
+        git config user.name "SubUser"
+        git config user.email "sub@sub"
         touch subrepo
         git add subrepo
         git commit -m "subrepo initial commit"

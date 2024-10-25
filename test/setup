@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
 
-# Set this locally for Windows:
-git config core.autocrlf input
-
 set -e
 
-# Set the GIT_SUBREPO_ROOT for testing.
-source "$PWD"/.rc
+export LC_ALL=C.UTF-8
 
 # Get the location of this script
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
+# Running tests depends on the whole project being git initialized.
+# So, git initialize the project, if necessary.
+if [ ! -d "${SCRIPT_DIR}/../.git" ]; then
+	git init -b master .
+	git config user.email "you@you"
+	git config user.name "YouUser"
+	git add .
+	git commit -a -m"Initial commit"
+	git config --list
+fi
+
 BASHLIB=$(
-  find "$PWD"/ -type d -name bin -o -type d -name lib | tr '\n' ':'
+  find "$PWD"/ -type d -name bin -o -type d -name lib | grep -v "\/\.pc\/" | tr '\n' ':'
 )
 export BASHLIB
 
@@ -46,17 +53,17 @@ clone-foo-and-bar() {
     git clone "$UPSTREAM/foo" "$OWNER/foo"
     (
         cd "$OWNER/foo"
-        git config core.autocrlf input
         git config user.name "FooUser"
         git config user.email "foo@foo"
+        git config init.defaultBranch $DEFAULTBRANCH
     )
     # bar will act as the subrepo
     git clone "$UPSTREAM/bar" "$OWNER/bar"
     (
         cd "$OWNER/bar"
-        git config core.autocrlf input
         git config user.name "BarUser"
         git config user.email "bar@bar"
+        git config init.defaultBranch $DEFAULTBRANCH
     )
   ) &> /dev/null || die
 }
