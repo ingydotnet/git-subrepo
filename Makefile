@@ -110,7 +110,7 @@ compgen: force
 	    $(SHARE)/zsh-completion/_git-subrepo
 
 clean:
-	rm -fr tmp test/tmp
+	rm -fr tmp test/tmp test/repo
 
 define docker-make-test
 	docker run --rm \
