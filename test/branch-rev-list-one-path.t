@@ -19,7 +19,7 @@ subrepo-clone-bar-into-foo
   add-new-files bar/file3
   add-new-files bar/file4
   add-new-files bar/file5
-  git merge master
+  git merge --ff master
 ) >& /dev/null || die
 
 test-exists "$OWNER/foo/bar/file1" "$OWNER/foo/bar/file2" "$OWNER/foo/bar/file3" "$OWNER/foo/bar/file4" "$OWNER/foo/bar/file5"
