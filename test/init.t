@@ -24,7 +24,7 @@ output=$(
   cd "$OWNER/init"
   git config user.email "ini@ini"
   git config user.name "IniUser"
-  git config init.defaultBranch $DEFAULTBRANCH
+  git config init.defaultBranch "${DEFAULTBRANCH}"
   git subrepo init doc
 )
 
@@ -53,7 +53,7 @@ git clone "$UPSTREAM/init" "$OWNER/init" &>/dev/null
   cd "$OWNER/init"
   git config user.email "ini@ini"
   git config user.name "IniUser"
-  git config init.defaultBranch $DEFAULTBRANCH
+  git config init.defaultBranch "${DEFAULTBRANCH}"
   git subrepo init doc -r git@github.com:user/repo -b foo -M rebase
 ) >/dev/null
 

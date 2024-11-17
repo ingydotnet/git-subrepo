@@ -11,8 +11,8 @@ use Test::More
     # Make two new repos
     (
         mkdir host sub
-        git init --initial-branch=$DEFAULTBRANCH host
-        git init --initial-branch=$DEFAULTBRANCH sub
+        git init --initial-branch="${DEFAULTBRANCH}" host
+        git init --initial-branch="${DEFAULTBRANCH}" sub
     ) > /dev/null
 
     # Initialize host repo
@@ -90,7 +90,7 @@ use Test::More
     # expected: successful push without conflicts
     is "$(
             cd host
-            git subrepo push sub -b "$DEFAULTBRANCH" -u
+            git subrepo push sub -b "${DEFAULTBRANCH}" -u
     )" \
        "Subrepo 'sub' pushed to '../sub' ($DEFAULTBRANCH)."
 

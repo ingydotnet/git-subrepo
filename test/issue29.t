@@ -18,9 +18,9 @@ cd "$TMP"
 # Make 3 new repos:
 (
   mkdir share main1 main2
-  git init --initial-branch=$DEFAULTBRANCH share
-  git init --initial-branch=$DEFAULTBRANCH main1
-  git init --initial-branch=$DEFAULTBRANCH main2
+  git init --initial-branch="${DEFAULTBRANCH}" share
+  git init --initial-branch="${DEFAULTBRANCH}" main1
+  git init --initial-branch="${DEFAULTBRANCH}" main2
 ) > /dev/null
 
 # Add an empty 'readme' to the share repo:
@@ -44,7 +44,7 @@ cd "$TMP"
   touch main1
   git add main1
   git commit -m "Initial main1"
-  git subrepo clone ../share share -b "$DEFAULTBRANCH"
+  git subrepo clone ../share share -b "${DEFAULTBRANCH}"
 ) > /dev/null
 
 # `subrepo clone` the share repo into main2:
@@ -55,7 +55,7 @@ cd "$TMP"
   touch main2
   git add main2
   git commit -m "Initial main2"
-  git subrepo clone ../share share -b "$DEFAULTBRANCH"
+  git subrepo clone ../share share -b "${DEFAULTBRANCH}"
 ) > /dev/null
 
 

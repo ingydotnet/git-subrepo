@@ -12,8 +12,8 @@ use Test::More
     # Make two new repos
     (
         mkdir host sub
-        git init --initial-branch=$DEFAULTBRANCH host
-        git init --initial-branch=$DEFAULTBRANCH sub
+        git init --initial-branch="${DEFAULTBRANCH}" host
+        git init --initial-branch="${DEFAULTBRANCH}" sub
     ) > /dev/null
 
     # Initialize host repo
@@ -49,7 +49,7 @@ use Test::More
         touch feature
         git add feature
         git commit -m "feature added"
-        git checkout "$DEFAULTBRANCH"
+        git checkout "${DEFAULTBRANCH}"
     ) &> /dev/null
 
     # Commit directly to subrepo

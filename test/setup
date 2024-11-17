@@ -59,7 +59,7 @@ mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 cp -r test/repo/{foo,bar,init} "$UPSTREAM/"
 
 DEFAULTBRANCH=$( git config --global --get init.defaultbranch || true )
-[[ -z $DEFAULTBRANCH ]] && DEFAULTBRANCH="master"
+[[ -z "${DEFAULTBRANCH}" ]] && DEFAULTBRANCH="master"
 export DEFAULTBRANCH
 
 ###
@@ -73,7 +73,7 @@ clone-foo-and-bar() {
         cd "$OWNER/foo"
         git config user.name "FooUser"
         git config user.email "foo@foo"
-        git config init.defaultBranch $DEFAULTBRANCH
+        git config init.defaultBranch "${DEFAULTBRANCH}"
     )
     # bar will act as the subrepo
     git clone "$UPSTREAM/bar" "$OWNER/bar"
@@ -81,7 +81,7 @@ clone-foo-and-bar() {
         cd "$OWNER/bar"
         git config user.name "BarUser"
         git config user.email "bar@bar"
-        git config init.defaultBranch $DEFAULTBRANCH
+        git config init.defaultBranch "${DEFAULTBRANCH}"
     )
   ) &> /dev/null || die
 }
