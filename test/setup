@@ -28,10 +28,11 @@ rm -fr "$TMP"
 export UPSTREAM=$TMP/upstream
 export OWNER=$TMP/owner
 export COLLAB=$TMP/collab
+export TEMPLATES="$PWD/test/repo"
 
 mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 
-cp -r test/repo/{foo,bar,init} "$UPSTREAM/"
+cp -r "$TEMPLATES"/{foo,bar,doak,init} "$UPSTREAM/"
 
 DEFAULTBRANCH=$( git config --global --get init.defaultbranch || true )
 [[ -z $DEFAULTBRANCH ]] && DEFAULTBRANCH="master"
