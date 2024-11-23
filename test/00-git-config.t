@@ -23,6 +23,8 @@ else
   git config --global init.defaultBranch "master"
   git config --global --add safe.directory "${PROJ_DIR}"
   git config --global --add safe.directory "${PROJ_DIR}/.git"
+  git config --global pull.ff only
+  git config --global merge.ff only
   git config --list
 
   test-exists "${PROJ_DIR}/.gitconfig"
