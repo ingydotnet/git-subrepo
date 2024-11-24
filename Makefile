@@ -22,7 +22,7 @@ INSTALL_BIN  ?= $(PREFIX)/bin
 INSTALL_LIB  ?= $(PREFIX)/share/$(NAME)
 INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
 INSTALL_MAN1 ?= $(PREFIX)/share/man/man1
-LINK_REL_DIR := $(shell realpath --relative-to=$(INSTALL_BIN) $(INSTALL_LIB))
+LINK_REL_DIR := $(shell bash share/pnrelpath.sh $(INSTALL_BIN) $(INSTALL_LIB))
 
 # Docker variables:
 DOCKER_TAG ?= 0.0.6
@@ -49,6 +49,7 @@ help:
 
 .PHONY: test
 test:
+	@echo uname: '$(shell uname)'
 	prove $(prove) $(test)
 
 test-all: test docker-tests

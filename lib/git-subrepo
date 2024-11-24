@@ -12,7 +12,7 @@ set -e
 export FILTER_BRANCH_SQUELCH_WARNING=1
 
 # Import Bash+ helper functions:
-SUBREPO_EXT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/git-subrepo.d" # replaced by `make install`
+SUBREPO_EXT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/git-subrepo.d" # replaced by `make install`
 source "${SUBREPO_EXT_DIR}/bash+.bash"
 bash+:import :std can version-check
 
