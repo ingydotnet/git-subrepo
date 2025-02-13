@@ -82,4 +82,3 @@ There are certain steps that each command must do first:
 == Clone command:
 
 * Fetch upstream content for our tracking branch.
-
