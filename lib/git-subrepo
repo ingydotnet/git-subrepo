@@ -64,7 +64,7 @@ Options:
 h           Show the command summary
 help        Help overview
 version     Print the git-subrepo version number
- 
+
 a,all       Perform command on all current subrepos
 A,ALL       Perform command on all subrepos and subsubrepos
 b,branch=   Specify the upstream branch to push/pull/fetch
@@ -77,7 +77,7 @@ file=       Specify a commit message file
 r,remote=   Specify the upstream remote to push/pull/fetch
 s,squash    Squash commits on push
 u,update    Add the --branch and/or --remote overrides to .gitrepo
- 
+
 q,quiet     Show minimal output
 v,verbose   Show verbose output
 d,debug     Show the actual commands used

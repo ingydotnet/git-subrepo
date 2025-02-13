@@ -604,7 +604,7 @@ If you want to chat about the `git-subrepo` command, join `#gitcommands` on
 `git-subrepo` supports adding subrepos which themselves make use of
 subrepos. In fact, subrepo itself is built this way. Take a look in the
 `ext/` folder, it houses 2 dependencies as subrepos, `test-more-bash` and
-`bashplus`. 
+`bashplus`.
 
 `test-more-bash` itself depends on 2 more subrepos: `bashplus` again, and
 `test-tap-bash`.
@@ -623,7 +623,7 @@ There is *no* special handling for nested subrepos.
 When you clone a subrepo, *all* `git-subrepo` does is download the code
 and set up the subrepo file.
 This means that all the subrepo commands simply act on the subrepo as a whole,
-treating nested subrepos like any other part of the source code. 
+treating nested subrepos like any other part of the source code.
 
 Let's look at what this means in practice. Say you have a structure as follows:
 
@@ -642,7 +642,7 @@ just like any other changes, you run
 
 Now, if `barlib` is a library you don't maintain, your responsibility would end
 here. `barlib`'s maintainer would see your changes and decide what to do with
-them. 
+them.
 
 If you do maintain `barlib`, you might now want to upstream the changes all the
 way into `bazlib`. You could be tempted to try running something like:
