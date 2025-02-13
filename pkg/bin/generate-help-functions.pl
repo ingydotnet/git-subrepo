@@ -84,4 +84,3 @@ __END__
 Bad usage: '`help`
   Show this manpage.
 ' '' '  Show this manpage.' at tool/gerate-help-functions.pl line 15, <> line 1.
-

@@ -53,5 +53,3 @@ git subrepo branch ext/bashplus         # create refs/heads/subrepo/ext/bashplus
 git subrepo checkout ext/bashplus
 
 git subrepo push ext/bashplus
-
-
