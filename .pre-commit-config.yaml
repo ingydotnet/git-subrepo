@@ -7,3 +7,6 @@ repos:
     -   id: check-illegal-windows-names
     -   id: check-merge-conflict
     -   id: trailing-whitespace
+    -   id: check-executables-have-shebangs
+    -   id: check-shebang-scripts-are-executable
+        exclude: \.t$
