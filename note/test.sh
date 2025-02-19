@@ -13,19 +13,19 @@ git clone "git@github.com:$repo" test-repo
 
 (
   # cd into test-repo
-  cd test-repo
+  cd test-repo || exit
   # Tag original head
   git tag o
   # Pick a commit in the middle of the commit history
   S=$(git rev-parse HEAD^^^^)
   # Reset to the middle commit
-  git reset --hard $S
+  git reset --hard "$S"
   # Tag that history as 'a'
   git tag a
   # Reset to original
   git reset --hard o
   # Take the tail of the history.
-  git filter-branch -f --parent-filter "sed 's/-p $S//'" $S..HEAD
+  git filter-branch -f --parent-filter "sed 's/-p $S//'" "$S..HEAD"
   # Mark that sequence as 'b'
   git tag b
   # Reset to a
