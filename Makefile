@@ -46,6 +46,7 @@ help:
 
 .PHONY: test
 test:
+	@echo uname: '$(shell uname)'
 	prove $(prove) $(test)
 
 test-all: test docker-tests
