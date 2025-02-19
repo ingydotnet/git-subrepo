@@ -162,10 +162,12 @@ _git_subrepo() {
     local _opts="$options_string"
     local subcommands="@$list"
     local subdircommands="@$subdir_cmds"
-    local subcommand="\$(__git_find_on_cmdline "\$subcommands")"
+    local subcommand
+    subcommand="\$(__git_find_on_cmdline "\$subcommands")"
 
     if [ -z "\$subcommand" ]; then
         # no subcommand yet
+        # shellcheck disable=SC2154
         case "\$cur" in
         -*)
             __gitcomp "\$_opts"
@@ -188,9 +190,11 @@ _git_subrepo() {
             return
         fi
 
-        local subdircommand="\$(__git_find_on_cmdline "\$subdircommands")"
-        if [ ! -z "\$subdircommand" ]; then
-            local git_subrepos=`git subrepo status -q`
+        local subdircommand
+        subdircommand="\$(__git_find_on_cmdline "\$subdircommands")"
+        if [ -n "\$subdircommand" ]; then
+            local git_subrepos
+            git_subrepos=$(git subrepo status -q)
             __gitcomp "\$git_subrepos"
         fi
 

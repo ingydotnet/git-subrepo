@@ -17,6 +17,7 @@ BASHLIB=$(
 export BASHLIB
 
 export PATH=$BASHLIB:$PATH
+# shellcheck disable=SC1091
 source bash+ :std
 
 source 'lib/git-subrepo'
