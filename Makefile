@@ -101,6 +101,8 @@ compgen: force
 	    $(SHARE)/completion.bash
 	perl pkg/bin/generate-completion.pl zsh $(DOC) $(LIB) > \
 	    $(SHARE)/zsh-completion/_git-subrepo
+	perl pkg/bin/generate-completion.pl fish $(DOC) $(LIB) > \
+	    $(SHARE)/git-subrepo.fish
 
 clean:
 	rm -fr tmp test/tmp
