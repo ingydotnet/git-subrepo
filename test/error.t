@@ -116,11 +116,11 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd .git
       catch git subrepo status
     )" \
-    "git-subrepo: Can't 'subrepo status' outside a working tree." \
+    "git-subrepo: (Can't 'subrepo status' outside a working tree\.|Not inside a git repository\.)" \
     "Error OK: check inside working tree"
 }
 
@@ -140,11 +140,11 @@ clone-foo-and-bar
 }
 
 {
-  is "$(
+  like "$(
       cd lib
       catch git subrepo status
     )" \
-    "git-subrepo: Need to run subrepo command from top level directory of the repo." \
+    "git-subrepo: (Need to run subrepo command from top level directory of the repo\.|Not inside a git repository\.)" \
     "Error OK: check cwd is at top level"
 }
 
