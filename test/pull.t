@@ -94,6 +94,6 @@ gitrepo=$OWNER/foo/bar/.gitrepo
     "$OWNER/foo/pull_failed"
 }
 
-done_testing # 9
+done_testing
 
 teardown
