@@ -212,7 +212,18 @@ command:clone() {
 command:init() {
   command-setup +subdir
   local default_branch=
-  default_branch=$(git config --get --default=master init.defaultbranch)
+  # Check if Git supports init.defaultbranch (Git 2.28+)
+  local git_version
+  local git_major
+  local git_minor
+  git_version=$(git --version | sed 's/git version //' | sed 's/\..*//')
+  git_major=$(echo "$git_version" | cut -d. -f1)
+  git_minor=$(echo "$git_version" | cut -d. -f2)
+  if [[ $git_major -gt 2 ]] || [[ $git_major -eq 2 && $git_minor -ge 28 ]]; then
+    default_branch=$(git config --get init.defaultbranch 2>/dev/null || echo "master")
+  else
+    default_branch="master"
+  fi
   local remote=${subrepo_remote:=none}
   local branch=${subrepo_branch:=$default_branch}
 
