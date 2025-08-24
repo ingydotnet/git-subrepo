@@ -22,16 +22,20 @@ INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
 INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
 
 # Docker variables:
-DOCKER_TAG ?= 0.0.7
-DOCKER_IMAGE := ingy/bash-testing:$(DOCKER_TAG)
-BASH_VERSIONS ?= 5.2 5.1 5.0 4.4 4.3 4.2 4.1 4.0
-DOCKER_TESTS := $(BASH_VERSIONS:%=docker-test-%)
-GIT_VERSIONS := 2.48 2.40 2.30 2.29 2.25 2.17 2.7
+DOCKER_TAG ?= git-subrepo-testing:latest
+DOCKER_IMAGE := $(DOCKER_TAG)
+BASH_VERSIONS ?= 5.3 5.2 5.1 5.0 4.4 4.3 4.2 4.1 4.0 3.2
+GIT_VERSIONS := 2.51 2.48 2.40 2.30 2.29 2.25 2.17
+
+# Create matrix of all bash/git combinations for comprehensive testing
+BASH_GIT_COMBINATIONS := $(foreach bash,$(BASH_VERSIONS),$(foreach git,$(GIT_VERSIONS),$(bash)-$(git)))
+DOCKER_TESTS := $(BASH_GIT_COMBINATIONS:%=docker-test-%)
+DOCKER_BASH_TESTS := $(BASH_VERSIONS:%=docker-bash-test-%)
 
 prove ?=
 test ?= test/
-bash ?= 5.2
-git ?= 2.48
+bash ?= 5.3
+git ?= 2.51
 
 # Basic targets:
 default: help
@@ -43,6 +47,17 @@ help:
 	@echo 'install    Install $(NAME)'
 	@echo 'uninstall  Uninstall $(NAME)'
 	@echo 'env        Show environment variables to set'
+	@echo ''
+	@echo 'Docker testing:'
+	@echo 'docker-build      Build Docker image with multiple bash/git versions'
+	@echo 'docker-tests      Test ALL bash/git combinations (comprehensive)'
+	@echo 'docker-bash-tests Test all bash versions with default git (faster)'
+	@echo 'docker-test       Test specific bash/git: make docker-test bash=5.1 git=2.25'
+
+	@echo ''
+	@echo 'Available bash versions: $(BASH_VERSIONS)'
+	@echo 'Available git versions:  $(GIT_VERSIONS)'
+	@echo ''
 
 .PHONY: test
 test:
@@ -53,10 +68,26 @@ test-all: test docker-tests
 docker-test:
 	$(call docker-make-test,$(bash),$(git))
 
+docker-build:
+	docker build -t $(DOCKER_TAG) test/
+
+# Test all bash/git combinations (comprehensive but slow)
 docker-tests: $(DOCKER_TESTS)
 
+# Test all bash versions with default git (faster option)
+docker-bash-tests: $(DOCKER_BASH_TESTS)
+
+
+
+# Parse bash-git combination from target name
 $(DOCKER_TESTS):
-	$(call docker-make-test,$(@:docker-test-%=%),$(git))
+	$(eval BASH_VER := $(shell echo "$(@:docker-test-%=%)" | cut -d'-' -f1))
+	$(eval GIT_VER := $(shell echo "$(@:docker-test-%=%)" | cut -d'-' -f2))
+	$(call docker-make-test,$(BASH_VER),$(GIT_VER))
+
+# Test specific bash version with default git
+$(DOCKER_BASH_TESTS):
+	$(call docker-make-test,$(@:docker-bash-test-%=%),$(git))
 
 # Install support:
 install:
@@ -109,6 +140,7 @@ clean:
 
 define docker-make-test
 	docker run --rm \
+	    --user $(shell id -u):$(shell id -g) \
 	    -v $(PWD):/git-subrepo \
 	    -w /git-subrepo \
 	    $(DOCKER_IMAGE) \
