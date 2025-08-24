@@ -5,6 +5,63 @@ git config core.autocrlf input
 
 set -e
 
+# Isolate git configuration for tests to ensure consistent behavior
+# across different environments and prevent interference from user's
+# global git configuration
+
+# Set up a temporary home directory for git config
+TEST_HOME=$(mktemp -d)
+export HOME="$TEST_HOME"
+TEMP_GIT_CONFIG="$TEST_HOME/.gitconfig"
+export GIT_CONFIG_GLOBAL="$TEMP_GIT_CONFIG"
+export GIT_CONFIG_SYSTEM=/dev/null
+
+# Set up minimal git configuration for tests
+setup_git_config() {
+  # Core settings
+  git config --global user.name "Test User"
+  git config --global user.email "test@example.com"
+  # Only set init.defaultBranch if Git supports it (Git 2.28+)
+  git_version=$(git --version | sed 's/git version //' | head -1)
+  git_major=$(echo "$git_version" | cut -d. -f1)
+  git_minor=$(echo "$git_version" | cut -d. -f2)
+  if [[ $git_major -gt 2 ]] || [[ $git_major -eq 2 && $git_minor -ge 28 ]]; then
+    git config --global init.defaultBranch "master"
+  fi
+  git config --global core.autocrlf input
+  git config --global core.filemode true
+  git config --global core.bare false
+  git config --global core.logallrefupdates true
+  git config --global core.repositoryformatversion 0
+
+  # Disable interactive prompts
+  git config --global advice.detachedHead false
+  git config --global advice.pushNonFastForward false
+  git config --global advice.statusHints false
+  git config --global advice.commitBeforeMerge false
+  git config --global advice.resolveConflict false
+  git config --global advice.implicitIdentity false
+  git config --global advice.rmHints false
+
+  # Merge/pull settings
+  git config --global merge.tool false
+  git config --global pull.rebase false
+  git config --global push.default simple
+
+  # Color settings (disable for consistent output)
+  git config --global color.ui false
+  git config --global color.branch false
+  git config --global color.diff false
+  git config --global color.status false
+
+  # Security settings
+  git config --global http.sslverify false
+  git config --global receive.advertisePushOptions false
+}
+
+# Set up git configuration for tests
+setup_git_config
+
 # Set the GIT_SUBREPO_ROOT for testing.
 source "$PWD"/.rc
 
@@ -34,7 +91,15 @@ mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 
 cp -r test/repo/{foo,bar,init} "$UPSTREAM/"
 
-DEFAULTBRANCH=$( git config --global --get init.defaultbranch || true )
+# Check if Git supports init.defaultbranch (Git 2.28+)
+git_version=$(git --version | sed 's/git version //' | head -1)
+git_major=$(echo "$git_version" | cut -d. -f1)
+git_minor=$(echo "$git_version" | cut -d. -f2)
+if [[ $git_major -gt 2 ]] || [[ $git_major -eq 2 && $git_minor -ge 28 ]]; then
+  DEFAULTBRANCH=$( git config --global --get init.defaultbranch || true )
+else
+  DEFAULTBRANCH=""
+fi
 [[ -z $DEFAULTBRANCH ]] && DEFAULTBRANCH="master"
 export DEFAULTBRANCH
 
@@ -210,4 +275,6 @@ catch() {
 
 teardown() {
   rm -fr "$TMP"
+  # Clean up temporary home directory and git config
+  [[ -n "$TEST_HOME" && -d "$TEST_HOME" ]] && rm -rf "$TEST_HOME"
 }

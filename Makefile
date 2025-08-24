@@ -53,7 +53,6 @@ help:
 	@echo 'docker-tests      Test ALL bash/git combinations (comprehensive)'
 	@echo 'docker-bash-tests Test all bash versions with default git (faster)'
 	@echo 'docker-test       Test specific bash/git: make docker-test bash=5.1 git=2.25'
-
 	@echo ''
 	@echo 'Available bash versions: $(BASH_VERSIONS)'
 	@echo 'Available git versions:  $(GIT_VERSIONS)'
