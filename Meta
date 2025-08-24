@@ -17,7 +17,7 @@ author:
 
 requires:
   bash: 4.0.0
-  git: 2.7.0
+  git: 2.23.0
 test:
   cmd: make test
 install: make install

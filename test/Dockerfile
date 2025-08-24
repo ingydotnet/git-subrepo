@@ -131,17 +131,28 @@ RUN cd /root \
     && rm -fr bash* \
     && true
 
+# Buil/install bash-5.3
+RUN cd /root \
+    && wget https://ftp.gnu.org/gnu/bash/bash-5.3.tar.gz \
+    && tar -xzf bash-5.3.tar.gz \
+    && cd bash-5.3 \
+    && ./configure --prefix=/bash-5.3 \
+    && make \
+    && make install \
+    && rm -fr bash* \
+    && true
+
 
 # Build/install git-2.17
 RUN cd /root \
-    && wget --timeout=60 --retry-connrefused --tries=3 https://github.com/git/git/archive/v2.17.6.tar.gz \
-    && tar -xzf v2.17.6.tar.gz \
-    && cd git-2.17.6 \
+    && wget --timeout=60 --retry-connrefused --tries=3 https://github.com/git/git/archive/v2.23.4.tar.gz \
+    && tar -xzf v2.23.4.tar.gz \
+    && cd git-2.23.4 \
     && make configure \
-    && ./configure --prefix=/git-2.17 --with-openssl --with-libpcre --with-curl \
+    && ./configure --prefix=/git-2.23 --with-openssl --with-libpcre --with-curl \
     && make all -j$(nproc) \
     && make install \
-    && cd /root && rm -fr git* v2.17.6.tar.gz
+    && cd /root && rm -fr git* v2.23.4.tar.gz
 
 # Build/install git-2.25
 RUN cd /root \
