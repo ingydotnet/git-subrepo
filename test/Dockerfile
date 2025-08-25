@@ -32,17 +32,6 @@ RUN cd /root \
     && rm -fr shellcheck* \
     && true
 
-# Build/install bash-3.2.57
-RUN cd /root \
-    && wget https://ftp.gnu.org/gnu/bash/bash-3.2.57.tar.gz \
-    && tar -xzf bash-3.2.57.tar.gz \
-    && cd bash-3.2.57 \
-    && ./configure --prefix=/bash-3.2 \
-    && make \
-    && make install \
-    && rm -fr bash* \
-    && true
-
 # Buil/install bash-4.0
 RUN cd /root \
     && wget https://ftp.gnu.org/gnu/bash/bash-4.0.tar.gz \
