@@ -22,7 +22,7 @@ INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
 INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
 
 # Docker variables:
-DOCKER_TAG ?= git-subrepo-testing:latest
+DOCKER_TAG ?= admorgan/git-subrepo-testing:1.0
 DOCKER_IMAGE := $(DOCKER_TAG)
 BASH_VERSIONS ?= 5.3 5.2 5.1 5.0 4.4 4.3 4.2 4.1 4.0
 GIT_VERSIONS := 2.51 2.48 2.40 2.30 2.29 2.25 2.23
