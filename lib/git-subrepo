@@ -118,6 +118,7 @@ main() {
 
   local subrepo_remote=         # Remote url for subrepo's upstream repo
   local subrepo_branch=         # Upstream branch to clone/push/pull
+  local subrepo_branch_commit=  # Upstream branch commit to clone
   local subrepo_commit=         # Upstream HEAD from previous clone/pull
   local subrepo_parent=         # Local commit from before previous clone/pull
   local subrepo_former=         # A retired gitrepo key that might still exist
@@ -727,6 +728,13 @@ subrepo:fetch() {
   RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch"
   OK || return
 
+  if [[ -n "$subrepo_branch_commit" ]]; then
+    reset-upstream-subrepo-branch-commit
+    o "Re-fetch the upstream: $subrepo_remote ($subrepo_branch@$subrepo_branch_commit)."
+    RUN git fetch --no-tags --quiet "$subrepo_remote" "$subrepo_branch_commit"
+    OK || return
+  fi
+
   o "Get the upstream subrepo HEAD commit."
   OUT=true RUN git rev-parse FETCH_HEAD^0
   upstream_head_commit=$output
@@ -1093,8 +1101,11 @@ get-command-options() {
       -a) all_wanted=true ;;
       -A) ALL_wanted=true
           all_wanted=true ;;
-      -b) subrepo_branch=$1
-          override_branch=$1
+      -b) subrepo_branch=${1%%@*}
+          override_branch=${1%%@*}
+          if [ ${subrepo_branch} != "${1}" ]; then
+            subrepo_branch_commit=${1#*@}
+          fi
           commit_msg_args+=("--branch=$1")
           shift ;;
       -e) edit_wanted=true ;;
@@ -1648,6 +1659,25 @@ add-subrepo() {
     done
   fi
   subrepos+=("$1")
+}
+
+# Determine and set real commit behind branch@commit request
+reset-upstream-subrepo-branch-commit() {
+  local branch_commit
+  OUT=true RUN git rev-parse FETCH_HEAD^0
+  branch_commit=$output
+  [[ -n "$branch_commit" ]] ||
+    error "Problem finding head commit in upstream branch '${subrepo_branch}'."
+
+  if [[ ! "${branch_commit}" =~ ^$subrepo_branch_commit ]]; then
+    OUT=true FAIL=false RUN git rev-list --parents $subrepo_branch_commit..$branch_commit
+    branch_commit=$(
+      echo "$output" | sed -e '$!d' -e 's/.* //'
+    )
+    [[ -n "$branch_commit" ]] ||
+      error "Problem finding '${subrepo_branch_commit}' commit in upstream branch '${subrepo_branch}'."
+  fi
+  subrepo_branch_commit=$branch_commit
 }
 
 # Determine the upstream's default head branch:
