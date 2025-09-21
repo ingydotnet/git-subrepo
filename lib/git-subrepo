@@ -206,7 +206,11 @@ command:clone() {
   local re=
   $force_wanted && re=re
   local remote=$subrepo_remote
-  say "Subrepo '$remote' ($subrepo_branch) ${re}cloned into '$subdir'."
+  local bc=$subrepo_branch
+  if [ -n "$subrepo_branch_commit" ]; then
+    bc=$subrepo_branch@$subrepo_branch_commit
+  fi
+  say "Subrepo '$remote' ($bc) ${re}cloned into '$subdir'."
 }
 
 # `git subrepo init <subdir>` command:
@@ -237,7 +241,11 @@ command:pull() {
 
   subrepo:pull
   if OK; then
-    say "Subrepo '$subdir' pulled from '$subrepo_remote' ($subrepo_branch)."
+    local bc=$subrepo_branch
+    if [ -n "$subrepo_branch_commit" ]; then
+      bc=$subrepo_branch@$subrepo_branch_commit
+    fi
+    say "Subrepo '$subdir' pulled from '$subrepo_remote' ($bc)."
   elif [[ $CODE -eq -1 ]]; then
     say "Subrepo '$subdir' is up to date."
   elif [[ $CODE -eq 1 ]]; then
@@ -275,7 +283,11 @@ command:fetch() {
     say "Ignored '$subdir', no remote."
   else
     subrepo:fetch
-    say "Fetched '$subdir' from '$subrepo_remote' ($subrepo_branch)."
+    local bc=$subrepo_branch
+    if [ -n "$subrepo_branch_commit" ]; then
+      bc=$subrepo_branch@$subrepo_branch_commit
+    fi
+    say "Fetched '$subdir' from '$subrepo_remote' ($bc)."
   fi
 }
 
