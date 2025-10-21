@@ -1115,7 +1115,7 @@ get-command-options() {
           all_wanted=true ;;
       -b) subrepo_branch=${1%%@*}
           override_branch=${1%%@*}
-          if [ ${subrepo_branch} != "${1}" ]; then
+          if [ "${subrepo_branch}" != "${1}" ]; then
             subrepo_branch_commit=${1#*@}
           fi
           commit_msg_args+=("--branch=$1")
@@ -1682,7 +1682,7 @@ reset-upstream-subrepo-branch-commit() {
     error "Problem finding head commit in upstream branch '${subrepo_branch}'."
 
   if [[ ! "${branch_commit}" =~ ^$subrepo_branch_commit ]]; then
-    OUT=true FAIL=false RUN git rev-list --parents $subrepo_branch_commit..$branch_commit
+    OUT=true FAIL=false RUN git rev-list --parents "$subrepo_branch_commit".."$branch_commit"
     branch_commit=$(
       echo "$output" | sed -e '$!d' -e 's/.* //'
     )
