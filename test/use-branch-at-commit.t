@@ -18,7 +18,7 @@ clone-foo-and-bar
     "$OWNER/bar/Bar"
 }
 
-# Make a new branch bar1 in bar 
+# Make a new branch bar1 in bar
 (
   cd $OWNER/bar
   git checkout -b bar1
@@ -89,7 +89,7 @@ clone-foo-and-bar
     'bar: The third added commit is correct'
 }
 
-# Checkout default branch in bar 
+# Checkout default branch in bar
 (
   cd $OWNER/bar
   git checkout ${DEFAULTBRANCH}
