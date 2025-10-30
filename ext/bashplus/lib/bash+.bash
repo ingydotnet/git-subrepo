@@ -41,8 +41,6 @@ bash+:version-check() {
 bash+:version-check bash 3.2 ||
   { echo "The 'bashplus' library requires 'Bash 3.2+'." >&2; exit 1; }
 
-@() (echo "$@")  # XXX do we want to keep this?
-
 bash+:export:std() {
   set -o pipefail
 
