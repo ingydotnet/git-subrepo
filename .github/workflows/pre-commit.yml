@@ -8,6 +8,9 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v3
-    - uses: pre-commit/action@v3.0.1
+      - uses: actions/checkout@v4
+        with:
+          # For PRs from forks, checkout the merge commit to avoid branch name conflicts
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v3.0.1
