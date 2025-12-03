@@ -10,7 +10,7 @@ clone-foo-and-bar
 
 (
   mkdir -p "$OWNER/empty"
-  git init "$OWNER/empty"
+  git init --initial-branch="${DEFAULTBRANCH}" "$OWNER/empty"
 )
 
 # Test that the repos look ok:

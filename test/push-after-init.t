@@ -12,12 +12,18 @@ use Test::More
 (
   mkdir -p "$OWNER/init"
   cd "$OWNER/init"
-  git init
+  git init --initial-branch="${DEFAULTBRANCH}"
+  git config user.name "IniUser"
+  git config user.email "ini@ini"
   mkdir doc
   add-new-files doc/FooBar
   git subrepo init doc || die
   mkdir ../upstream
-  git init --bare ../upstream || die
+  git init --initial-branch="${DEFAULTBRANCH}" --bare ../upstream || die
+  cd ../upstream
+  git config user.name "UpsUser"
+  git config user.email "ups@ups"
+  cd -
 ) &> /dev/null
 
 output=$(

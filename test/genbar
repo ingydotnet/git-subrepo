@@ -1,0 +1,31 @@
+#!/bin/bash
+set -xe
+
+if [ -z "${1}" ]; then
+	echo "${BASH_SOURCE[0]}: Single argument required (common test repos path)"
+	exit 1
+fi
+
+REPO="bar"
+NAME="Bar"
+TARGET="${1}/$REPO"
+TMPREPO="${1}/tmp/$REPO"
+
+rm -rf "$TMPREPO"
+mkdir -p "$TMPREPO"
+cd "$TMPREPO"
+git init --initial-branch=master .
+git config user.name "${NAME}User"
+git config user.email "${REPO}@${REPO}"
+touch $NAME
+git add $NAME
+git commit -m"$NAME"
+git tag A -m"$NAME"
+mkdir -p bard
+touch bard/Bard
+git add bard
+git commit -m"bard/Bard"
+git config --bool core.bare true
+cd -
+mkdir -p "$1"
+mv "$TMPREPO/.git" "$TARGET"

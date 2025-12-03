@@ -1,0 +1,60 @@
+#!/bin/bash
+set -xe
+
+if [ -z "${1}" ]; then
+	echo "${BASH_SOURCE[0]}: Single argument required (common test repos path)"
+	exit 1
+fi
+
+REPO="init"
+NAME="Init"
+TARGET="${1}/$REPO"
+TMPREPO="${1}/tmp/$REPO"
+
+rm -rf "$TMPREPO"
+mkdir -p "$TMPREPO"
+cd "$TMPREPO"
+git init --initial-branch=master .
+git config user.name "${NAME}User"
+git config user.email "${REPO}@${REPO}"
+cat <<EOF > ReadMe
+This is a repo to test \`git subrepo init\`.
+
+We will make a short history with a subdir, then we can turn that subdir into a
+subrepo.
+EOF
+git add ReadMe
+git commit -m"Initial commit"
+mkdir -p doc
+cat <<EOF > doc/init.swim
+== Subrepo Init!
+
+This is a file to test the \`git subrepo init\` command.
+EOF
+git add doc
+git commit -m"Add a file in a subdir."
+cat <<EOF >> ReadMe
+
+This repo will go in the git-subrepo test suite.
+EOF
+git add ReadMe
+git commit -m"Add a commit to the mainline."
+cat <<EOF >> doc/init.swim
+
+It lives under the doc directory which will become a subrepo.
+EOF
+git add doc/init.swim
+git commit -m"Add a commit to the subdir."
+cat <<EOF >> ReadMe
+
+EOF
+git add ReadMe
+cat <<EOF >> doc/init.swim
+
+EOF
+git add doc/init.swim
+git commit -m"Add a commit that affects both."
+git config --bool core.bare true
+cd -
+mkdir -p "$1"
+mv "${TMPREPO}/.git" "$TARGET"

@@ -1,4 +1,5 @@
 SHELL := bash
+INSTALL ?= install
 
 # Make sure we have git:
 ifeq ($(shell which git),)
@@ -17,9 +18,11 @@ SHARE = share
 
 # Install variables:
 PREFIX ?= /usr/local
-INSTALL_LIB  ?= $(DESTDIR)$(shell git --exec-path)
+INSTALL_BIN  ?= $(PREFIX)/bin
+INSTALL_LIB  ?= $(PREFIX)/share/$(NAME)
 INSTALL_EXT  ?= $(INSTALL_LIB)/$(NAME).d
-INSTALL_MAN1 ?= $(DESTDIR)$(PREFIX)/share/man/man1
+INSTALL_MAN1 ?= $(PREFIX)/share/man/man1
+LINK_REL_DIR := $(shell bash share/pnrelpath.sh $(INSTALL_BIN) $(INSTALL_LIB))
 
 # Docker variables:
 DOCKER_TAG ?= 0.0.7
@@ -46,6 +49,7 @@ help:
 
 .PHONY: test
 test:
+	@echo uname: '$(shell uname)'
 	prove $(prove) $(test)
 
 test-all: test docker-tests
@@ -60,18 +64,22 @@ $(DOCKER_TESTS):
 
 # Install support:
 install:
-	install -d -m 0755 $(INSTALL_LIB)/
-	install -C -m 0755 $(LIB) $(INSTALL_LIB)/
-	install -d -m 0755 $(INSTALL_EXT)/
-	install -C -m 0644 $(EXTS) $(INSTALL_EXT)/
-	install -d -m 0755 $(INSTALL_MAN1)/
-	install -C -m 0644 $(MAN1)/$(NAME).1 $(INSTALL_MAN1)/
+	$(INSTALL) -d -m 0755 $(DESTDIR)$(INSTALL_LIB)/
+	$(INSTALL) -C -m 0755 $(LIB) $(DESTDIR)$(INSTALL_LIB)/
+	sed -i 's!^SUBREPO_EXT_DIR=.*!SUBREPO_EXT_DIR=$(INSTALL_EXT)!' $(DESTDIR)$(INSTALL_LIB)/$(NAME)
+	$(INSTALL) -d -m 0755 $(DESTDIR)$(INSTALL_BIN)
+	ln -s $(LINK_REL_DIR)/$(NAME) $(DESTDIR)$(INSTALL_BIN)/$(NAME)
+	$(INSTALL) -d -m 0755 $(DESTDIR)$(INSTALL_EXT)/
+	$(INSTALL) -C -m 0644 $(EXTS) $(DESTDIR)$(INSTALL_EXT)/
+	$(INSTALL) -d -m 0755 $(DESTDIR)$(INSTALL_MAN1)/
+	$(INSTALL) -C -m 0644 $(MAN1)/$(NAME).1 $(DESTDIR)$(INSTALL_MAN1)/
 
 # Uninstall support:
 uninstall:
-	rm -f $(INSTALL_LIB)/$(NAME)
-	rm -fr $(INSTALL_EXT)
-	rm -f $(INSTALL_MAN1)/$(NAME).1
+	rm -f $(DESTDIR)$(INSTALL_BIN)/$(NAME)
+	rm -fr $(DESTDIR)$(INSTALL_EXT)
+	rm -fr $(DESTDIR)$(INSTALL_LIB)
+	rm -f $(DESTDIR)$(INSTALL_MAN1)/$(NAME).1
 
 env:
 	@echo "export PATH=\"$$PWD/lib:\$$PATH\""
@@ -105,7 +113,7 @@ compgen: force
 	    $(SHARE)/git-subrepo.fish
 
 clean:
-	rm -fr tmp test/tmp
+	rm -fr tmp test/tmp test/repo .gitconfig
 
 define docker-make-test
 	docker run --rm \

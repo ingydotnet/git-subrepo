@@ -1,18 +1,45 @@
 #!/usr/bin/env bash
 
-# Set this locally for Windows:
-git config core.autocrlf input
-
 set -e
 
-# Set the GIT_SUBREPO_ROOT for testing.
-source "$PWD"/.rc
+if [ "$(uname)" == "Linux" ]; then
+	export LC_ALL=C.UTF-8
+fi
 
 # Get the location of this script
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
+# Running tests depends on the whole project being git initialized.
+# So, git initialize the project, if necessary.
+if [ ! -d "${SCRIPT_DIR}/../.git" ]; then
+	git init -b master .
+	git config user.email "you@you"
+	git config user.name "YouUser"
+	git add .
+	git commit -a -m"Initial commit"
+fi
+
+# Disable any GIT configuration set outside this 'git-subrepo' project.
+# Real GIT configuration for tests is set through the first test
+# (00-git-config.t).
+export XDG_CONFIG_HOME=$PWD
+export HOME=$PWD
+export GIT_CONFIG_NOSYSTEM=1
+
+# Generate additional testing git repos, if not already present.
+mkdir -p  "${SCRIPT_DIR}/repo"
+if [ ! -d "${SCRIPT_DIR}/repo/bar" ]; then
+	"${SCRIPT_DIR}/genbar" "${SCRIPT_DIR}/repo"
+fi
+if [ ! -d "${SCRIPT_DIR}/repo/foo" ]; then
+	"${SCRIPT_DIR}/genfoo" "${SCRIPT_DIR}/repo"
+fi
+if [ ! -d "${SCRIPT_DIR}/repo/init" ]; then
+	"${SCRIPT_DIR}/geninit" "${SCRIPT_DIR}/repo"
+fi
+
 BASHLIB=$(
-  find "$PWD"/ -type d -name bin -o -type d -name lib | tr '\n' ':'
+  find "$PWD"/ -type d -name bin -o -type d -name lib | grep -v "\/\.pc\/" | tr '\n' ':'
 )
 export BASHLIB
 
@@ -35,7 +62,7 @@ mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 cp -r test/repo/{foo,bar,init} "$UPSTREAM/"
 
 DEFAULTBRANCH=$( git config --global --get init.defaultbranch || true )
-[[ -z $DEFAULTBRANCH ]] && DEFAULTBRANCH="master"
+[[ -z "${DEFAULTBRANCH}" ]] && DEFAULTBRANCH="master"
 export DEFAULTBRANCH
 
 ###
@@ -47,17 +74,17 @@ clone-foo-and-bar() {
     git clone "$UPSTREAM/foo" "$OWNER/foo"
     (
         cd "$OWNER/foo"
-        git config core.autocrlf input
         git config user.name "FooUser"
         git config user.email "foo@foo"
+        git config init.defaultBranch "${DEFAULTBRANCH}"
     )
     # bar will act as the subrepo
     git clone "$UPSTREAM/bar" "$OWNER/bar"
     (
         cd "$OWNER/bar"
-        git config core.autocrlf input
         git config user.name "BarUser"
         git config user.email "bar@bar"
+        git config init.defaultBranch "${DEFAULTBRANCH}"
     )
   ) &> /dev/null || die
 }
