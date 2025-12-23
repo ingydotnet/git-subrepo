@@ -53,6 +53,7 @@ help:
 	@echo 'docker-tests      Test ALL bash/git combinations (comprehensive)'
 	@echo 'docker-bash-tests Test all bash versions with default git (faster)'
 	@echo 'docker-test       Test specific bash/git: make docker-test bash=5.1 git=2.25'
+	@echo 'CI_TEST           Test oldest and newest bash/git combinations for CI'
 	@echo ''
 	@echo 'Available bash versions: $(BASH_VERSIONS)'
 	@echo 'Available git versions:  $(GIT_VERSIONS)'
@@ -63,6 +64,11 @@ test:
 	prove $(prove) $(test)
 
 test-all: test docker-tests
+
+CI_TEST:
+	@echo "Running CI tests with oldest and newest bash/git combinations"
+	$(call docker-make-test,$(lastword $(BASH_VERSIONS)),$(lastword $(GIT_VERSIONS)))
+	$(call docker-make-test,$(firstword $(BASH_VERSIONS)),$(firstword $(GIT_VERSIONS)))
 
 docker-test:
 	$(call docker-make-test,$(bash),$(git))
