@@ -1242,7 +1242,7 @@ command-setup() {
     local _worktree
     _worktree=$(
       git worktree list |
-        grep "\[subrepo/$subdir\]" |
+        grep "\[subrepo/$subref\]" |
         cut -d ' ' -f1
     ) || true
     if [[ $command =~ ^(commit)$ && -z $_worktree ]]; then
