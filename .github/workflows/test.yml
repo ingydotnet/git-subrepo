@@ -41,4 +41,4 @@ jobs:
       - if: startsWith(matrix.os, 'macos')
         run: make test
       - if: startsWith(matrix.os, 'ubuntu')
-        run: make docker-tests
+        run: make CI_TEST
