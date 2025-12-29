@@ -26,7 +26,14 @@ GIT_SUBREPO_ROOT=$(
 ) || return
 export GIT_SUBREPO_ROOT
 
-export PATH=$GIT_SUBREPO_ROOT/lib:$PATH
-export MANPATH=$GIT_SUBREPO_ROOT/man:$MANPATH
+if ! [[ "$PATH" =~ "$GIT_SUBREPO_ROOT/lib:" ]]; then
+  PATH="$GIT_SUBREPO_ROOT/lib:$PATH"
+fi
+export PATH
+
+if ! [[ "$MANPATH" =~ "$GIT_SUBREPO_ROOT/man:" ]]; then
+  MANPATH="$GIT_SUBREPO_ROOT/man:$MANPATH"
+fi
+export MANPATH
 
 source "$GIT_SUBREPO_ROOT/share/enable-completion.sh"
