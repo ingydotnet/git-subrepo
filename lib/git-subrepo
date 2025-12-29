@@ -585,7 +585,7 @@ subrepo:pull() {
     fi
   else
     o "Merge in changes from $refs_subrepo_fetch"
-    FAIL=false RUN git merge "$refs_subrepo_fetch"
+    FAIL=false RUN git merge --ff "$refs_subrepo_fetch"
     if ! OK; then
       say "The \"git merge\" command failed:"
       say
