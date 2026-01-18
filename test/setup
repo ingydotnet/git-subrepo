@@ -86,10 +86,11 @@ rm -fr "$TMP"
 export UPSTREAM=$TMP/upstream
 export OWNER=$TMP/owner
 export COLLAB=$TMP/collab
+export TEMPLATES="$PWD/test/repo"
 
 mkdir -p "$UPSTREAM" "$OWNER" "$COLLAB"
 
-cp -r test/repo/{foo,bar,init} "$UPSTREAM/"
+cp -r "$TEMPLATES"/{foo,bar,doak,init} "$UPSTREAM/"
 
 # Check if Git supports init.defaultbranch (Git 2.28+)
 git_version=$(git --version | sed 's/git version //' | head -1)
