@@ -1748,10 +1748,10 @@ get-command-info() {
       command_commit=$(readlink "$lib/git-subrepo.d/commit")
     elif [[ $lib =~ / ]]; then
       lib=$(dirname "$lib")
-      if [[ -d $lib/.git ]]; then
+      if [[ -e $lib/.git ]]; then
         local remote
         remote=$(
-          GIT_DIR=$lib/.git git remote -v |
+          git -C $lib remote -v |
             grep '^origin' |
             head -n1 |
             cut -f2 |
@@ -1762,7 +1762,7 @@ get-command-info() {
         else
           local remote
           remote=$(
-            GIT_DIR=$lib/.git git remote -v |
+            git -C $lib remote -v |
               head -n1 |
               cut -f2 |
               cut -d ' ' -f1
@@ -1772,7 +1772,7 @@ get-command-info() {
           fi
         fi
         local commit
-        commit=$(GIT_DIR=$lib/.git git rev-parse --short HEAD)
+        commit=$(git -C $lib rev-parse --short HEAD)
         if [[ $commit ]]; then
           command_commit=$commit
         fi
