@@ -828,8 +828,8 @@ subrepo:branch() {
       [[ $prev_commit ]] && first_parent=(-p "$prev_commit")
       second_parent=()
       if [[ -z $first_gitrepo_commit ]]; then
-        first_gitrepo_commit=$gitrepo_commit
-        second_parent=(-p "$gitrepo_commit")
+        first_gitrepo_commit=$subrepo_commit
+        second_parent=(-p "$subrepo_commit")
       fi
 
       if [[ $join_method != rebase ]]; then
