@@ -114,7 +114,7 @@ The best short answer is:
 
 The complete "Installation Instructions" can be found below.
 
-Note: git-subrepo needs a git version >= 2.23) due to changes in --is-ansestor.
+Note: git-subrepo needs a git version >= 2.23) due to changes in --is-ancestor.
 
 =head1 Commands
 
