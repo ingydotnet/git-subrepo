@@ -68,6 +68,13 @@ source "$PWD"/.rc
 # Get the location of this script
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
+# Disable any GIT configuration set outside this 'git-subrepo' project.
+# Real GIT configuration for tests is set through the first test
+# (00-git-config.t).
+export XDG_CONFIG_HOME=$PWD
+export HOME=$PWD
+export GIT_CONFIG_NOSYSTEM=1
+
 BASHLIB=$(
   find "$PWD"/ -type d -name bin -o -type d -name lib | tr '\n' ':'
 )
