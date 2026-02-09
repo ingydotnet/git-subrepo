@@ -329,11 +329,20 @@ Read or update configuration values in the subdir/.gitrepo file.
 
 Because most of the values stored in the .gitrepo file are generated you
 will need to use C<--force> if you want to change anything else then the
-C<method> option.
+C<method> and C<verify> options.
 
 Example to update the C<method> option for a subrepo:
 
     git subrepo config foo method rebase
+
+Example to enable git hooks for a subrepo:
+
+    git subrepo config foo verify true
+
+The C<verify> option controls whether git hooks (pre-commit and commit-msg)
+are run during subrepo operations. By default, hooks are bypassed to prevent
+parent repository hooks from interfering with subrepo operations. Set
+C<verify = true> in the .gitrepo file to always run hooks for a specific subrepo.
 
 =item C<< git subrepo help [<command>|--all] >>
 
@@ -446,6 +455,19 @@ Squash all commits on a push into one new commit.
 
 If C<--branch> or C<--remote> are used, and the command updates the
 C<.gitrepo> file, include these values to the update.
+
+=item C<--verify> (C<-V>)
+
+Run pre-commit and commit-msg hooks during subrepo operations.
+
+By default, git-subrepo bypasses git hooks (using C<--no-verify> internally)
+to prevent hooks from the parent repository interfering with subrepo operations.
+This is particularly useful when cloning subrepos that may contain code that
+doesn't pass the parent repository's linting or validation rules.
+
+Use the C<--verify> flag to enable hooks for a specific operation, or set
+C<verify = true> in the C<.gitrepo> file to always run hooks for a particular
+subrepo.
 
 =back
 
