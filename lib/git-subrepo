@@ -876,6 +876,20 @@ subrepo:branch() {
       "$subref" "$branch"
   fi
 
+  # Mechanism to skip subdirs containing subrepos during a push.
+  # TODO: 1) mention dependency on 'find'; 2) may be turned on/off on option.
+  if which find > /dev/null; then
+    o "Checking $subdir for nested subdirs to avoid"
+    local subdirs
+    mapfile -t subdirs < <(cd -- "$subdir"; find -mindepth 1 -type d -exec 'test' '-f' '{}/.gitrepo' ';' -print)
+    if [[ ${#subdirs[@]} -gt 0 ]]; then
+      for d in "${subdirs[@]}"; do
+        o "Found $d: will rebase to exclude it";
+        git filter-branch -f --index-filter "git rm -r --cached --ignore-unmatch \"${d}\"" "$branch" || true
+      done
+    fi
+  fi
+
   o "Remove the .gitrepo file from $first_gitrepo_commit..$branch"
   local filter=$branch
   [[ $first_gitrepo_commit ]] && filter=$first_gitrepo_commit..$branch
