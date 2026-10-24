@@ -261,7 +261,7 @@ _git_subrepo() {
         subdircommand="\$(__git_find_on_cmdline "\$subdircommands")"
         if [ -n "\$subdircommand" ]; then
             local git_subrepos
-            git_subrepos=$(git subrepo status -q)
+            git_subrepos=\$(git subrepo status -q)
             __gitcomp "\$git_subrepos"
         fi
 
