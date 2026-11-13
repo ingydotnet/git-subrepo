@@ -763,9 +763,7 @@ subrepo:branch() {
     # Check if the subrepo parent is an ancestor of HEAD.
     # For example rebasing the commit that touched the subrepo
     # could make the commit no longer match.
-    local parent_is_ancestor=
-    git merge-base --is-ancestor "$subrepo_parent" HEAD && parent_is_ancestor="true"
-    if [[ -z "$parent_is_ancestor" ]]; then
+    if ! git:is-ancestor "$subrepo_parent" HEAD; then
       local prev_merge_point
       prev_merge_point=$(git log -1 -G "commit =" --format="%H" "$gitrepo")
         # We want the SHA of the patch before the sync point just in case someone made a modifcation in the
@@ -810,6 +808,17 @@ subrepo:branch() {
           o "Ignore $commit, it's not in the selected path"
           continue
         fi
+      else
+        if git:rev-exists "$refs_subrepo_fetch"; then
+          if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
+            if ! git:is-ancestor "$gitrepo_commit" "$refs_subrepo_fetch"; then
+              o "Ignore $gitrepo_commit, it's not an ancestor"
+              continue
+            else
+              error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' or add the '-F' flag to always fetch the latest content."
+            fi
+          fi
+        fi
       fi
 
       # Remember the previous commit from the parent repo path
@@ -818,7 +827,11 @@ subrepo:branch() {
       o "Check for rebase"
       if git:rev-exists "$refs_subrepo_fetch"; then
         if ! git:commit-in-rev-list  "$gitrepo_commit" "$refs_subrepo_fetch"; then
-          error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' or add the '-F' flag to always fetch the latest content."
+          if ! git:is-ancestor "$gitrepo_commit" "$refs_subrepo_fetch"; then
+            o "Ignore $gitrepo_commit, it's not an ancestor"
+          else
+            error "Local repository does not contain $gitrepo_commit. Try to 'git subrepo fetch $subref' or add the '-F' flag to always fetch the latest content."
+          fi
         fi
       fi
 
@@ -1896,6 +1909,12 @@ git:make-ref() {
 git:is_merge_commit() {
   local commit=$1
   git show --summary "$commit" | grep -q ^Merge:
+}
+
+git:is-ancestor() {
+  local commit=$1
+  local list_head=$2
+  git merge-base --is-ancestor $commit $list_head
 }
 
 git:create-worktree() {
